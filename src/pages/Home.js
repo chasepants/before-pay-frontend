@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ProductCard from '../components/ProductCard';
+import mockSerpResults from '../mock_serp.js'; // Import mock data
 
 const Home = () => {
   const [search, setSearch] = useState('');
@@ -15,16 +16,17 @@ const Home = () => {
 
   const handleSearch = async () => {
     try {
-      const res = await axios.get(`http://localhost:3001/api/wishlist/search?q=${search}`, { withCredentials: true });
-      setProducts(res.data);
+      // const res = await axios.get(`http://localhost:3001/api/wishlist/search?q=${search}`, { withCredentials: true });
+      // setProducts(res.data);
+      setProducts(mockSerpResults);
     } catch (err) {
-      console.error('Search failed:', err);
+      console.error('Mock search failed:', err);
     }
   };
 
   const addToWishlist = async (product) => {
     try {
-      const res = await axios.post('http://localhost:3001/api/wishlist', { ...product, savingsGoal: product.price }, { withCredentials: true });
+      const res = await axios.post('http://localhost:3001/api/wishlist', { ...product, price: product.extracted_price, savingsGoal: product.extracted_price }, { withCredentials: true });
       setWishlist([...wishlist, res.data]);
     } catch (err) {
       console.error('Add to wishlist failed:', err);
@@ -62,17 +64,30 @@ const Home = () => {
           Search
         </button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+        gap: '16px',
+        padding: '16px'
+      }}>
         {products.map((p, i) => (
-          <div key={i}>
-            <ProductCard {...p} savingsGoal={p.price} savingsProgress={0} />
-            <button
-              onClick={() => addToWishlist(p)}
-              style={{ backgroundColor: '#34a853', color: 'white', padding: '8px', width: '100%', borderRadius: '4px', border: 'none', cursor: 'pointer', marginTop: '8px' }}
-            >
-              Add to Wishlist
-            </button>
-          </div>
+          <ProductCard
+            key={i}
+            name={p.name}
+            price={p.price}
+            oldPrice={p.oldPrice}
+            url={p.url}
+            imageUrl={p.imageUrl}
+            source={p.source}
+            sourceIcon={p.source_icon}
+            rating={p.rating}
+            reviews={p.reviews}
+            badge={p.badge}
+            tag={p.tag}
+            delivery={p.delivery}
+            buttonText="Add to Wishlist"
+            onButtonClick={() => addToWishlist(p)}
+          />
         ))}
       </div>
       <h2 style={{ marginTop: '32px', fontSize: '20px', fontWeight: 'bold' }}>My Wishlist</h2>

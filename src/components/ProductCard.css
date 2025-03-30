@@ -1,0 +1,152 @@
+.product-card {
+  display: flex;
+  flex-direction: column;
+  border: none;
+  border-radius: 8px;
+  background-color: white;
+  transition: all 0.3s ease;
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 16px;
+  cursor: pointer; /* Make the whole card clickable */
+}
+
+.product-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.product-link {
+  display: flex;
+  flex-direction: row;
+  text-decoration: none;
+  color: inherit;
+}
+
+.product-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 16px;
+}
+
+.product-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-left: 16px;
+}
+
+.product-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #202124;
+  margin-bottom: 8px;
+  font-family: Arial, sans-serif;
+  word-wrap: break-word; /* Allow wrapping */
+}
+
+.product-prices {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.product-price-old {
+  color: #999;
+  text-decoration: line-through;
+  margin-right: 8px;
+}
+
+.product-price {
+  font-size: 18px;
+  font-weight: bold;
+  color: #202124;
+}
+
+.product-source {
+  font-size: 12px;
+  color: #5f6368;
+  margin-top: 8px;
+}
+
+.product-source-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.product-rating {
+  font-size: 12px;
+  color: #5f6368;
+  margin-top: 4px;
+}
+
+.rating-number {
+  font-weight: bold;
+}
+
+.reviews-count {
+  margin-left: 4px;
+}
+
+.product-badge {
+  background-color: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-size: 10px;
+  color: #5f6368;
+  margin-top: 4px;
+}
+
+.product-tag {
+  color: #d93025;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.product-delivery {
+  font-size: 12px;
+  color: #5f6368;
+  margin-top: 4px;
+}
+
+.add-to-wishlist {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  transition: background-color 0.3s;
+  margin-top: 12px;
+}
+
+.add-to-wishlist:hover {
+  background-color: #3367d6;
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 767px) {
+  .product-link {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .product-image {
+    width: 100%;
+    height: auto;
+    margin-right: 0;
+    margin-bottom: 16px;
+  }
+
+  .product-info {
+    width: 100%;
+    align-items: center;
+    text-align: center;
+  }
+}
