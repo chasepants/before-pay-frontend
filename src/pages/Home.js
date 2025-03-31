@@ -25,12 +25,12 @@ const Home = () => {
   };
 
   const addToWishlist = async (product) => {
+    if (wishlist.some(item => item.product_id === product.product_id)) {
+      alert('Product already in wishlist');
+      return;
+    }
     try {
-      console.log(product)
-      const res = await axios.post('http://localhost:3001/api/wishlist', { 
-        ...product,
-        savings_goal: product.extracted_price
-      }, { withCredentials: true });
+      const res = await axios.post('http://localhost:3001/api/wishlist', {...product, savings_goal: product.extracted_price}, { withCredentials: true });
       setWishlist([...wishlist, res.data]);
     } catch (err) {
       console.error('Add to wishlist failed:', err);
@@ -74,25 +74,29 @@ const Home = () => {
         gap: '16px',
         padding: '16px'
       }}>
-        {products.map((p, i) => (
-          <ProductCard
-            key={i}
-            name={p.title}
-            price={p.price}
-            oldPrice={p.old_price}
-            url={p.product_link}
-            imageUrl={p.thumbnail}
-            source={p.source}
-            sourceIcon={p.source_icon}
-            rating={p.rating}
-            reviews={p.reviews}
-            badge={p.badge}
-            tag={p.tag}
-            delivery={p.delivery}
-            buttonText="Add to Wishlist"
-            onButtonClick={() => addToWishlist(p)}
-          />
-        ))}
+        {products.map((p, i) => {
+          const isInWishlist = wishlist.some(item => item.product_id === p.product_id);
+          return (
+            <ProductCard
+              key={i}
+              name={p.title}
+              price={p.price}
+              oldPrice={p.old_price}
+              url={p.product_link}
+              imageUrl={p.thumbnail}
+              source={p.source}
+              sourceIcon={p.source_icon}
+              rating={p.rating}
+              reviews={p.reviews}
+              badge={p.badge}
+              tag={p.tag}
+              delivery={p.delivery}
+              buttonText="Add to Wishlist"
+              isInWishlist={isInWishlist}
+              onButtonClick={() => addToWishlist(p)}
+            />
+          )
+        })}
       </div>
       <h2 style={{ marginTop: '32px', fontSize: '20px', fontWeight: 'bold' }}>My Wishlist</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px', marginTop: '16px' }}>
@@ -111,6 +115,7 @@ const Home = () => {
             badge={item.badge}
             tag={item.tag}
             delivery={item.delivery}
+            isInWishlist={true}
           />
         ))}
       </div>

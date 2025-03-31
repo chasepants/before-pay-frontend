@@ -22,18 +22,31 @@
   flex-direction: row;
   overflow: hidden;
 }
-.add-to-wishlist {
+
+.add-to-wishlist, .added-text {
+  height: 30px;
+  line-height: 30px;
+  padding: 8px 16px;
+  border-radius: 4px;
   margin-top: auto;
+  display: block;
+  text-align: center;
+}
+
+.add-to-wishlist {
   background-color: #4285f4;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-  transition: background-color 0.3s;
 }
+
+.added-text {
+  background-color: transparent;
+  color: green;
+  border: none;
+  cursor: default;
+}
+
 .product-image {
   width: 120px;
   height: 120px;
