@@ -26,7 +26,11 @@ const Home = () => {
 
   const addToWishlist = async (product) => {
     try {
-      const res = await axios.post('http://localhost:3001/api/wishlist', { ...product, price: product.extracted_price, savingsGoal: product.extracted_price }, { withCredentials: true });
+      console.log(product)
+      const res = await axios.post('http://localhost:3001/api/wishlist', { 
+        ...product,
+        savings_goal: product.extracted_price
+      }, { withCredentials: true });
       setWishlist([...wishlist, res.data]);
     } catch (err) {
       console.error('Add to wishlist failed:', err);
@@ -73,11 +77,11 @@ const Home = () => {
         {products.map((p, i) => (
           <ProductCard
             key={i}
-            name={p.name}
+            name={p.title}
             price={p.price}
-            oldPrice={p.oldPrice}
-            url={p.url}
-            imageUrl={p.imageUrl}
+            oldPrice={p.old_price}
+            url={p.product_link}
+            imageUrl={p.thumbnail}
             source={p.source}
             sourceIcon={p.source_icon}
             rating={p.rating}
@@ -92,7 +96,23 @@ const Home = () => {
       </div>
       <h2 style={{ marginTop: '32px', fontSize: '20px', fontWeight: 'bold' }}>My Wishlist</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px', marginTop: '16px' }}>
-        {wishlist.map(item => <ProductCard key={item._id} {...item} />)}
+        {wishlist.map(item => (
+          <ProductCard 
+            key={item._id}
+            name={item.title}
+            price={item.price}
+            oldPrice={item.old_price}
+            url={item.product_link}
+            imageUrl={item.thumbnail}
+            source={item.source}
+            sourceIcon={item.source_icon}
+            rating={item.rating}
+            reviews={item.reviews}
+            badge={item.badge}
+            tag={item.tag}
+            delivery={item.delivery}
+          />
+        ))}
       </div>
     </div>
   );

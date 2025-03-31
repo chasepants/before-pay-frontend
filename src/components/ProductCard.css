@@ -1,16 +1,15 @@
 .product-card {
+  height: 200px;
+  max-width: 300px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   border: none;
   border-radius: 8px;
   background-color: white;
   transition: all 0.3s ease;
-  max-width: 300px;
-  margin: 0 auto;
-  padding: 16px;
-  cursor: pointer; /* Make the whole card clickable */
+  cursor: pointer;
 }
-
 .product-card:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -18,12 +17,23 @@
 }
 
 .product-link {
+  flex: 1;
   display: flex;
   flex-direction: row;
-  text-decoration: none;
-  color: inherit;
+  overflow: hidden;
 }
-
+.add-to-wishlist {
+  margin-top: auto;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  transition: background-color 0.3s;
+}
 .product-image {
   width: 120px;
   height: 120px;
@@ -36,17 +46,19 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  padding-left: 16px;
+  overflow: hidden;
 }
-
 .product-name {
   font-size: 16px;
   font-weight: 500;
   color: #202124;
   margin-bottom: 8px;
   font-family: Arial, sans-serif;
-  word-wrap: break-word; /* Allow wrapping */
+  word-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 40px;
+  line-height: 20px;
 }
 
 .product-prices {
@@ -111,19 +123,6 @@
   font-size: 12px;
   color: #5f6368;
   margin-top: 4px;
-}
-
-.add-to-wishlist {
-  background-color: #4285f4;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-  transition: background-color 0.3s;
-  margin-top: 12px;
 }
 
 .add-to-wishlist:hover {
