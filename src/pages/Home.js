@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ProductCard from '../components/ProductCard';
-import mockSerpResults from '../mock_serp.js'; // Import mock data
+import WishlistItemCard from '../components/WishlistItemCard';
+import mockSerpResults from '../mock_serp.js';
 
 const Home = () => {
   const [search, setSearch] = useState('');
@@ -9,10 +10,17 @@ const Home = () => {
   const [wishlist, setWishlist] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:3001/api/wishlist', { withCredentials: true })
-      .then(res => setWishlist(res.data))
-      .catch(err => console.error('Wishlist fetch failed:', err));
+    fetchWishlist();
   }, []);
+
+  const fetchWishlist = async () => {
+    try {
+      const res = await axios.get('http://localhost:3001/api/wishlist', { withCredentials: true });
+      setWishlist(res.data);
+    } catch (err) {
+      console.error('Wishlist fetch failed:', err);
+    }
+  };
 
   const handleSearch = async () => {
     try {
@@ -34,6 +42,15 @@ const Home = () => {
       setWishlist([...wishlist, res.data]);
     } catch (err) {
       console.error('Add to wishlist failed:', err);
+    }
+  };
+
+  const handleDelete = async (itemId) => {
+    try {
+      await axios.delete(`http://localhost:3001/api/wishlist/${itemId}`, { withCredentials: true });
+      setWishlist(wishlist => wishlist.filter(item => item._id !== itemId));
+    } catch (err) {
+      console.error('Delete failed:', err);
     }
   };
 
@@ -91,17 +108,16 @@ const Home = () => {
               badge={p.badge}
               tag={p.tag}
               delivery={p.delivery}
-              buttonText="Add to Wishlist"
-              isInWishlist={isInWishlist}
               onButtonClick={() => addToWishlist(p)}
+              isInWishlist={isInWishlist}
             />
-          )
+          );
         })}
       </div>
       <h2 style={{ marginTop: '32px', fontSize: '20px', fontWeight: 'bold' }}>My Wishlist</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px', marginTop: '16px' }}>
         {wishlist.map(item => (
-          <ProductCard 
+          <WishlistItemCard
             key={item._id}
             name={item.title}
             price={item.price}
@@ -115,7 +131,12 @@ const Home = () => {
             badge={item.badge}
             tag={item.tag}
             delivery={item.delivery}
-            isInWishlist={true}
+            savingsGoal={item.savings_goal}
+            savingsProgress={item.savingsProgress}
+            onDelete={() => {
+              console.log("deleting")
+              handleDelete(item._id)
+            }}
           />
         ))}
       </div>

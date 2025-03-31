@@ -1,50 +1,30 @@
 .product-card {
-  height: 200px;
-  max-width: 300px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
+  display: flex; /* Enable flexbox for the card */
+  flex-direction: column; /* Stack content vertically */
   border: none;
   border-radius: 8px;
   background-color: white;
   transition: all 0.3s ease;
+  max-width: 300px;
+  height: 350px; /* Fixed height to ensure consistency */
+  margin: 0 auto;
+  padding: 16px;
   cursor: pointer;
 }
+
 .product-card:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid #e0e0e0;
 }
 
 .product-link {
-  flex: 1;
   display: flex;
   flex-direction: row;
-  overflow: hidden;
-}
-
-.add-to-wishlist, .added-text {
-  height: 30px;
-  line-height: 30px;
-  padding: 8px 16px;
-  border-radius: 4px;
-  margin-top: auto;
-  display: block;
-  text-align: center;
-}
-
-.add-to-wishlist {
-  background-color: #4285f4;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.added-text {
-  background-color: transparent;
-  color: green;
-  border: none;
-  cursor: default;
+  text-decoration: none;
+  color: inherit;
+  flex: 1; /* Take up all available space above the button */
+  overflow: hidden; /* Handle overflow if content is too long */
 }
 
 .product-image {
@@ -59,8 +39,10 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  justify-content: flex-start; /* Align content at the top */
+  overflow: hidden; /* Prevent overflow from pushing button */
 }
+
 .product-name {
   font-size: 16px;
   font-weight: 500;
@@ -70,7 +52,7 @@
   word-wrap: break-word;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-height: 40px;
+  max-height: 40px; /* Limit to 2 lines */
   line-height: 20px;
 }
 
@@ -96,11 +78,14 @@
   font-size: 12px;
   color: #5f6368;
   margin-top: 8px;
+  display: flex;
+  align-items: center;
 }
 
-.product-source-icon {
+.source-icon {
   width: 12px;
   height: 12px;
+  margin-right: 4px;
 }
 
 .product-rating {
@@ -138,27 +123,35 @@
   margin-top: 4px;
 }
 
+/* Button and Added Text Styles */
+.add-to-wishlist, .added-text {
+  height: 30px; /* Fixed height for consistent look */
+  line-height: 30px; /* Center text vertically */
+  padding: 0 16px; /* Horizontal padding only */
+  border-radius: 4px;
+  margin-top: auto; /* Push to bottom of card */
+  display: block;
+  text-align: center; /* Center text horizontally */
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: bold; /* Keep it bold */
+}
+
+.add-to-wishlist {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
 .add-to-wishlist:hover {
   background-color: #3367d6;
 }
 
-/* Responsive Design for Mobile */
-@media (max-width: 767px) {
-  .product-link {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .product-image {
-    width: 100%;
-    height: auto;
-    margin-right: 0;
-    margin-bottom: 16px;
-  }
-
-  .product-info {
-    width: 100%;
-    align-items: center;
-    text-align: center;
-  }
+.added-text {
+  background-color: transparent;
+  color: green;
+  border: none;
+  cursor: default;
 }
