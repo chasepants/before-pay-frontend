@@ -9,11 +9,10 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is authenticated on mount
     axios.get('http://localhost:3001/api/auth/current_user', { withCredentials: true })
       .then(res => {
-        console.log(res)
-        console.log(res.data)
+        console.log(res);
+        console.log(res.data);
         setUser(res.data);
         setLoading(false);
       })
@@ -31,9 +30,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route
           path="/home"
-          element={
-            user ? <Home /> : <Navigate to="/" replace />
-          }
+          element={user ? <Home /> : <Navigate to="/" replace />}
         />
       </Routes>
     </Router>
