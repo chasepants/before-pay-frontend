@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import axios from 'axios';
 import Login from './pages/Login';
 import Home from './pages/Home';
+import SetupSavings from './pages/SetupSavings';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -31,6 +32,10 @@ function App() {
         <Route
           path="/home"
           element={user ? <Home /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/setup-savings/:wishlistItemId"
+          element={user ? <SetupSavings /> : <Navigate to="/" replace />}
         />
       </Routes>
     </Router>

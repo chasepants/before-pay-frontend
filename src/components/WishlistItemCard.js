@@ -1,7 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './WishlistItemCard.css';
 
 const WishlistItemCard = ({
+  wishlistItemId, // Add _id prop
   name,
   price,
   oldPrice,
@@ -16,46 +18,57 @@ const WishlistItemCard = ({
   delivery,
   savingsGoal,
   savingsProgress,
+  subscriptionId,
   onDelete
 }) => {
-  const progressPercent = (savingsProgress / savingsGoal) * 100;
   return (
     <div className="wishlist-item-card">
-      <a href={url} target="_blank" rel="noopener noreferrer" className="product-link">
-        <img src={imageUrl || 'https://viaplaceholder.com/200'} alt={name} className="product-image" />
-        <div className="product-info">
-          <h3 className="product-name">{name}</h3>
-          <div className="product-prices">
-            {oldPrice && <span className="product-price-old">{oldPrice}</span>}
-            <span className="product-price">{price}</span>
-          </div>
-          <div className="product-source">
-            {sourceIcon && <img src={sourceIcon} alt={`${source} icon`} className="source-icon" />}
-            <span>{source}</span>
-          </div>
-          {rating && (
-            <div className="product-rating">
-              <span className="rating-number">{rating}</span>
-              <span className="reviews-count">({reviews} reviews)</span>
-            </div>
+      <img src={imageUrl} alt={name} className="wishlist-item-image" />
+      <div className="wishlist-item-details">
+        <h3 className="wishlist-item-title">{name}</h3>
+        <p className="wishlist-item-price">{price}</p>
+        {oldPrice && <p className="wishlist-item-old-price">{oldPrice}</p>}
+        <p className="wishlist-item-source">
+          <img src={sourceIcon} alt={source} className="source-icon" /> {source}
+        </p>
+        {rating && (
+          <p className="wishlist-item-rating">
+            {rating} ({reviews} reviews)
+          </p>
+        )}
+        {badge && <span className="wishlist-item-badge">{badge}</span>}
+        {tag && <span className="wishlist-item-tag">{tag}</span>}
+        {delivery && <p className="wishlist-item-delivery">{delivery}</p>}
+        <p className="wishlist-item-savings">
+          Savings Goal: ${savingsGoal} | Progress: ${savingsProgress}
+        </p>
+        <div className="wishlist-item-actions">
+          <button
+            onClick={onDelete}
+            className="wishlist-item-button delete-button"
+          >
+            Remove
+          </button>
+          {subscriptionId ? (
+            <button
+              className="wishlist-item-button view-savings-button"
+              style={{ backgroundColor: '#34a853', color: 'white', marginLeft: '8px' }}
+              disabled // Placeholder for future functionality
+            >
+              View Savings
+            </button>
+          ) : (
+            <Link to={`/setup-savings/${wishlistItemId}`}>
+              <button
+                className="wishlist-item-button setup-savings-button"
+                style={{ backgroundColor: '#4285f4', color: 'white', marginLeft: '8px' }}
+              >
+                Setup Savings
+              </button>
+            </Link>
           )}
-          {/* {badge && <div className="product-badge">{badge}</div>}
-          {tag && <div className="product-tag">{tag}</div>}
-          {delivery && <div className="product-delivery">{delivery}</div>} */}
         </div>
-      </a>
-      <div className="savings-section">
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
-        </div>
-        <span className="savings-text">${savingsProgress ?? 0} / ${savingsGoal}</span>
       </div>
-      <button className="delete-button" onClick={() => {
-            console.log("button clicked!")
-            onDelete()
-        }}>
-        Delete
-      </button>
     </div>
   );
 };

@@ -119,6 +119,7 @@ const Home = () => {
         {wishlist.map(item => (
           <WishlistItemCard
             key={item._id}
+            wishlistItemId={item._id} // Pass _id as wishlistItemId
             name={item.title}
             price={item.price}
             oldPrice={item.old_price}
@@ -132,10 +133,11 @@ const Home = () => {
             tag={item.tag}
             delivery={item.delivery}
             savingsGoal={item.savings_goal}
-            savingsProgress={item.savingsProgress}
+            savingsProgress={item.savings_progress}
+            subscriptionId={item.subscriptionId}
             onDelete={() => {
-              console.log("deleting")
-              handleDelete(item._id)
+              console.log("deleting");
+              handleDelete(item._id);
             }}
           />
         ))}
