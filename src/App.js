@@ -4,6 +4,7 @@ import axios from 'axios';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import SetupSavings from './pages/SetupSavings';
+import ViewSavings from './pages/ViewSavings';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -36,6 +37,10 @@ function App() {
         <Route
           path="/setup-savings/:wishlistItemId"
           element={user ? <SetupSavings /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/view-savings/:wishlistItemId"
+          element={user ? <ViewSavings /> : <Navigate to="/" replace />}
         />
       </Routes>
     </Router>

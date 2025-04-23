@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import './WishlistItemCard.css';
 
 const WishlistItemCard = ({
-  wishlistItemId, // Add _id prop
+  wishlistItemId,
   name,
   price,
   oldPrice,
@@ -50,13 +50,14 @@ const WishlistItemCard = ({
             Remove
           </button>
           {subscriptionId ? (
-            <button
-              className="wishlist-item-button view-savings-button"
-              style={{ backgroundColor: '#34a853', color: 'white', marginLeft: '8px' }}
-              disabled // Placeholder for future functionality
-            >
-              View Savings
-            </button>
+            <Link to={`/view-savings/${wishlistItemId}`}>
+              <button
+                className="wishlist-item-button view-savings-button"
+                style={{ backgroundColor: '#34a853', color: 'white', marginLeft: '8px' }}
+              >
+                View Savings
+              </button>
+            </Link>
           ) : (
             <Link to={`/setup-savings/${wishlistItemId}`}>
               <button
