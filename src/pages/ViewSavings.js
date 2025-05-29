@@ -15,10 +15,15 @@ const ViewSavings = () => {
     try {
       // Fetch wishlist item details
       console.log('Fetching wishlist item:', wishlistItemId);
-      const itemRes = await axios.get(`http://localhost:3001/api/wishlist/${wishlistItemId}`, { withCredentials: true });
+      var itemRes = await axios.get(`http://localhost:3001/api/wishlist/${wishlistItemId}`, { withCredentials: true });
       console.log('Wishlist item response:', itemRes.data);
       setWishlistItem(itemRes.data);
-
+    } catch (err) {
+      console.error('Fetch error:', err.response?.data || err.message);
+      setError(err.response?.status === 404 ? 'Wishlist item not found' : err.response?.data?.error || 'Failed to load savings data');
+    }
+  
+    try {
       // Fetch transaction history
       if (itemRes.data.subscriptionId) {
         console.log('Fetching transaction history for subscription:', itemRes.data.subscriptionId);
@@ -28,7 +33,7 @@ const ViewSavings = () => {
       }
     } catch (err) {
       console.error('Fetch error:', err.response?.data || err.message);
-      setError(err.response?.status === 404 ? 'Wishlist item not found' : err.response?.data?.error || 'Failed to load savings data');
+      setError(err.response?.status === 404 ? 'Subscription not found' : err.response?.data?.error || 'Failed to load savings data');
     } finally {
       setIsLoading(false);
     }
@@ -37,6 +42,30 @@ const ViewSavings = () => {
   useEffect(() => {
     fetchData();
   }, [wishlistItemId]);
+
+const handlePayout = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      console.log('Initiating payout for wishlist item:', wishlistItemId);
+      const res = await axios.post(
+        'http://localhost:3001/api/bank/payout',
+        { wishlistItemId },
+        { withCredentials: true }
+      );
+      console.log('Payout response:', res.data);
+      alert('Savings transferred successfully!');
+      // Refresh wishlist item
+      const refreshed = await axios.get(`http://localhost:3001/api/wishlist/${wishlistItemId}`, { withCredentials: true });
+      setWishlistItem(refreshed.data);
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || 'Failed to transfer savings';
+      setError(errorMsg);
+      console.error('Payout error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (error) {
     return (
@@ -68,100 +97,82 @@ const ViewSavings = () => {
 
   return (
     <div style={{ padding: '16px' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Savings Details</h1>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
-        <img
-          src={wishlistItem.thumbnail}
-          alt={wishlistItem.title}
-          style={{ width: '100px', height: '100px', objectFit: 'cover', marginRight: '16px' }}
+      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>{wishlistItem.title}</h1>
+      <p style={{ marginBottom: '16px' }}>
+        Savings Progress: ${wishlistItem.savings_progress} / ${wishlistItem.savings_goal}
+      </p>
+      <div style={{ width: '100%', backgroundColor: '#e0e0e0', borderRadius: '4px', marginBottom: '16px' }}>
+        <div
+          style={{
+            width: `${Math.min(progressPercentage, 100)}%`,
+            backgroundColor: '#34a853',
+            height: '20px',
+            borderRadius: '4px'
+          }}
         />
-        <div>
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold' }}>{wishlistItem.title}</h2>
-          <div style={{ marginTop: '8px' }}>
-            <p style={{ marginBottom: '4px' }}>Savings Progress: ${wishlistItem.savings_progress} / ${wishlistItem.savings_goal}</p>
-            <div style={{ width: '300px', backgroundColor: '#e0e0e0', borderRadius: '4px', overflow: 'hidden' }}>
-              <div
-                style={{
-                  width: `${progressPercentage}%`,
-                  backgroundColor: '#34a853',
-                  height: '20px',
-                  transition: 'width 0.3s'
-                }}
-              />
-            </div>
-          </div>
-        </div>
       </div>
-      <div style={{ marginBottom: '24px' }}>
+      {wishlistItem.savings_progress >= wishlistItem.savings_goal && wishlistItem.payoutBankAccountId ? (
         <button
-          onClick={() => alert('Cancel Savings not implemented yet')}
+          onClick={handlePayout}
+          disabled={isLoading}
           style={{
-            backgroundColor: '#db4437',
+            backgroundColor: '#34a853',
             color: 'white',
             padding: '8px 16px',
             borderRadius: '4px',
             border: 'none',
-            cursor: 'pointer',
-            marginRight: '8px'
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            marginRight: '10px'
           }}
         >
-          Cancel Savings
+          {isLoading ? 'Processing...' : 'Transfer Savings'}
         </button>
-        <button
-          onClick={() => alert('Pause Savings not implemented yet')}
-          style={{
-            backgroundColor: '#4285f4',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '4px',
-            border: 'none',
-            cursor: 'pointer',
-            marginRight: '8px'
-          }}
-        >
-          Pause Savings
-        </button>
-        <button
-          onClick={fetchData}
-          style={{
-            backgroundColor: '#4285f4',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '4px',
-            border: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          Refresh Data
-        </button>
-      </div>
-      <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>Transaction History</h2>
-      {transactions.length === 0 ? (
-        <p>No transactions yet. Payments will start on the subscription start date.</p>
       ) : (
+        <p style={{ color: 'red', marginBottom: '16px' }}>
+          {wishlistItem.savings_progress < wishlistItem.savings_goal
+            ? 'Savings goal not yet reached.'
+            : 'Please set up your payout account to enable transfers.'}
+        </p>
+      )}
+      {!wishlistItem.payoutBankAccountId && (
+        <p style={{ marginBottom: '16px' }}>
+          <a
+            href={`/setup-payout/${wishlistItemId}`}
+            style={{ color: '#4285f4', textDecoration: 'underline' }}
+          >
+            Set up your payout account
+          </a>
+          to receive funds.
+        </p>
+      )}
+      <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>Transaction History</h2>
+      {transactions.length > 0 ? (
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ backgroundColor: '#f5f5f5' }}>
-              <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #ccc' }}>Date</th>
-              <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #ccc' }}>Amount</th>
-              <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #ccc' }}>Status</th>
+            <tr>
+              <th style={{ border: '1px solid #ccc', padding: '8px' }}>Date</th>
+              <th style={{ border: '1px solid #ccc', padding: '8px' }}>Amount</th>
+              <th style={{ border: '1px solid #ccc', padding: '8px' }}>Status</th>
             </tr>
           </thead>
           <tbody>
             {transactions.map((tx, index) => (
               <tr key={index}>
-                <td style={{ padding: '8px', borderBottom: '1px solid #ccc' }}>
+                <td style={{ border: '1px solid #ccc', padding: '8px' }}>
                   {new Date(tx.date * 1000).toLocaleDateString()}
                 </td>
-                <td style={{ padding: '8px', borderBottom: '1px solid #ccc' }}>${(tx.amount / 100).toFixed(2)}</td>
-                <td style={{ padding: '8px', borderBottom: '1px solid #ccc' }}>{tx.status}</td>
+                <td style={{ border: '1px solid #ccc', padding: '8px' }}>${tx.amount / 100}</td>
+                <td style={{ border: '1px solid #ccc', padding: '8px' }}>{tx.status}</td>
               </tr>
             ))}
           </tbody>
         </table>
+      ) : (
+        <p>No transactions found.</p>
       )}
     </div>
   );
+
 };
 
 export default ViewSavings;

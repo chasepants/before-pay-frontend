@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import SetupSavings from './pages/SetupSavings';
 import ViewSavings from './pages/ViewSavings';
+import SetupPayout from './pages/SetupPayout';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -42,6 +43,7 @@ function App() {
           path="/view-savings/:wishlistItemId"
           element={user ? <ViewSavings /> : <Navigate to="/" replace />}
         />
+        <Route path="/setup-payout/:wishlistItemId" element={<SetupPayout />} />
       </Routes>
     </Router>
   );
