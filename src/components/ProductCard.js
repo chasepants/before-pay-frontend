@@ -1,4 +1,3 @@
-import React from 'react';
 import './ProductCard.css';
 
 const ProductCard = ({
@@ -20,33 +19,47 @@ const ProductCard = ({
   const buttonContent = isInWishlist ? (
     <span style={{ color: 'green' }}>Added ✓</span>
   ) : (
-    <button className="add-to-wishlist" onClick={onButtonClick}>Add to Wishlist</button>
+    <button href="#" className="btn btn-primary card-btn" style={{width: "100%"}} onClick={onButtonClick}>ADD TO SAVINGS</button>
   );
   return (
-    <div className="product-card">
-      <a href={url} target="_blank" rel="noopener noreferrer" className="product-link">
-        <img src={imageUrl || 'https://via.placeholder.com/200'} alt={name} className="product-image" />
-        <div className="product-info">
-          <h3 className="product-name">{name}</h3>
-          <div className="product-prices">
-            {oldPrice && <span className="product-price-old">{oldPrice}</span>}
-            <span className="product-price">{price}</span>
-          </div>
-          <div className="product-source"><img className="product-source-icon" src={sourceIcon}/>{source}</div>
-          {rating && (
-            <div className="product-rating">
-              <span className="rating-number">{rating}</span>
-              <span className="reviews-count">({reviews} reviews)</span>
-            </div>
-          )}
-          {/* {badge && <div className="product-badge">{badge}</div>}
-          {tag && <div className="product-tag">{tag}</div>}
-          {delivery && <div className="product-delivery">{delivery}</div>} */}
+    <div class="card" style={{width: "22rem" }}>
+      <img src={imageUrl || 'https://via.placeholder.com/200'} alt={name} class="card-img-top" />
+      <div class="card-body">
+        <h4 class="card-title">{name}</h4>
+        <p class="card-text">
+          <b>
+            <span style={{color: "#7ed957"}}>{price}</span>&nbsp;
+            {oldPrice && <s style={{color:"#d4d8de"}}>{oldPrice}</s>}
+          </b>
+        </p>
+        <p class="card-text" style={{color:"#d4d8de"}}>
+          <b>
+            <div className="product-source"><img className="product-source-icon" src={sourceIcon}/>&nbsp;{source}</div>
+          </b>
+        </p>
+        {rating && (
+          <p>
+            {rating} <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i> ({reviews} reviews)
+          </p>
+        )}
+        <br/>
+        <div className='text-center'>
+          {buttonContent}
         </div>
-      </a>
-      {buttonContent}
+      </div>
     </div>
   );
 }
 
 export default ProductCard;
+
+// <div className="product-card">
+//   <a href={url} target="_blank" rel="noopener noreferrer" className="product-link">
+//     <div className="product-info">
+//       {/* {badge && <div className="product-badge">{badge}</div>}
+//       {tag && <div className="product-tag">{tag}</div>}
+//       {delivery && <div className="product-delivery">{delivery}</div>} */}
+//     </div>
+//   </a>
+//   {buttonContent}
+// </div>

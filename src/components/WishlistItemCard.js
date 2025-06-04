@@ -1,5 +1,4 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './WishlistItemCard.css';
 
 const WishlistItemCard = ({
@@ -13,61 +12,75 @@ const WishlistItemCard = ({
   sourceIcon,
   rating,
   reviews,
-  badge,
-  tag,
-  delivery,
   savingsGoal,
   savingsProgress,
   subscriptionId,
   onDelete
 }) => {
+  console.log(subscriptionId);
+  const navigate = useNavigate();
+  const button = subscriptionId ? 
+    <button 
+      className="btn btn-secondary card-btn w-100"
+      onClick={() => navigate(`/view-savings/${wishlistItemId}` )}>
+        View Savings
+    </button> :
+    <button 
+      className="btn btn-primary card-btn w-100"
+      onClick={() => navigate(`/setup-savings/${wishlistItemId}`)}  
+    >
+      Setup Savings
+    </button>
+
   return (
-    <div className="wishlist-item-card">
-      <img src={imageUrl} alt={name} className="wishlist-item-image" />
-      <div className="wishlist-item-details">
-        <h3 className="wishlist-item-title">{name}</h3>
-        <p className="wishlist-item-price">{price}</p>
-        {oldPrice && <p className="wishlist-item-old-price">{oldPrice}</p>}
-        <p className="wishlist-item-source">
-          <img src={sourceIcon} alt={source} className="source-icon" /> {source}
+    <div className="card" style={{width: "22rem" }}>
+      <div>
+        <button className='btn btn-light' onClick={onDelete}>X</button>
+      </div>
+      <img src={imageUrl || 'https://via.placeholder.com/200'} alt={name} className="card-img-top" />
+      <div className="card-body">
+        <h4 className="card-title">{name}</h4>
+        <p className="card-text">
+          <b>
+            <span style={{color: "#7ed957"}}>{price}</span>&nbsp;
+            {oldPrice && <s style={{color:"#d4d8de"}}>{oldPrice}</s>}
+          </b>
         </p>
-        {rating && (
-          <p className="wishlist-item-rating">
-            {rating} ({reviews} reviews)
-          </p>
-        )}
-        {badge && <span className="wishlist-item-badge">{badge}</span>}
-        {tag && <span className="wishlist-item-tag">{tag}</span>}
-        {delivery && <p className="wishlist-item-delivery">{delivery}</p>}
-        <p className="wishlist-item-savings">
-          Savings Goal: ${savingsGoal} | Progress: ${savingsProgress}
-        </p>
-        <div className="wishlist-item-actions">
-          <button
-            onClick={onDelete}
-            className="wishlist-item-button delete-button"
-          >
-            Remove
-          </button>
-          {subscriptionId ? (
-            <Link to={`/view-savings/${wishlistItemId}`}>
-              <button
-                className="wishlist-item-button view-savings-button"
-                style={{ backgroundColor: '#34a853', color: 'white', marginLeft: '8px' }}
-              >
-                View Savings
-              </button>
-            </Link>
-          ) : (
-            <Link to={`/setup-savings/${wishlistItemId}`}>
-              <button
-                className="wishlist-item-button setup-savings-button"
-                style={{ backgroundColor: '#4285f4', color: 'white', marginLeft: '8px' }}
-              >
-                Setup Savings
-              </button>
-            </Link>
-          )}
+        {
+          subscriptionId && (
+            <>
+              <p className="card-text text-muted">
+                Wells Fargo - Checking #4587 
+              </p>
+              <p className="card-text text-muted">
+                $25 every 2 weeks 
+              </p>
+              <div className="progress" role="progressbar" aria-label="Savings Progress" aria-valuenow={{savingsProgress}} aria-valuemin="0" aria-valuemax={{savingsGoal}}>
+                <div className="progress-bar" style={{width: "50%"}}></div>
+              </div>
+            </>
+          )
+        }
+        {
+          !subscriptionId && (
+            <>
+              <p className="card-text" style={{color:"#d4d8de"}}>
+                <b>
+                  <div className="product-source"><img className="product-source-icon" src={sourceIcon}/>&nbsp;{source}</div>
+                </b>
+              </p>
+              {rating && (
+                <p>
+                  {rating} <i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-half"></i> ({reviews} reviews)
+                </p>
+              )}
+            </>
+          )
+        }
+        <br/>
+        <br/>
+        <div className='text-center mt-3'>
+          {button}
         </div>
       </div>
     </div>

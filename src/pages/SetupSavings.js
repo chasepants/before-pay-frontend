@@ -1,19 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Navbar from '../components/Navbar';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_publishable_key');
 
 const SetupSavings = () => {
-  const { wishlistItemId } = useParams();
   const navigate = useNavigate();
+
+  const { wishlistItemId } = useParams();
+  const { user } = useSelector((state) => state.user);
+
   const [clientSecret, setClientSecret] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    if (!user) {
+      navigate('/');
+      return;
+    }
+
     if (!wishlistItemId) {
       setError('Invalid wishlist item ID');
       return;
@@ -38,7 +48,7 @@ const SetupSavings = () => {
       }
     };
     fetchClientSecret();
-  }, [wishlistItemId]);
+  }, [wishlistItemId, user]);
 
   if (error) {
     return (
@@ -68,6 +78,7 @@ const SetupSavings = () => {
 
   return (
     <Elements stripe={stripePromise} options={{ clientSecret }}>
+      <Navbar user={user} />
       <SetupSavingsInner
         wishlistItemId={wishlistItemId}
         setError={setError}
@@ -142,68 +153,38 @@ const SetupSavingsInner = ({ wishlistItemId, setError, setIsLoading, isLoading, 
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div style={{ padding: '16px' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>Setup Savings</h1>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            Amount to Save ($)
-          </label>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter amount"
-            style={{ border: '1px solid #ccc', padding: '8px', width: '100%', borderRadius: '4px' }}
-            required
-          />
+    <>
+      <div className="container mt-5">
+        <div className='row'>
+          
         </div>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            Frequency
-          </label>
-          <select
-            value={frequency}
-            onChange={(e) => setFrequency(e.target.value)}
-            style={{ border: '1px solid #ccc', padding: '8px', width: '100%', borderRadius: '4px' }}
-            required
-          >
-            <option value="week">1 Week</option>
-            <option value="biweek">2 Weeks</option>
-            <option value="month">1 Month</option>
-          </select>
+        <div className="row">
+            <div className="col-sm-6 mt-5 p-5">
+              <h5>Create A Savings Plan</h5>
+              
+              <label for="schedule" className="form-label mt-3">How often do you want to save?</label>
+              <select value={frequency} onChange={e => setFrequency(e.target.value)} class="form-select" aria-label="schedule">
+                <option selected>---</option>
+                <option value="week">Every week</option>
+                <option value="biweek">Every 2 weeks</option>
+                <option value="month">Every month</option>
+              </select>
+
+              <label for="amount" className="form-label mt-3">How much do you want to save?</label>
+              <input value={amount} onChange={e => setAmount(e.target.value)} className="form-control form-control-lg" type="text" placeholder="$50" aria-label="savings Amount"/>
+              
+              <label for="date" className="form-label mt-3">When do you want to start?</label>
+              <input value={startDate} onChange={e => setStartDate(e.target.value)} className="form-control form-control-lg" type="text" placeholder="mm/dd/yyy" aria-label="Start Date"/>
+              
+              <label for="account" className="form-label mt-4">Securely link a bank account</label>
+              <PaymentElement />
+
+              <button onClick={handleSubmit} className="btn btn-primary w-50 mt-5">Create</button>
+          </div>
+          
         </div>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            Start Date
-          </label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            min={today} // Prevent past dates
-            style={{ border: '1px solid #ccc', padding: '8px', width: '100%', borderRadius: '4px' }}
-            required
-          />
-        </div>
-        <PaymentElement />
-        <button
-          type="submit"
-          disabled={!stripe || !elements || isLoading}
-          style={{
-            backgroundColor: '#4285f4',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '4px',
-            border: 'none',
-            cursor: 'pointer',
-            marginTop: '10px'
-          }}
-        >
-          {isLoading ? 'Processing...' : 'Setup Savings'}
-        </button>
-      </form>
-    </div>
+      </div>
+    </>
   );
 };
 

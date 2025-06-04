@@ -16,7 +16,7 @@ const mockSerpResults = [
       "rating": 4.8,
       "reviews": 7200,
       "snippet": "Performs well (678 user reviews)",
-      "thumbnail": "https://serpapi.com/searches/67eb1dbdee34034ffc318c2f/images/76efabd3c57ab8e6af3c3b0ca17d94620124e30d0c13b1e8dc19df8809356cac.webp",
+      "thumbnail": "https://serpapi.com/images/url/191f4HicDclLDoIwFADA27gTTOMnJSEGjHyMIUR04YqUFkuDlFf6ELmCN_Q2Otv5fhpEsJ7r1poPM2AtlljplSMtMlTc4X3n2qYHUFrujf8_L8gEjXnx4CY9kfbaNUFEsMzfliYXwvJ0u6F0JlM2tJNQ65fUSSFu9_Ecy90YDpF6zoSrqjYQsg6YXYzWgH8Ijj9AhTKY",
       "thumbnails":
       [
           "https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcSCuSSbJt4gryz3LpMsEMCFq2lBu-mo0QZrK_f4s2cLZws6Ys304hEYzGj9Q_l3rJEvMrxu3IYXFQhj-T_h6Cd7o-Nn4cOs9nsJteO-FN4"
@@ -48,7 +48,7 @@ const mockSerpResults = [
       "rating": 4.8,
       "reviews": 2200,
       "snippet": "Performs well (219 user reviews)",
-      "thumbnail": "https://serpapi.com/searches/67eb1dbdee34034ffc318c2f/images/76efabd3c57ab8e6af3c3b0ca17d9462c90224adc7ac15919800bb150a02b236.webp",
+      "thumbnail": "https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcTiN-DaxLvKMyPfVDI8nzSbC0V6SHmuCsssnOHU95tvP2cZ2TF83gi19CCB_E_NOnr6sskA3PMn&usqp=CAE",
       "thumbnails":
       [
           "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcSOXjfmFdS3LwLLnet_y9bO-_jBV5vZP7xtaT5Yg786b4JQEkB1pgnp_MmlTtDEb8UmK7IINogV-DLEfrt9CVcfprPiLcRQyocXAPZX_64"
