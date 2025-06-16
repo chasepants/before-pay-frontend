@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const Navbar = ({ user }) => {
   const navigate = useNavigate();
-
+  
   const handleLogoClick = () => {
     navigate('/home');
   };

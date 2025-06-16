@@ -17,7 +17,6 @@ const WishlistItemCard = ({
   subscriptionId,
   onDelete
 }) => {
-  console.log(subscriptionId);
   const navigate = useNavigate();
   const button = subscriptionId ? 
     <button 
@@ -64,11 +63,11 @@ const WishlistItemCard = ({
         {
           !subscriptionId && (
             <>
-              <p className="card-text" style={{color:"#d4d8de"}}>
+              <div className="card-text" style={{color:"#d4d8de"}}>
                 <b>
                   <div className="product-source"><img className="product-source-icon" src={sourceIcon}/>&nbsp;{source}</div>
                 </b>
-              </p>
+              </div>
               {rating && (
                 <p>
                   {rating} <i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-half"></i> ({reviews} reviews)

@@ -17,7 +17,6 @@ const Home = () => {
   
   const { user } = useSelector((state) => state.user);
   const { items: wishlist } = useSelector((state) => state.wishlist);
-
   const handleSearch = async () => {
     try {
       // const res = await axios.get(`http://localhost:3001/api/wishlist/search?q=${search}`, { withCredentials: true });

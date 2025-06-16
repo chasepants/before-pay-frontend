@@ -157,7 +157,7 @@ const ViewSavings = () => {
         <div className='row'>
           <div className='col-sm-10 offset-sm-1'>
             <h1>Your Savings Plan</h1>
-            <h4 className='text-muted'>Wells Fargo - Checking #4857 - $100 every 2 weeks <i className="bi bi-pencil-square"></i></h4>
+            <h4 className='text-muted'>{wishlistItem.bankName} - {wishlistItem.bankAccountName} - ${wishlistItem.savingsAmount} every {wishlistItem.savingsFrequency} <i className="bi bi-pencil-square"></i></h4>
             {transactions.length > 0 ? (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>

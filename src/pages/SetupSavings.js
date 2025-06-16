@@ -1,54 +1,109 @@
-import { useState, useEffect } from 'react';
+// frontend/src/pages/SetupSavings.js
+import React, { useState, useEffect } from 'react';
+import { usePlaidLink } from 'react-plaid-link';
 import { useSelector } from 'react-redux';
-import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_publishable_key');
-
 const SetupSavings = () => {
   const navigate = useNavigate();
-
   const { wishlistItemId } = useParams();
   const { user } = useSelector((state) => state.user);
-
-  const [clientSecret, setClientSecret] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [plaidToken, setPlaidToken] = useState(null);
+  const [plaidAccessToken, setPlaidAccessToken] = useState(null);
+  const [plaidAccountId, setPlaidAccountId] = useState(null);
+  const [amount, setAmount] = useState('');
+  const [frequency, setFrequency] = useState('week');
+  const [startDate, setStartDate] = useState('');
 
   useEffect(() => {
     if (!user) {
       navigate('/');
       return;
     }
-
     if (!wishlistItemId) {
       setError('Invalid wishlist item ID');
       return;
     }
-    const fetchClientSecret = async () => {
+
+    const checkProfile = async () => {
       try {
-        console.log('Fetching client secret for wishlistItemId:', wishlistItemId);
-        const res = await axios.post(
-          'http://localhost:3001/api/bank/setup-intent',
-          { wishlistItemId },
-          { withCredentials: true }
-        );
-        console.log('Setup intent response:', res.data);
-        if (res.data.client_secret) {
-          setClientSecret(res.data.client_secret);
-        } else {
-          setError('Failed to retrieve client secret');
+        const response = await axios.get('http://localhost:3001/api/auth/profile-status', { withCredentials: true });
+        if (!response.data.completed) {
+          navigate('/complete-profile');
         }
       } catch (err) {
-        console.error('Setup intent failed:', err.response?.data || err.message);
-        setError(err.response?.data?.error || 'Failed to initialize setup');
+        setError('Failed to check profile status');
       }
     };
-    fetchClientSecret();
-  }, [wishlistItemId, user]);
+    checkProfile();
+
+    // Fetch Plaid Link token from backend
+    const fetchPlaidToken = async () => {
+      try {
+        const response = await axios.post('http://localhost:3001/api/bank/plaid-link-token', {}, { withCredentials: true });
+        setPlaidToken(response.data.link_token);
+      } catch (err) {
+        setError('Failed to initialize bank account linking');
+      }
+    };
+    fetchPlaidToken();
+  }, [user, wishlistItemId, navigate]);
+
+  const { open, ready } = usePlaidLink({
+    token: plaidToken,
+    onSuccess: (public_token, metadata) => {
+      // Exchange public token for access token
+      setPlaidAccessToken(public_token);
+      setPlaidAccountId(metadata.account_id);
+      //async save plaid token
+      console.log(metadata);
+    },
+    onExit: (err, metadata) => {
+      if (err) {
+        setError('Failed to link bank account');
+      }
+    }
+  });
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!plaidAccessToken || !plaidAccountId) {
+      setError('Please link a bank account');
+      return;
+    }
+    if (!amount || !frequency || !startDate) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      await axios.post(
+        'http://localhost:3001/api/bank/setup-savings',
+        {
+          wishlistItemId,
+          plaidAccessToken,
+          plaidAccountId,
+          amount,
+          frequency,
+          start_date: startDate
+        },
+        { withCredentials: true }
+      );
+      alert('Savings plan set up successfully!');
+      navigate('/home');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to set up savings plan');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (error) {
     return (
@@ -72,119 +127,44 @@ const SetupSavings = () => {
     );
   }
 
-  if (!clientSecret) {
-    return <div style={{ padding: '16px' }}><p>Loading savings setup...</p></div>;
+  if (!plaidToken) {
+    return <div style={{ padding: '16px' }}><p>Loading bank account linking...</p></div>;
   }
 
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret }}>
+    <div>
       <Navbar user={user} />
-      <SetupSavingsInner
-        wishlistItemId={wishlistItemId}
-        setError={setError}
-        setIsLoading={setIsLoading}
-        isLoading={isLoading}
-        navigate={navigate}
-      />
-    </Elements>
-  );
-};
-
-const SetupSavingsInner = ({ wishlistItemId, setError, setIsLoading, isLoading, navigate }) => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [amount, setAmount] = useState('');
-  const [frequency, setFrequency] = useState('week');
-  const [startDate, setStartDate] = useState('');
-
-  console.log('SetupSavingsInner rendered with stripe:', !!stripe, 'elements:', !!elements);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    console.log('handleSubmit called with start_date:', startDate);
-    if (!stripe || !elements) {
-      setError('Stripe not initialized');
-      return;
-    }
-    if (!amount || !frequency || !startDate) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      console.log('Calling stripe.confirmSetup');
-      const result = await stripe.confirmSetup({
-        elements,
-        redirect: 'if_required'
-      });
-
-      console.log('stripe.confirmSetup result:', result);
-      if (result.error) {
-        setError(result.error.message);
-      } else {
-        console.log('Sending payment_method_id to /api/bank/transfer:', result.setupIntent.payment_method);
-        await axios.post(
-          'http://localhost:3001/api/bank/transfer',
-          {
-            wishlistItemId,
-            payment_method_id: result.setupIntent.payment_method,
-            amount: parseFloat(amount),
-            frequency,
-            start_date: startDate
-          },
-          { withCredentials: true }
-        );
-        alert('Savings setup successfully!');
-        navigate('/home');
-      }
-    } catch (err) {
-      const errorMsg = err.message || 'Failed to setup savings';
-      setError(errorMsg);
-      console.error('Setup error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Get today's date in YYYY-MM-DD format for min attribute
-  const today = new Date().toISOString().split('T')[0];
-
-  return (
-    <>
       <div className="container mt-5">
-        <div className='row'>
-          
-        </div>
+        <div className='row'></div>
         <div className="row">
-            <div className="col-sm-6 mt-5 p-5">
-              <h5>Create A Savings Plan</h5>
-              
-              <label for="schedule" className="form-label mt-3">How often do you want to save?</label>
-              <select value={frequency} onChange={e => setFrequency(e.target.value)} class="form-select" aria-label="schedule">
-                <option selected>---</option>
-                <option value="week">Every week</option>
-                <option value="biweek">Every 2 weeks</option>
-                <option value="month">Every month</option>
-              </select>
-
-              <label for="amount" className="form-label mt-3">How much do you want to save?</label>
-              <input value={amount} onChange={e => setAmount(e.target.value)} className="form-control form-control-lg" type="text" placeholder="$50" aria-label="savings Amount"/>
-              
-              <label for="date" className="form-label mt-3">When do you want to start?</label>
-              <input value={startDate} onChange={e => setStartDate(e.target.value)} className="form-control form-control-lg" type="text" placeholder="mm/dd/yyy" aria-label="Start Date"/>
-              
-              <label for="account" className="form-label mt-4">Securely link a bank account</label>
-              <PaymentElement />
-
-              <button onClick={handleSubmit} className="btn btn-primary w-50 mt-5">Create</button>
+          <div className="col-sm-6 mt-5 p-5">
+            <h5>Create A Savings Plan</h5>
+            <label htmlFor="schedule" className="form-label mt-3">How often do you want to save?</label>
+            <select value={frequency} onChange={e => setFrequency(e.target.value)} className="form-select" aria-label="schedule">
+              <option value="">---</option>
+              <option value="week">Every week</option>
+              <option value="biweek">Every 2 weeks</option>
+              <option value="month">Every month</option>
+            </select>
+            <label htmlFor="amount" className="form-label mt-3">How much do you want to save?</label>
+            <input value={amount} onChange={e => setAmount(e.target.value)} className="form-control form-control-lg" type="text" placeholder="$50" aria-label="savings Amount"/>
+            <label htmlFor="date" className="form-label mt-3">When do you want to start?</label>
+            <input value={startDate} onChange={e => setStartDate(e.target.value)} className="form-control form-control-lg" type="text" placeholder="mm/dd/yyyy" aria-label="Start Date"/>
+            <label htmlFor="account" className="form-label mt-4">Securely link a bank account</label>
+            <button
+              onClick={() => open()}
+              disabled={!ready || isLoading}
+              className="btn btn-primary mt-2"
+            >
+              Link Bank Account
+            </button>
+            <button onClick={handleSubmit} className="btn btn-primary w-50 mt-5" disabled={isLoading}>
+              {isLoading ? 'Processing...' : 'Create'}
+            </button>
           </div>
-          
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
