@@ -1,4 +1,3 @@
-// frontend/src/pages/SetupSavings.js
 import React, { useState, useEffect } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import { useSelector } from 'react-redux';
@@ -13,8 +12,11 @@ const SetupSavings = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [plaidToken, setPlaidToken] = useState(null);
-  const [plaidAccessToken, setPlaidAccessToken] = useState(null);
+  const [plaidPublicToken, setPlaidPublicToken] = useState(null);
   const [plaidAccountId, setPlaidAccountId] = useState(null);
+  const [linkedAccount, setLinkedAccount] = useState(null); // Store linked account details
+  const [existingAccounts, setExistingAccounts] = useState([]); // Store existing funding sources
+  const [selectedAccount, setSelectedAccount] = useState(null); // Track selected account (new or existing)
   const [amount, setAmount] = useState('');
   const [frequency, setFrequency] = useState('week');
   const [startDate, setStartDate] = useState('');
@@ -41,7 +43,6 @@ const SetupSavings = () => {
     };
     checkProfile();
 
-    // Fetch Plaid Link token from backend
     const fetchPlaidToken = async () => {
       try {
         const response = await axios.post('http://localhost:3001/api/bank/plaid-link-token', {}, { withCredentials: true });
@@ -51,28 +52,47 @@ const SetupSavings = () => {
       }
     };
     fetchPlaidToken();
+
+    // Fetch existing funding sources for the user
+    const fetchExistingAccounts = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3001/api/bank/existing-funding-sources`, { withCredentials: true });
+        setExistingAccounts(response.data.fundingSources || []);
+      } catch (err) {
+        console.error('Failed to fetch existing funding sources:', err);
+      }
+    };
+    fetchExistingAccounts();
   }, [user, wishlistItemId, navigate]);
 
   const { open, ready } = usePlaidLink({
     token: plaidToken,
     onSuccess: (public_token, metadata) => {
-      // Exchange public token for access token
-      setPlaidAccessToken(public_token);
-      setPlaidAccountId(metadata.account_id);
-      //async save plaid token
-      console.log(metadata);
+      if (metadata.accounts && metadata.accounts.length > 0) {
+        const account = metadata.accounts[0];
+        setPlaidPublicToken(public_token);
+        setPlaidAccountId(account.id);
+        setLinkedAccount({
+          id: account.id,
+          name: account.name || 'Linked Account',
+          mask: account.mask || '****'
+        });
+        setSelectedAccount(account.id); // Auto-select the newly linked account
+      } else {
+        setError('No account selected. Please try linking your bank account again.');
+      }
     },
     onExit: (err, metadata) => {
       if (err) {
-        setError('Failed to link bank account');
+        setError('Failed to link bank account: ' + err.message);
       }
     }
   });
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!plaidAccessToken || !plaidAccountId) {
-      setError('Please link a bank account');
+    if (!selectedAccount) {
+      setError('Please select or link a bank account');
       return;
     }
     if (!amount || !frequency || !startDate) {
@@ -88,8 +108,8 @@ const SetupSavings = () => {
         'http://localhost:3001/api/bank/setup-savings',
         {
           wishlistItemId,
-          plaidAccessToken,
-          plaidAccountId,
+          plaidAccessToken: plaidPublicToken || null, // Only send if newly linked
+          plaidAccountId: selectedAccount,
           amount,
           frequency,
           start_date: startDate
@@ -103,6 +123,13 @@ const SetupSavings = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleChangeAccount = () => {
+    setPlaidPublicToken(null);
+    setPlaidAccountId(null);
+    setLinkedAccount(null);
+    setSelectedAccount(null); // Reset to allow relinking
   };
 
   if (error) {
@@ -150,14 +177,44 @@ const SetupSavings = () => {
             <input value={amount} onChange={e => setAmount(e.target.value)} className="form-control form-control-lg" type="text" placeholder="$50" aria-label="savings Amount"/>
             <label htmlFor="date" className="form-label mt-3">When do you want to start?</label>
             <input value={startDate} onChange={e => setStartDate(e.target.value)} className="form-control form-control-lg" type="text" placeholder="mm/dd/yyyy" aria-label="Start Date"/>
-            <label htmlFor="account" className="form-label mt-4">Securely link a bank account</label>
-            <button
-              onClick={() => open()}
-              disabled={!ready || isLoading}
-              className="btn btn-primary mt-2"
-            >
-              Link Bank Account
-            </button>
+            <label htmlFor="account" className="form-label mt-4">Select or link a bank account</label>
+            {linkedAccount || existingAccounts.length > 0 ? (
+              <div>
+                {linkedAccount && (
+                  <div style={{ marginBottom: '10px' }}>
+                    <p>Linked Account: {linkedAccount.name} (****{linkedAccount.mask})</p>
+                    <button
+                      onClick={handleChangeAccount}
+                      className="btn btn-secondary mt-2"
+                    >
+                      Change Account
+                    </button>
+                  </div>
+                )}
+                {existingAccounts.length > 0 && (
+                  <select
+                    value={selectedAccount || ''}
+                    onChange={e => setSelectedAccount(e.target.value)}
+                    className="form-select mt-2"
+                  >
+                    <option value="">Select an existing account</option>
+                    {existingAccounts.map(account => (
+                      <option key={account.id} value={account.id}>
+                        {account.name} (****{account.mask})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => open()}
+                disabled={!ready || isLoading}
+                className="btn btn-primary mt-2"
+              >
+                Link Bank Account
+              </button>
+            )}
             <button onClick={handleSubmit} className="btn btn-primary w-50 mt-5" disabled={isLoading}>
               {isLoading ? 'Processing...' : 'Create'}
             </button>

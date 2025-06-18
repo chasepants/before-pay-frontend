@@ -131,7 +131,7 @@ const Home = () => {
                   reviews={item.reviews}
                   savingsGoal={item.savings_goal}
                   savingsProgress={item.savings_progress}
-                  subscriptionId={item.subscriptionId}
+                  fundingSourceId={item.fundingSourceId}
                   onDelete={() => {
                     console.log("deleting");
                     handleDelete(item._id);

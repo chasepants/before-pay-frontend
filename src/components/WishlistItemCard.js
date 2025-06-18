@@ -14,11 +14,11 @@ const WishlistItemCard = ({
   reviews,
   savingsGoal,
   savingsProgress,
-  subscriptionId,
+  fundingSourceId,
   onDelete
 }) => {
   const navigate = useNavigate();
-  const button = subscriptionId ? 
+  const button = fundingSourceId ? 
     <button 
       className="btn btn-secondary card-btn w-100"
       onClick={() => navigate(`/view-savings/${wishlistItemId}` )}>
@@ -46,7 +46,7 @@ const WishlistItemCard = ({
           </b>
         </p>
         {
-          subscriptionId && (
+          fundingSourceId && (
             <>
               <p className="card-text text-muted">
                 Wells Fargo - Checking #4587 
@@ -61,7 +61,7 @@ const WishlistItemCard = ({
           )
         }
         {
-          !subscriptionId && (
+          !fundingSourceId && (
             <>
               <div className="card-text" style={{color:"#d4d8de"}}>
                 <b>
