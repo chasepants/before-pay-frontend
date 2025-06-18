@@ -83,60 +83,56 @@ const Home = () => {
             </div>
           </div>
         </div>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-          gap: '16px',
-          padding: '16px'
-        }}>
+        <div className='row m-4'>
           {products.map((p, i) => {
             const isInWishlist = wishlist.some(item => item.product_id === p.product_id);
             return (
-              <ProductCard
-                key={i}
-                name={p.title}
-                price={p.price}
-                oldPrice={p.old_price}
-                url={p.product_link}
-                imageUrl={p.thumbnail}
-                source={p.source}
-                sourceIcon={p.source_icon}
-                rating={p.rating}
-                reviews={p.reviews}
-                badge={p.badge}
-                tag={p.tag}
-                delivery={p.delivery}
-                onButtonClick={() => user ? addToWishlist(p) : navigate('/signup')}
-                isInWishlist={isInWishlist}
-              />
+              <div className='col-sm-2'>
+                <ProductCard
+                  key={i}
+                  name={p.title}
+                  price={p.price}
+                  oldPrice={p.old_price}
+                  url={p.product_link}
+                  imageUrl={p.thumbnail}
+                  source={p.source}
+                  sourceIcon={p.source_icon}
+                  rating={p.rating}
+                  reviews={p.reviews}
+                  badge={p.badge}
+                  tag={p.tag}
+                  delivery={p.delivery}
+                  onButtonClick={() => user ? addToWishlist(p) : navigate('/signup')}
+                  isInWishlist={isInWishlist}
+                />
+              </div>
             );
           })}
         </div>
         {user && (
           <>
             <h1 style={{ marginTop: '32px', fontSize: '20px', fontWeight: 'bold' }}>SAVINGS LIST</h1>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px', marginTop: '16px' }}>
+            <div className='row m-4'>
               {wishlist.map(item => (
-                <WishlistItemCard
-                  key={item._id}
-                  wishlistItemId={item._id}
-                  name={item.title}
-                  price={item.price}
-                  oldPrice={item.old_price}
-                  url={item.product_link}
-                  imageUrl={item.thumbnail}
-                  source={item.source}
-                  sourceIcon={item.source_icon}
-                  rating={item.rating}
-                  reviews={item.reviews}
-                  savingsGoal={item.savings_goal}
-                  savingsProgress={item.savings_progress}
-                  fundingSourceId={item.fundingSourceId}
-                  onDelete={() => {
-                    console.log("deleting");
-                    handleDelete(item._id);
-                  }}
-                />
+                <div className='col-sm-2'>
+                  <WishlistItemCard
+                    key={item._id}
+                    wishlistItemId={item._id}
+                    name={item.title}
+                    price={item.price}
+                    oldPrice={item.old_price}
+                    url={item.product_link}
+                    imageUrl={item.thumbnail}
+                    source={item.source}
+                    sourceIcon={item.source_icon}
+                    rating={item.rating}
+                    reviews={item.reviews}
+                    savingsGoal={item.savings_goal}
+                    savingsProgress={item.savings_progress}
+                    fundingSourceId={item.fundingSourceId}
+                    onDelete={() => handleDelete(item._id) }
+                  />  
+                </div>
               ))}
             </div>
           </>

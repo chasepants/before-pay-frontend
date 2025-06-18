@@ -10,7 +10,8 @@ import SetupPayout from './pages/SetupPayout';
 import ViewSavings from './pages/ViewSavings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import CompleteProfile from './pages/CompleteProfile';
+import Profile from './pages/Profile';
+import Accounts from './pages/Accounts';
 import { setUser, setUserLoading, setUserError } from './store/userSlice';
 import { setWishlist, setWishlistLoading, setWishlistError } from './store/wishlistSlice';
 
@@ -101,7 +102,8 @@ const App = () => {
         <Route path="/setup-savings/:wishlistItemId" element={user ? <SetupSavings /> : <Navigate to="/" />} />
         <Route path="/setup-payout/:wishlistItemId" element={user ?  <SetupPayout /> : <Navigate to="/" />} />
         <Route path="/view-savings/:wishlistItemId" element={user ?  <ViewSavings /> : <Navigate to="/" />} />
-        <Route path="/complete-profile" element={user ? <CompleteProfile /> : <Navigate to="/" />} />
+        <Route path="/profile" element={user ? <Profile /> : <Navigate to="/" />} />
+        <Route path="/accounts" element={user ? <Accounts /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );

@@ -20,6 +20,7 @@ const SetupSavings = () => {
   const [amount, setAmount] = useState('');
   const [frequency, setFrequency] = useState('week');
   const [startDate, setStartDate] = useState('');
+  const [showTooltip, setShowTooltip] = useState(false); // State for tooltip visibility
 
   useEffect(() => {
     if (!user) {
@@ -132,6 +133,11 @@ const SetupSavings = () => {
     setSelectedAccount(null); // Reset to allow relinking
   };
 
+  // Toggle tooltip visibility on hover
+  const handleInfoHover = (isHovering) => {
+    setShowTooltip(isHovering);
+  };
+
   if (error) {
     return (
       <div style={{ padding: '16px' }}>
@@ -178,42 +184,71 @@ const SetupSavings = () => {
             <label htmlFor="date" className="form-label mt-3">When do you want to start?</label>
             <input value={startDate} onChange={e => setStartDate(e.target.value)} className="form-control form-control-lg" type="text" placeholder="mm/dd/yyyy" aria-label="Start Date"/>
             <label htmlFor="account" className="form-label mt-4">Select or link a bank account</label>
-            {linkedAccount || existingAccounts.length > 0 ? (
+            {linkedAccount && (
               <div>
-                {linkedAccount && (
-                  <div style={{ marginBottom: '10px' }}>
-                    <p>Linked Account: {linkedAccount.name} (****{linkedAccount.mask})</p>
-                    <button
-                      onClick={handleChangeAccount}
-                      className="btn btn-secondary mt-2"
-                    >
-                      Change Account
-                    </button>
-                  </div>
-                )}
-                {existingAccounts.length > 0 && (
-                  <select
-                    value={selectedAccount || ''}
-                    onChange={e => setSelectedAccount(e.target.value)}
-                    className="form-select mt-2"
-                  >
-                    <option value="">Select an existing account</option>
-                    {existingAccounts.map(account => (
-                      <option key={account.id} value={account.id}>
-                        {account.name} (****{account.mask})
-                      </option>
-                    ))}
-                  </select>
-                )}
+                <p>Linked Account: {linkedAccount.name} (****{linkedAccount.mask})</p>
+                <button
+                  onClick={handleChangeAccount}
+                  className="btn btn-secondary mt-2"
+                >
+                  Change Account
+                </button>
               </div>
-            ) : (
-              <button
-                onClick={() => open()}
-                disabled={!ready || isLoading}
-                className="btn btn-primary mt-2"
+            )}
+            {(!linkedAccount && existingAccounts.length > 0) && (
+              <select
+                value={selectedAccount || ''}
+                onChange={e => setSelectedAccount(e.target.value)}
+                className="form-select mt-2"
               >
-                Link Bank Account
-              </button>
+                <option value="">Select an existing account</option>
+                {existingAccounts.map(account => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} (****{account.mask})
+                  </option>
+                ))}
+              </select>
+            )}
+            {!linkedAccount && (
+              <div className='d-flex flex-row align-items-center justify-space-between'>
+                <button
+                  onClick={() => open()}
+                  disabled={!ready || isLoading}
+                  className="btn btn-secondary mt-4"
+                >
+                  <i className="bi bi-lock"></i>&nbsp;Link a New Bank Account
+                </button>
+                <h3
+                  className='mt-2 mx-3'
+                  onMouseEnter={() => handleInfoHover(true)}
+                  onMouseLeave={() => handleInfoHover(false)}
+                >
+                  <i className="bi bi-info-circle"></i>
+                  {showTooltip && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        backgroundColor: '#fff',
+                        border: '1px solid #ccc',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        zIndex: 1000,
+                        width: '50%', // Increased width for horizontal stretch
+                        maxHeight: '50%', // Limit height to prevent overflow
+                        overflowY: 'auto', // Add scrollbar if text exceeds height
+                        marginLeft: '-200px', // Center horizontally relative to icon
+                        marginTop: '10px',
+                        whiteSpace: 'normal', // Allow text to wrap naturally
+                      }}
+                    >
+                      <p>
+                        Beforepay utilizes Plaid, a third-party service, to securely facilitate bank account linking. We do not store, access, or process your bank account details. Plaid provides a tokenized representation of your account, which is securely transmitted to our payment processor, Dwolla, for transaction processing. For more information on how your data is handled, please review Plaid's <a href="https://plaid.com/legal/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                      </p>
+                    </div>
+                  )}
+                </h3>
+              </div>
             )}
             <button onClick={handleSubmit} className="btn btn-primary w-50 mt-5" disabled={isLoading}>
               {isLoading ? 'Processing...' : 'Create'}

@@ -7,7 +7,7 @@ const Signup = () => {
                     <h5>Set up an account to start saving</h5>
                     <input className="form-control form-control-lg mt-3" type="text" placeholder="Name" aria-label="Name"/>
                     <input className="form-control form-control-lg mt-3" type="text" placeholder="Email" aria-label="Email"/>
-                    <input className="form-control form-control-lg mt-3" type="text" placeholder=".Password" aria-label="Password"/>
+                    <input className="form-control form-control-lg mt-3" type="text" placeholder="Password" aria-label="Password"/>
                     <button className="btn btn-primary w-50 mt-5">Sign Up</button>
                     <h5 className="mt-5">------------------- OR ------------------</h5>
                     <button className="btn btn-danger mt-5" onClick={() => window.location = "http://localhost:3001/api/auth/google"}>
