@@ -5,12 +5,14 @@ import { useSelector } from 'react-redux';
 import Navbar from '../components/Navbar';
 
 import axios from 'axios';
+import LoadingAnimation from '../components/LoadingAnimation';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
 
   const [completed, setCompleted] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [address, setAddress] = useState({ line1: '', city: '', state: '', postal_code: '' });
   const [ssnLast4, setSsnLast4] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -25,7 +27,7 @@ const Profile = () => {
       try {
         const response = await axios.get('http://localhost:3001/api/auth/profile-status', { withCredentials: true });
         setCompleted(response.data.completed);
-
+        
         if (response.data.completed) {
           setAddress(user.address);
           setDateOfBirth(user.dateOfBirth);
@@ -34,6 +36,7 @@ const Profile = () => {
       } catch (err) {
         console.error('Profile check failed:', err);
       }
+      setProfileLoaded(true);
     };
     checkProfile();
   }, []);
@@ -53,27 +56,34 @@ const Profile = () => {
     }
   };
 
+  if (!profileLoaded) {
+    return <LoadingAnimation />
+  }
+
   return (
     <div>
       <Navbar user={user} />
       <div className='container mt-5'>
         <div className='row'>
-          <div className="border border-black col-sm-6 mt-5 offset-sm-3 p-5 rounded-5 text-center">
-            {completed && 
-              <>
-                <h1>Update Your Profile</h1>
-              </>
-            }
-            {!completed && 
-              <>
-                <h1>Complete Your Profile</h1>
-                <p>We need your address and the last 4 digits of your SSN to set up your savings account.</p>
-              </>
-            }
+          <div className="border border-black col-sm-6 mt-5 offset-sm-3 p-5 rounded-5">
+            <div className='text-center mb-3'>
+              {completed && 
+                <>
+                  <h1>Update Your Profile</h1>
+                </>
+              }
+              {!completed && 
+                <>
+                  <h1>Complete Your Profile</h1>
+                  <p>We need your address and the last 4 digits of your SSN to set up your savings account.</p>
+                </>
+              }
+            </div>
             {error && <p style={{ color: 'red' }}>{error}</p>}
+            <label for="address" className="form-label mt-4"><h4>Address</h4></label>
             <input
-              className="form-control form-control-lg mt-3"
-              placeholder="Address"
+              className="form-control form-control-lg"
+              placeholder="Street Address (i.e. 123 Main St)"
               aria-label="Address"
               type="text"
               value={address.line1}
@@ -107,8 +117,9 @@ const Profile = () => {
               onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
               required
             />
+            <label for="birthdate" className="form-label mt-4"><h4>Birthdate</h4></label>
             <input
-              className="form-control form-control-lg mt-3"
+              className="form-control form-control-lg"
               aria-label="Birth Date"
               type="text"
               placeholder='YYYY-MM-DD'
@@ -116,9 +127,10 @@ const Profile = () => {
               onChange={(e) => setDateOfBirth(e.target.value)}
               required
             />
+            <label for="ssn" className="form-label mt-4"><h4>SSN Last 4</h4></label>
             <input
-              className="form-control form-control-lg mt-3"
-              placeholder="SSN Last 4"
+              className="form-control form-control-lg"
+              placeholder="1234"
               aria-label="SSN Last 4"
               type="text"
               value={ssnLast4}

@@ -71,4 +71,6 @@ h1 {
   letter-spacing: 2px;
 }
 
+$card-cap-bg: #ffffff; // Override card header background to white
+
 @import '~bootstrap/scss/bootstrap.scss';

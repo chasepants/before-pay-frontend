@@ -1,0 +1,49 @@
+/* frontend/src/components/LoadingAnimation.css */
+.loading-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px; /* Space between dots and logo */
+  z-index: 2000; /* Above other content */
+}
+
+.dot {
+  width: 15px;
+  height: 15px;
+  background-color: #ff914d;
+  border-radius: 50%;
+  animation: jumpWave 1.5s infinite ease-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.logo {
+  width: 75px; /* Smaller size for animation */
+  animation: jumpWave 1.5s infinite ease-out;
+  animation-delay: 0.6s; /* Delay after the last dot */
+}
+
+@keyframes jumpWave {
+  0% {
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(-20px); /* Quick jump up */
+  }
+  50% {
+    transform: translateY(-20px); /* Hold at peak */
+  }
+  100% {
+    transform: translateY(0); /* Slow fall back */
+  }
+}

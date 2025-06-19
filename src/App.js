@@ -14,6 +14,7 @@ import Profile from './pages/Profile';
 import Accounts from './pages/Accounts';
 import { setUser, setUserLoading, setUserError } from './store/userSlice';
 import { setWishlist, setWishlistLoading, setWishlistError } from './store/wishlistSlice';
+import LoadingAnimation from './components/LoadingAnimation';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -68,7 +69,8 @@ const App = () => {
   }, [user, dispatch]);
 
   if (userLoading || (user && wishlistLoading)) {
-    return <div>Loading...</div>;
+    console.log("Loading user and wishlist")
+    return <LoadingAnimation />;
   }
 
   if (error) {

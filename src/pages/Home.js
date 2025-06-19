@@ -17,6 +17,7 @@ const Home = () => {
   
   const { user } = useSelector((state) => state.user);
   const { items: wishlist } = useSelector((state) => state.wishlist);
+
   const handleSearch = async () => {
     try {
       // const res = await axios.get(`http://localhost:3001/api/wishlist/search?q=${search}`, { withCredentials: true });
@@ -52,44 +53,39 @@ const Home = () => {
   return (
     <>
       <Navbar user={user} />
-      <div className='mt-5' style={{ padding: '16px' }}>
-        <div className='container'>
-          <div className='row'>
-            <h1 className='text-center' style={{ fontSize: '24px', fontWeight: 'bold', fontFamily: 'montserrat' }}>
-              SEARCH FOR PRODUCTS TO ADD TO YOUR SAVINGS LIST
-            </h1>
-          </div>
-          <div className='row mt-3'>
-            <div className='col-sm-6 offset-sm-3'>
-              <div className="input-group mb-3">
-                <input
-                  onChange={(e) => setSearch(e.target.value)}
-                  value={search}
-                  type="text"
-                  className="form-control"
-                  placeholder="Search for products..."
-                  aria-label="Search for Products"
-                  aria-describedby="button-addon2"
-                />
-                <button
-                  onClick={handleSearch}
-                  className="btn btn-primary"
-                  type="button"
-                  id="button-addon2"
-                >
-                  Search
-                </button>
-              </div>
+      <div className='container mt-5'>
+        <div className='row'>
+          <h1 className='text-center fw-bold fs-4'>SEARCH FOR PRODUCTS TO ADD TO YOUR SAVINGS LIST</h1>
+        </div>
+        <div className='row mt-3'>
+          <div className='col-sm-6 offset-sm-3'>
+            <div className="input-group mb-3">
+              <input
+                onChange={(e) => setSearch(e.target.value)}
+                value={search}
+                type="text"
+                className="form-control"
+                placeholder="Search for products..."
+                aria-label="Search for Products"
+                aria-describedby="button-addon2"
+              />
+              <button
+                onClick={handleSearch}
+                className="btn btn-primary"
+                type="button"
+                id="button-addon2"
+              >
+                Search
+              </button>
             </div>
           </div>
         </div>
-        <div className='row m-4'>
+        <div className='row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 m-4'>
           {products.map((p, i) => {
             const isInWishlist = wishlist.some(item => item.product_id === p.product_id);
             return (
-              <div className='col-sm-2'>
+              <div className='col' key={i}>
                 <ProductCard
-                  key={i}
                   name={p.title}
                   price={p.price}
                   oldPrice={p.old_price}
@@ -111,12 +107,11 @@ const Home = () => {
         </div>
         {user && (
           <>
-            <h1 style={{ marginTop: '32px', fontSize: '20px', fontWeight: 'bold' }}>SAVINGS LIST</h1>
-            <div className='row m-4'>
+            <h1 className='mt-5 fs-3 fw-bold'>SAVINGS LIST</h1>
+            <div className='row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 m-4'>
               {wishlist.map(item => (
-                <div className='col-sm-2'>
+                <div className='col' key={item._id}>
                   <WishlistItemCard
-                    key={item._id}
                     wishlistItemId={item._id}
                     name={item.title}
                     price={item.price}
@@ -130,8 +125,10 @@ const Home = () => {
                     savingsGoal={item.savings_goal}
                     savingsProgress={item.savings_progress}
                     fundingSourceId={item.fundingSourceId}
-                    onDelete={() => handleDelete(item._id) }
-                  />  
+                    bankName={item.bankName}
+                    bankAccount={item.bankAccountName}
+                    onDelete={() => handleDelete(item._id)}
+                  />
                 </div>
               ))}
             </div>

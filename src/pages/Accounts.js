@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+import LoadingAnimation from '../components/LoadingAnimation';
 
 const Accounts = () => {
   const navigate = useNavigate();
@@ -67,7 +68,8 @@ const Accounts = () => {
   }
 
   if (isLoading) {
-    return <div style={{ padding: '16px' }}><p>Loading funding sources...</p></div>;
+    console.log("Loading funding sources")
+        return <LoadingAnimation />;
   }
 
   return (

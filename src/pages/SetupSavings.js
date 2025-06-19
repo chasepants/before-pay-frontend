@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+import LoadingAnimation from '../components/LoadingAnimation';
 
 const SetupSavings = () => {
   const navigate = useNavigate();
@@ -161,7 +162,8 @@ const SetupSavings = () => {
   }
 
   if (!plaidToken) {
-    return <div style={{ padding: '16px' }}><p>Loading bank account linking...</p></div>;
+    console.log("loading bank account linking...");
+    return <LoadingAnimation />;
   }
 
   return (

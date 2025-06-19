@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+import LoadingAnimation from '../components/LoadingAnimation';
 
 const ViewSavings = () => {
   const { wishlistItemId } = useParams();
@@ -100,7 +101,8 @@ const ViewSavings = () => {
   }
 
   if (isLoading || !wishlistItem) {
-    return <div style={{ padding: '16px' }}><p>Loading savings details...</p></div>;
+    console.log("loading saving details")
+    return <LoadingAnimation />
   }
 
   const progressPercentage = Math.min((wishlistItem.savings_progress / wishlistItem.savings_goal) * 100, 100);
@@ -172,9 +174,9 @@ const ViewSavings = () => {
                       <td style={{ border: '1px solid #ccc', padding: '8px' }}>
                         {new Date(tx.date * 1000).toLocaleDateString()}
                       </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>${tx.amount}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>${tx.amount < 0 ? tx.amount * -1 : tx.amount}</td>
                       <td style={{ border: '1px solid #ccc', padding: '8px' }}>{tx.status}</td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>{tx.type}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>{tx.amount < 0 ? "credit" : tx.type}</td>
                     </tr>
                   ))}
                 </tbody>

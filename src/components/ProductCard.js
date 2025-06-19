@@ -1,3 +1,4 @@
+// frontend/src/components/ProductCard.js
 import './ProductCard.css';
 
 const ProductCard = ({
@@ -17,49 +18,33 @@ const ProductCard = ({
   isInWishlist
 }) => {
   const buttonContent = isInWishlist ? (
-    <span style={{ color: 'green' }}>Added ✓</span>
+    <span className="text-success">Added ✓</span>
   ) : (
-    <button href="#" className="btn btn-primary card-btn" style={{width: "100%"}} onClick={onButtonClick}>ADD TO SAVINGS</button>
+    <a href="#" className="btn btn-primary w-100" onClick={(e) => { e.preventDefault(); onButtonClick(); }}>ADD TO SAVINGS</a>
   );
   return (
-    <div class="card" style={{width: "22rem" }}>
-      <img src={imageUrl || 'https://via.placeholder.com/200'} alt={name} class="card-img-top" />
-      <div class="card-body">
-        <h4 class="card-title">{name}</h4>
-        <p class="card-text">
-          <b>
-            <span style={{color: "#7ed957"}}>{price}</span>&nbsp;
-            {oldPrice && <s style={{color:"#d4d8de"}}>{oldPrice}</s>}
-          </b>
+    <div className="card h-100">
+      <img src={imageUrl || 'https://via.placeholder.com/200'} alt={name} className="card-img-top" />
+      <div className="card-body d-flex flex-column">
+        <h4 className="card-title">{name}</h4>
+        <p className="card-text">
+          <span className="text-success fw-bold">{price}</span>
+          {oldPrice && <s className="text-muted ms-1">{oldPrice}</s>}
         </p>
-        <p class="card-text" style={{color:"#d4d8de"}}>
-          <b>
-            <div className="product-source"><img className="product-source-icon" src={sourceIcon}/>&nbsp;{source}</div>
-          </b>
+        <p className="card-text text-muted">
+          <img src={sourceIcon} alt={`${source} icon`} className="product-source-icon me-1" /> {source}
         </p>
         {rating && (
-          <p>
-            {rating} <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i> ({reviews} reviews)
+          <p className="card-text">
+            {rating} <i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-half"></i> ({reviews} reviews)
           </p>
         )}
-        <br/>
-        <div className='text-center'>
+        <div className="mt-auto text-center">
           {buttonContent}
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default ProductCard;
-
-// <div className="product-card">
-//   <a href={url} target="_blank" rel="noopener noreferrer" className="product-link">
-//     <div className="product-info">
-//       {/* {badge && <div className="product-badge">{badge}</div>}
-//       {tag && <div className="product-tag">{tag}</div>}
-//       {delivery && <div className="product-delivery">{delivery}</div>} */}
-//     </div>
-//   </a>
-//   {buttonContent}
-// </div>
