@@ -1,6 +1,8 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/beforepay-logo.png';
 import axios from 'axios';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap CSS is imported
 
 const Navbar = ({ user }) => {
   const navigate = useNavigate();
@@ -23,37 +25,55 @@ const Navbar = ({ user }) => {
 
   return (
     <nav
+      className="navbar navbar-expand-lg navbar-light d-flex justify-content-between"
       style={{
         backgroundColor: '#ffffff',
         position: 'sticky',
         top: 0,
         zIndex: 1000,
-        padding: '10px 20px',
-        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', // Subtle shadow for depth
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        padding: '10px 20px'
       }}
     >
-      <img
-        src={logo}
-        alt="Beforepay Logo"
-        style={{
-          width: '150px', // Adjust size as needed
-          cursor: 'pointer',
-        }}
-        onClick={handleLogoClick}
-      />
-      {
-        user && (
-          <button
-            onClick={handleLogout}
-            style={{ backgroundColor: '#db4437', color: 'white', padding: '8px 16px', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
-          >
-            Logout
-          </button>
-        )
-      }
+      <a className="navbar-brand" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
+        <img src={logo} alt="Beforepay Logo" style={{ width: '150px' }} />
+      </a>
+
+      {user ? (
+        <div className="mx-4">
+          <ul className="navbar-nav">
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href="/complete-profile"
+                onClick={(e) => { e.preventDefault(); navigate('/profile'); }}
+                aria-label="Go to profile"
+              >
+                Profile
+              </a>
+            </li>
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href="/accounts"
+                onClick={(e) => { e.preventDefault(); navigate('/accounts'); }}
+                aria-label="Go to bank accounts"
+              >
+                Bank Accounts
+              </a>
+            </li>
+            <li className="nav-item">
+              <button
+                className="btn btn-secondary mx-3"
+                onClick={handleLogout}
+                aria-label="Logout"
+              >
+                Logout
+              </button>
+            </li>
+          </ul>
+        </div>
+      ) : null}
     </nav>
   );
 };

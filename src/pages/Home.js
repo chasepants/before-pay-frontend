@@ -53,91 +53,83 @@ const Home = () => {
   return (
     <>
       <Navbar user={user} />
-      <div className='mt-5' style={{ padding: '16px' }}>
-        <div className='container'>
-          <div className='row'>
-            <h1 className='text-center' style={{ fontSize: '24px', fontWeight: 'bold', fontFamily: 'montserrat' }}>
-              SEARCH FOR PRODUCTS TO ADD TO YOUR SAVINGS LIST
-            </h1>
-          </div>
-          <div className='row mt-3'>
-            <div className='col-sm-6 offset-sm-3'>
-              <div className="input-group mb-3">
-                <input
-                  onChange={(e) => setSearch(e.target.value)}
-                  value={search}
-                  type="text"
-                  className="form-control"
-                  placeholder="Search for products..."
-                  aria-label="Search for Products"
-                  aria-describedby="button-addon2"
-                />
-                <button
-                  onClick={handleSearch}
-                  className="btn btn-primary"
-                  type="button"
-                  id="button-addon2"
-                >
-                  Search
-                </button>
-              </div>
+      <div className='container mt-5'>
+        <div className='row'>
+          <h1 className='text-center fw-bold fs-4'>SEARCH FOR PRODUCTS TO ADD TO YOUR SAVINGS LIST</h1>
+        </div>
+        <div className='row mt-3'>
+          <div className='col-sm-6 offset-sm-3'>
+            <div className="input-group mb-3">
+              <input
+                onChange={(e) => setSearch(e.target.value)}
+                value={search}
+                type="text"
+                className="form-control"
+                placeholder="Search for products..."
+                aria-label="Search for Products"
+                aria-describedby="button-addon2"
+              />
+              <button
+                onClick={handleSearch}
+                className="btn btn-primary"
+                type="button"
+                id="button-addon2"
+              >
+                Search
+              </button>
             </div>
           </div>
         </div>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-          gap: '16px',
-          padding: '16px'
-        }}>
+        <div className='row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 m-4'>
           {products.map((p, i) => {
             const isInWishlist = wishlist.some(item => item.product_id === p.product_id);
             return (
-              <ProductCard
-                key={i}
-                name={p.title}
-                price={p.price}
-                oldPrice={p.old_price}
-                url={p.product_link}
-                imageUrl={p.thumbnail}
-                source={p.source}
-                sourceIcon={p.source_icon}
-                rating={p.rating}
-                reviews={p.reviews}
-                badge={p.badge}
-                tag={p.tag}
-                delivery={p.delivery}
-                onButtonClick={() => user ? addToWishlist(p) : navigate('/signup')}
-                isInWishlist={isInWishlist}
-              />
+              <div className='col' key={i}>
+                <ProductCard
+                  name={p.title}
+                  price={p.price}
+                  oldPrice={p.old_price}
+                  url={p.product_link}
+                  imageUrl={p.thumbnail}
+                  source={p.source}
+                  sourceIcon={p.source_icon}
+                  rating={p.rating}
+                  reviews={p.reviews}
+                  badge={p.badge}
+                  tag={p.tag}
+                  delivery={p.delivery}
+                  onButtonClick={() => user ? addToWishlist(p) : navigate('/signup')}
+                  isInWishlist={isInWishlist}
+                />
+              </div>
             );
           })}
         </div>
         {user && (
           <>
-            <h1 style={{ marginTop: '32px', fontSize: '20px', fontWeight: 'bold' }}>SAVINGS LIST</h1>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px', marginTop: '16px' }}>
+            <h1 className='mt-5 fs-3 fw-bold'>SAVINGS LIST</h1>
+            <div className='row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 m-4'>
               {wishlist.map(item => (
-                <WishlistItemCard
-                  key={item._id}
-                  wishlistItemId={item._id}
-                  name={item.title}
-                  price={item.price}
-                  oldPrice={item.old_price}
-                  url={item.product_link}
-                  imageUrl={item.thumbnail}
-                  source={item.source}
-                  sourceIcon={item.source_icon}
-                  rating={item.rating}
-                  reviews={item.reviews}
-                  savingsGoal={item.savings_goal}
-                  savingsProgress={item.savings_progress}
-                  subscriptionId={item.subscriptionId}
-                  onDelete={() => {
-                    console.log("deleting");
-                    handleDelete(item._id);
-                  }}
-                />
+                <div className='col' key={item._id}>
+                  <WishlistItemCard
+                    wishlistItemId={item._id}
+                    name={item.title}
+                    price={item.price}
+                    oldPrice={item.old_price}
+                    url={item.product_link}
+                    imageUrl={item.thumbnail}
+                    source={item.source}
+                    sourceIcon={item.source_icon}
+                    rating={item.rating}
+                    reviews={item.reviews}
+                    savingsGoal={item.savings_goal}
+                    savingsProgress={item.savings_progress}
+                    fundingSourceId={item.fundingSourceId}
+                    bankName={item.bankName}
+                    bankAccount={item.bankAccountName}
+                    onDelete={() => handleDelete(item._id)}
+                  />
+                </div>
               ))}
             </div>
           </>

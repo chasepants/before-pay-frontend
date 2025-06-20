@@ -1,6 +1,6 @@
 // frontend/src/App.js
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import LandingPage from './pages/LandingPage';
@@ -10,8 +10,11 @@ import SetupPayout from './pages/SetupPayout';
 import ViewSavings from './pages/ViewSavings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Profile from './pages/Profile';
+import Accounts from './pages/Accounts';
 import { setUser, setUserLoading, setUserError } from './store/userSlice';
 import { setWishlist, setWishlistLoading, setWishlistError } from './store/wishlistSlice';
+import LoadingAnimation from './components/LoadingAnimation';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -66,7 +69,8 @@ const App = () => {
   }, [user, dispatch]);
 
   if (userLoading || (user && wishlistLoading)) {
-    return <div>Loading...</div>;
+    console.log("Loading user and wishlist")
+    return <LoadingAnimation />;
   }
 
   if (error) {
@@ -94,15 +98,14 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route
-          path="/home"
-          element={<Home />}
-        />
-        <Route path="/setup-savings/:wishlistItemId" element={<SetupSavings />} />
-        <Route path="/setup-payout/:wishlistItemId" element={<SetupPayout />} />
-        <Route path="/view-savings/:wishlistItemId" element={<ViewSavings />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/setup-savings/:wishlistItemId" element={user ? <SetupSavings /> : <Navigate to="/" />} />
+        <Route path="/setup-payout/:wishlistItemId" element={user ?  <SetupPayout /> : <Navigate to="/" />} />
+        <Route path="/view-savings/:wishlistItemId" element={user ?  <ViewSavings /> : <Navigate to="/" />} />
+        <Route path="/profile" element={user ? <Profile /> : <Navigate to="/" />} />
+        <Route path="/accounts" element={user ? <Accounts /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );

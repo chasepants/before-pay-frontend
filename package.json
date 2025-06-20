@@ -4,8 +4,6 @@
   "private": true,
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
-    "@stripe/react-stripe-js": "^3.6.0",
-    "@stripe/stripe-js": "^7.0.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
@@ -14,7 +12,9 @@
     "bootstrap": "^5.3.6",
     "bootstrap-icons": "^1.13.1",
     "react": "^19.0.0",
+    "react-datepicker": "^8.4.0",
     "react-dom": "^19.0.0",
+    "react-plaid-link": "^4.0.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.4.0",
     "react-scripts": "5.0.1",
