@@ -5,8 +5,12 @@ import logo from '../assets/beforepay-logo.png'; // Adjust the path to where the
 const LandingPage = () => {
   const navigate = useNavigate();
 
-  const handleExploreClick = () => {
-    navigate('/home');
+  const handleGetStarted = () => {
+    window.location.href = 'http://localhost:3001/api/auth/google'; // Redirect to Google OAuth
+  };
+
+  const handleLearnMore = () => {
+    navigate('/learn-more');
   };
 
   return (
@@ -24,7 +28,7 @@ const LandingPage = () => {
         src={logo}
         alt="Beforepay Logo"
         style={{
-          width: '600px', // Adjust size as needed
+          width: '600px',
           marginBottom: '20px',
         }}
       />
@@ -37,26 +41,47 @@ const LandingPage = () => {
           marginBottom: '30px',
         }}
       >
-            SAVE FOR PURCHASES LIKE A GROWNUP
+        SAVE FOR PURCHASES LIKE A GROWNUP
       </h2>
-      <button
-        onClick={handleExploreClick}
-        style={{
-          backgroundColor: '#ff914d',
-          color: 'white',
-          padding: '12px 24px',
-          borderRadius: '4px',
-          border: 'none',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          cursor: 'pointer',
-          transition: 'background-color 0.3s',
-        }}
-        onMouseOver={(e) => (e.target.style.backgroundColor = '#f09f6d')}
-        onMouseOut={(e) => (e.target.style.backgroundColor = '#ff914d')}
-      >
-        EXPLORE
-      </button>
+      <div>
+        <button
+          onClick={handleGetStarted}
+          style={{
+            backgroundColor: '#ff914d',
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: '4px',
+            border: 'none',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            transition: 'background-color 0.3s',
+            marginRight: '10px',
+          }}
+          onMouseOver={(e) => (e.target.style.backgroundColor = '#f09f6d')}
+          onMouseOut={(e) => (e.target.style.backgroundColor = '#ff914d')}
+        >
+          GET STARTED
+        </button>
+        <button
+          onClick={handleLearnMore}
+          style={{
+            backgroundColor: '#e0e0e0',
+            color: '#333',
+            padding: '12px 24px',
+            borderRadius: '4px',
+            border: 'none',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            transition: 'background-color 0.3s',
+          }}
+          onMouseOver={(e) => (e.target.style.backgroundColor = '#c0c0c0')}
+          onMouseOut={(e) => (e.target.style.backgroundColor = '#e0e0e0')}
+        >
+          LEARN MORE
+        </button>
+      </div>
     </div>
   );
 };

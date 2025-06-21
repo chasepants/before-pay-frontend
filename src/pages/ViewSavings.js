@@ -1,3 +1,4 @@
+// frontend/src/pages/ViewSavings.js
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -6,11 +7,11 @@ import Navbar from '../components/Navbar';
 import LoadingAnimation from '../components/LoadingAnimation';
 
 const ViewSavings = () => {
-  const { wishlistItemId } = useParams();
+  const { savingsGoalId } = useParams(); // Renamed from wishlistItemId
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
-  const { items: wishlist } = useSelector((state) => state.wishlist);
-  const [wishlistItem, setWishlistItem] = useState(null);
+  const { goals: savingsGoals } = useSelector((state) => state.savings); // Renamed from wishlist
+  const [savingsGoal, setSavingsGoal] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,26 +22,23 @@ const ViewSavings = () => {
       return;
     }
 
-    const item = wishlist.find((item) => item._id === wishlistItemId);
-    if (!item) {
-      setError('Wishlist item not found');
+    const goal = savingsGoals.find((goal) => goal._id === savingsGoalId);
+    if (!goal) {
+      setError('Savings goal not found');
       setIsLoading(false);
       return;
     }
-    console.log('Found wishlist item:', item);
-    setWishlistItem(item);
+    setSavingsGoal(goal);
 
     const fetchTransactions = async () => {
       setIsLoading(true);
       try {
         const txRes = await axios.get(
-          `http://localhost:3001/api/bank/transaction-history/${wishlistItemId}`,
+          `http://localhost:3001/api/bank/transaction-history/${savingsGoalId}`,
           { withCredentials: true }
         );
-        console.log('Transaction history response:', txRes.data);
         setTransactions(txRes.data.transactions);
       } catch (err) {
-        console.error('Fetch error:', err.response?.data || err.message);
         setError(
           err.response?.status === 404
             ? 'Transaction history not found'
@@ -52,27 +50,23 @@ const ViewSavings = () => {
     };
 
     fetchTransactions();
-  }, [wishlistItemId, wishlist, user, navigate]);
+  }, [savingsGoalId, savingsGoals, user, navigate]);
 
   const handlePayout = async () => {
     setIsLoading(true);
     setError('');
     try {
-      console.log('Initiating payout for wishlist item:', wishlistItemId);
       const res = await axios.post(
         'http://localhost:3001/api/bank/payout',
-        { wishlistItemId },
+        { savingsGoalId }, // Renamed from wishlistItemId
         { withCredentials: true }
       );
-      console.log('Payout response:', res.data);
       alert('Savings transferred successfully!');
 
-      const refreshed = await axios.get(`http://localhost:3001/api/wishlist/${wishlistItemId}`, { withCredentials: true });
-      setWishlistItem(refreshed.data);
+      const refreshed = await axios.get(`http://localhost:3001/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
+      setSavingsGoal(refreshed.data);
     } catch (err) {
-      const errorMsg = err.response?.data?.error || 'Failed to transfer savings';
-      setError(errorMsg);
-      console.error('Payout error:', err);
+      setError(err.response?.data?.error || 'Failed to transfer savings');
     } finally {
       setIsLoading(false);
     }
@@ -100,12 +94,11 @@ const ViewSavings = () => {
     );
   }
 
-  if (isLoading || !wishlistItem) {
-    console.log("loading saving details")
-    return <LoadingAnimation />
+  if (isLoading || !savingsGoal) {
+    return <LoadingAnimation />;
   }
 
-  const progressPercentage = Math.min((wishlistItem.savings_progress / wishlistItem.savings_goal) * 100, 100);
+  const progressPercentage = Math.min((savingsGoal.currentAmount / savingsGoal.targetAmount) * 100, 100);
 
   return (
     <>
@@ -113,10 +106,10 @@ const ViewSavings = () => {
       <div className='container mt-3'>
         <div className='row'>
           <div className='col-sm-3 offset-sm-1'>
-            <img src={wishlistItem.thumbnail || 'https://via.placeholder.com/200'} alt="Savings Item image" className="card-img-top" />
+            <img src={savingsGoal.thumbnail || 'https://via.placeholder.com/200'} alt="Savings Goal image" className="card-img-top" />
           </div>
           <div className='col-sm-7 mt-3'>
-            <h1 className='mt-3'>{wishlistItem.title}</h1>
+            <h1 className='mt-3'>{savingsGoal.goalName || savingsGoal.title}</h1>
             <div className='d-flex justify-content-between'>
               <div className="progress w-75 pt-4" role="progressbar" aria-label="Savings Progress" aria-valuenow={progressPercentage} aria-valuemin="0" aria-valuemax="100">
                 <div className="progress-bar" style={{ width: `${progressPercentage}%` }}></div>
@@ -124,8 +117,8 @@ const ViewSavings = () => {
               <div>
                 <h5 className="card-text">
                   <b>
-                    <span style={{ color: "#d4d8de" }}>${wishlistItem.savings_progress}</span>/
-                    <span style={{ color: "#7ed957" }}>${wishlistItem.savings_goal}</span> 
+                    <span style={{ color: "#d4d8de" }}>${savingsGoal.currentAmount}</span>/
+                    <span style={{ color: "#7ed957" }}>${savingsGoal.targetAmount}</span> 
                   </b>
                 </h5>
               </div>
@@ -133,10 +126,10 @@ const ViewSavings = () => {
             <div className='d-flex justify-content-between'>
               <div className="card-text" style={{ color: "#d4d8de" }}>
                 <b>
-                  <div className="product-source"><img className="product-source-icon" src={wishlistItem.sourceIcon} /> {wishlistItem.source}</div>
+                  <div className="product-source"><img className="product-source-icon" src={savingsGoal.sourceIcon} /> {savingsGoal.source}</div>
                 </b>
               </div>
-              {wishlistItem.savings_progress > 0 && (
+              {user.status === 'approved' && savingsGoal.currentAmount > 0 && (
                 <button
                   type='button'
                   className='btn btn-link'
@@ -147,9 +140,9 @@ const ViewSavings = () => {
                 </button>
               )}
             </div>
-            {wishlistItem.rating && (
+            {savingsGoal.rating && (
               <p>
-                {wishlistItem.rating} <i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-half"></i> ({wishlistItem.reviews} reviews)
+                {savingsGoal.rating} <i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-half"></i> ({savingsGoal.reviews} reviews)
               </p>
             )}
           </div>
@@ -157,7 +150,7 @@ const ViewSavings = () => {
         <div className='row'>
           <div className='col-sm-10 offset-sm-1'>
             <h1>Your Savings Plan</h1>
-            <h4 className='text-muted'>{wishlistItem.bankName} - {wishlistItem.bankAccountName} - ${wishlistItem.savingsAmount} every {wishlistItem.savingsFrequency} <i className="bi bi-pencil-square"></i></h4>
+            <h4 className='text-muted'>{savingsGoal.bankName} - {savingsGoal.bankAccountName} - ${savingsGoal.savingsAmount} every {savingsGoal.savingsFrequency} <i className="bi bi-pencil-square"></i></h4>
             {transactions.length > 0 ? (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>

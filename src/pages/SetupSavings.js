@@ -1,3 +1,4 @@
+// frontend/src/pages/SetupSavings.js
 import React, { useState, useEffect } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import { useSelector } from 'react-redux';
@@ -8,28 +9,28 @@ import LoadingAnimation from '../components/LoadingAnimation';
 
 const SetupSavings = () => {
   const navigate = useNavigate();
-  const { wishlistItemId } = useParams();
+  const { savingsGoalId } = useParams(); // Renamed from wishlistItemId
   const { user } = useSelector((state) => state.user);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [plaidToken, setPlaidToken] = useState(null);
   const [plaidPublicToken, setPlaidPublicToken] = useState(null);
   const [plaidAccountId, setPlaidAccountId] = useState(null);
-  const [linkedAccount, setLinkedAccount] = useState(null); // Store linked account details
-  const [existingAccounts, setExistingAccounts] = useState([]); // Store existing funding sources
-  const [selectedAccount, setSelectedAccount] = useState(null); // Track selected account (new or existing)
+  const [linkedAccount, setLinkedAccount] = useState(null);
+  const [existingAccounts, setExistingAccounts] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(null);
   const [amount, setAmount] = useState('');
   const [frequency, setFrequency] = useState('week');
   const [startDate, setStartDate] = useState('');
-  const [showTooltip, setShowTooltip] = useState(false); // State for tooltip visibility
+  const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
     if (!user) {
       navigate('/');
       return;
     }
-    if (!wishlistItemId) {
-      setError('Invalid wishlist item ID');
+    if (!savingsGoalId) {
+      setError('Invalid savings goal ID');
       return;
     }
 
@@ -55,17 +56,16 @@ const SetupSavings = () => {
     };
     fetchPlaidToken();
 
-    // Fetch existing funding sources for the user
     const fetchExistingAccounts = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/bank/existing-funding-sources`, { withCredentials: true });
+        const response = await axios.get(`http://localhost:3001/api/bank/funding-sources/${user.dwollaCustomerId}`, { withCredentials: true });
         setExistingAccounts(response.data.fundingSources || []);
       } catch (err) {
         console.error('Failed to fetch existing funding sources:', err);
       }
     };
     fetchExistingAccounts();
-  }, [user, wishlistItemId, navigate]);
+  }, [user, savingsGoalId, navigate]);
 
   const { open, ready } = usePlaidLink({
     token: plaidToken,
@@ -79,7 +79,7 @@ const SetupSavings = () => {
           name: account.name || 'Linked Account',
           mask: account.mask || '****'
         });
-        setSelectedAccount(account.id); // Auto-select the newly linked account
+        setSelectedAccount(account.id);
       } else {
         setError('No account selected. Please try linking your bank account again.');
       }
@@ -93,8 +93,8 @@ const SetupSavings = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!selectedAccount) {
-      setError('Please select or link a bank account');
+    if (!selectedAccount || user.status !== 'approved') {
+      setError('Please select or link a bank account and wait for approval');
       return;
     }
     if (!amount || !frequency || !startDate) {
@@ -109,8 +109,8 @@ const SetupSavings = () => {
       await axios.post(
         'http://localhost:3001/api/bank/setup-savings',
         {
-          wishlistItemId,
-          plaidAccessToken: plaidPublicToken || null, // Only send if newly linked
+          savingsGoalId,
+          plaidAccessToken: plaidPublicToken || null,
           plaidAccountId: selectedAccount,
           amount,
           frequency,
@@ -131,10 +131,9 @@ const SetupSavings = () => {
     setPlaidPublicToken(null);
     setPlaidAccountId(null);
     setLinkedAccount(null);
-    setSelectedAccount(null); // Reset to allow relinking
+    setSelectedAccount(null);
   };
 
-  // Toggle tooltip visibility on hover
   const handleInfoHover = (isHovering) => {
     setShowTooltip(isHovering);
   };
@@ -162,7 +161,6 @@ const SetupSavings = () => {
   }
 
   if (!plaidToken) {
-    console.log("loading bank account linking...");
     return <LoadingAnimation />;
   }
 
@@ -236,23 +234,23 @@ const SetupSavings = () => {
                         borderRadius: '4px',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                         zIndex: 1000,
-                        width: '50%', // Increased width for horizontal stretch
-                        maxHeight: '50%', // Limit height to prevent overflow
-                        overflowY: 'auto', // Add scrollbar if text exceeds height
-                        marginLeft: '-200px', // Center horizontally relative to icon
+                        width: '50%',
+                        maxHeight: '50%',
+                        overflowY: 'auto',
+                        marginLeft: '-200px',
                         marginTop: '10px',
-                        whiteSpace: 'normal', // Allow text to wrap naturally
+                        whiteSpace: 'normal',
                       }}
                     >
                       <p>
-                        Beforepay utilizes Plaid, a third-party service, to securely facilitate bank account linking. We do not store, access, or process your bank account details. Plaid provides a tokenized representation of your account, which is securely transmitted to our payment processor, Dwolla, for transaction processing. For more information on how your data is handled, please review Plaid's <a href="https://plaid.com/legal/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                        Beforepay utilizes Plaid, a third-party service, to securely facilitate bank account linking. We do not store, access, or process your bank account details. Plaid provides a tokenized representation of your account, which is securely transmitted to our payment processor, Unit, for transaction processing. For more information on how your data is handled, please review Plaid's <a href="https://plaid.com/legal/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
                       </p>
                     </div>
                   )}
                 </h3>
               </div>
             )}
-            <button onClick={handleSubmit} className="btn btn-primary w-50 mt-5" disabled={isLoading}>
+            <button onClick={handleSubmit} className="btn btn-primary w-50 mt-5" disabled={isLoading || user.status !== 'approved'}>
               {isLoading ? 'Processing...' : 'Create'}
             </button>
           </div>

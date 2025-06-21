@@ -1,11 +1,11 @@
 // frontend/src/store/index.js
 import { configureStore } from '@reduxjs/toolkit';
 import userReducer from './userSlice';
-import wishlistReducer from './wishlistSlice';
+import savingsReducer from './savingsSlice'; // Updated import name
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
-    wishlist: wishlistReducer,
+    savings: savingsReducer, // Updated key to match reducer name
   },
 });

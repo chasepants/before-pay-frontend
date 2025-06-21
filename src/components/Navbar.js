@@ -53,16 +53,6 @@ const Navbar = ({ user }) => {
               </a>
             </li>
             <li className="nav-item">
-              <a
-                className="nav-link"
-                href="/accounts"
-                onClick={(e) => { e.preventDefault(); navigate('/accounts'); }}
-                aria-label="Go to bank accounts"
-              >
-                Bank Accounts
-              </a>
-            </li>
-            <li className="nav-item">
               <button
                 className="btn btn-secondary mx-3"
                 onClick={handleLogout}
