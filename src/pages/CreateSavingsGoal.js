@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+import ProductCard from '../components/ProductCard';
+import mockSerpResults from '../mock_serp.js';
 import { addSavingsGoal } from '../store/savingsSlice';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap is included
 
@@ -74,11 +76,6 @@ const CreateSavingsGoal = () => {
       console.error('Add to savings failed:', err);
     }
   };
-
-  const mockSerpResults = [
-    { title: 'Sample Product', price: '50', extracted_price: 50, thumbnail: 'https://via.placeholder.com/200', product_link: 'http://example.com' }
-    // Add more mock data as needed
-  ];
 
   return (
     <>
@@ -160,23 +157,22 @@ const CreateSavingsGoal = () => {
                 const isInSavings = savingsGoals.some(goal => goal.product_id === p.product_id);
                 return (
                   <div className='col' key={i}>
-                    <div className='card'>
-                      <img src={p.thumbnail || 'https://via.placeholder.com/200'} className='card-img-top' alt={p.title} />
-                      <div className='card-body'>
-                        <h5 className='card-title'>{p.title}</h5>
-                        <p className='card-text'>
-                          <span style={{ textDecoration: p.old_price ? 'line-through' : 'none' }}>{p.old_price || ''}</span>
-                          <span style={{ color: '#7ed957' }}> ${p.price}</span>
-                        </p>
-                        <button
-                          className='btn btn-primary'
-                          onClick={() => user && user.status === 'approved' ? addToSavings(p) : navigate('/pending')}
-                          disabled={isInSavings || user.status !== 'approved'}
-                        >
-                          {isInSavings ? 'Added' : (user.status === 'approved' ? 'Add to Savings' : 'Pending Approval')}
-                        </button>
-                      </div>
-                    </div>
+                    <ProductCard
+                      name={p.title}
+                      price={p.price}
+                      oldPrice={p.old_price}
+                      url={p.product_link}
+                      imageUrl={p.thumbnail}
+                      source={p.source}
+                      sourceIcon={p.source_icon}
+                      rating={p.rating}
+                      reviews={p.reviews}
+                      badge={p.badge}
+                      tag={p.tag}
+                      delivery={p.delivery}
+                      onButtonClick={() => user ? addToSavings(p) : navigate('/signup')}
+                      isInSavings={isInSavings}
+                    />
                   </div>
                 );
               })}

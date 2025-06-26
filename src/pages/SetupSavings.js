@@ -9,20 +9,24 @@ import LoadingAnimation from '../components/LoadingAnimation';
 
 const SetupSavings = () => {
   const navigate = useNavigate();
-  const { savingsGoalId } = useParams(); // Renamed from wishlistItemId
+  const { savingsGoalId } = useParams();
   const { user } = useSelector((state) => state.user);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [plaidToken, setPlaidToken] = useState(null);
   const [plaidPublicToken, setPlaidPublicToken] = useState(null);
   const [plaidAccountId, setPlaidAccountId] = useState(null);
-  const [linkedAccount, setLinkedAccount] = useState(null);
-  const [existingAccounts, setExistingAccounts] = useState([]);
-  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [linkedAccount, setLinkedAccount] = useState(null); // Store linked account details
+  const [existingCounterparties, setExistingCounterparties] = useState([]); // Store existing counterparties
+  const [selectedAccount, setSelectedAccount] = useState(null); // Track selected account (new or existing)
   const [amount, setAmount] = useState('');
-  const [frequency, setFrequency] = useState('week');
-  const [startDate, setStartDate] = useState('');
-  const [showTooltip, setShowTooltip] = useState(false);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [interval, setInterval] = useState('Weekly'); // Default to Weekly
+  const [dayOfMonth, setDayOfMonth] = useState('');
+  const [dayOfWeek, setDayOfWeek] = useState('Monday'); // Default to Monday
+  const [totalNumberOfPayments, setTotalNumberOfPayments] = useState('');
+  const [showTooltip, setShowTooltip] = useState(false); // State for tooltip visibility
 
   useEffect(() => {
     if (!user) {
@@ -56,15 +60,18 @@ const SetupSavings = () => {
     };
     fetchPlaidToken();
 
-    const fetchExistingAccounts = async () => {
+    const fetchExistingCounterparties = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/bank/funding-sources/${user.dwollaCustomerId}`, { withCredentials: true });
-        setExistingAccounts(response.data.fundingSources || []);
+        const response = await axios.get(`http://localhost:3001/api/bank/counterparties/${user._id}`, { withCredentials: true });
+        setExistingCounterparties(response.data.counterparties || []);
+        if (response.data.counterparties.length > 0 && !selectedAccount) {
+          setSelectedAccount(response.data.counterparties[0].id); // Auto-select first if none chosen
+        }
       } catch (err) {
-        console.error('Failed to fetch existing funding sources:', err);
+        console.error('Failed to fetch existing counterparties:', err);
       }
     };
-    fetchExistingAccounts();
+    fetchExistingCounterparties();
   }, [user, savingsGoalId, navigate]);
 
   const { open, ready } = usePlaidLink({
@@ -79,7 +86,7 @@ const SetupSavings = () => {
           name: account.name || 'Linked Account',
           mask: account.mask || '****'
         });
-        setSelectedAccount(account.id);
+        setSelectedAccount(account.id); // Auto-select the newly linked account
       } else {
         setError('No account selected. Please try linking your bank account again.');
       }
@@ -93,14 +100,23 @@ const SetupSavings = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!selectedAccount || user.status !== 'approved') {
-      setError('Please select or link a bank account and wait for approval');
+    if (!selectedAccount || !amount || !interval || !startTime || (interval === 'Monthly' && !dayOfMonth) || (interval === 'Weekly' && !dayOfWeek)) {
+      setError('Please fill all required fields: account, amount, interval, start date, and day (of month or week).');
       return;
     }
-    if (!amount || !frequency || !startDate) {
-      setError('Please fill in all fields');
+    if (user.status !== 'approved') {
+      setError('Account not approved yet');
       return;
     }
+
+    const schedule = {
+      startTime,
+      endTime: endTime || undefined,
+      interval,
+      ...(interval === 'Monthly' && { dayOfMonth: parseInt(dayOfMonth) }),
+      ...(interval === 'Weekly' && { dayOfWeek }),
+      totalNumberOfPayments: totalNumberOfPayments ? parseInt(totalNumberOfPayments) : undefined
+    };
 
     setIsLoading(true);
     setError('');
@@ -110,11 +126,10 @@ const SetupSavings = () => {
         'http://localhost:3001/api/bank/setup-savings',
         {
           savingsGoalId,
-          plaidAccessToken: plaidPublicToken || null,
+          plaidAccessToken: plaidPublicToken || null, // Only send if newly linked
           plaidAccountId: selectedAccount,
           amount,
-          frequency,
-          start_date: startDate
+          schedule
         },
         { withCredentials: true }
       );
@@ -131,7 +146,7 @@ const SetupSavings = () => {
     setPlaidPublicToken(null);
     setPlaidAccountId(null);
     setLinkedAccount(null);
-    setSelectedAccount(null);
+    setSelectedAccount(null); // Reset to allow relinking
   };
 
   const handleInfoHover = (isHovering) => {
@@ -161,6 +176,7 @@ const SetupSavings = () => {
   }
 
   if (!plaidToken) {
+    console.log("loading bank account linking...");
     return <LoadingAnimation />;
   }
 
@@ -172,17 +188,90 @@ const SetupSavings = () => {
         <div className="row">
           <div className="col-sm-6 mt-5 p-5">
             <h5>Create A Savings Plan</h5>
-            <label htmlFor="schedule" className="form-label mt-3">How often do you want to save?</label>
-            <select value={frequency} onChange={e => setFrequency(e.target.value)} className="form-select" aria-label="schedule">
-              <option value="">---</option>
-              <option value="week">Every week</option>
-              <option value="biweek">Every 2 weeks</option>
-              <option value="month">Every month</option>
-            </select>
             <label htmlFor="amount" className="form-label mt-3">How much do you want to save?</label>
-            <input value={amount} onChange={e => setAmount(e.target.value)} className="form-control form-control-lg" type="text" placeholder="$50" aria-label="savings Amount"/>
-            <label htmlFor="date" className="form-label mt-3">When do you want to start?</label>
-            <input value={startDate} onChange={e => setStartDate(e.target.value)} className="form-control form-control-lg" type="text" placeholder="mm/dd/yyyy" aria-label="Start Date"/>
+            <input
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="form-control form-control-lg"
+              type="text"
+              placeholder="$50"
+              aria-label="Savings Amount"
+            />
+            <label htmlFor="startTime" className="form-label mt-3">Start Date</label>
+            <input
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="form-control form-control-lg"
+              type="date"
+              aria-label="Start Date"
+            />
+            <label htmlFor="endTime" className="form-label mt-3">End Date (Optional)</label>
+            <input
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              className="form-control form-control-lg"
+              type="date"
+              aria-label="End Date"
+            />
+            <label htmlFor="interval" className="form-label mt-3">Interval</label>
+            <select
+              value={interval}
+              onChange={(e) => setInterval(e.target.value)}
+              className="form-control form-control-lg"
+              aria-label="Interval"
+            >
+              <option value="Weekly">Weekly</option>
+              <option value="Monthly">Monthly</option>
+            </select>
+            {interval === 'Monthly' && (
+              <div>
+                <label htmlFor="dayOfMonth" className="form-label mt-3">Day of Month (1-28 or -5 to -1)</label>
+                <input
+                  value={dayOfMonth}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if ((value >= 1 && value <= 28) || (value >= -5 && value <= -1)) {
+                      setDayOfMonth(e.target.value);
+                    }
+                  }}
+                  className="form-control form-control-lg"
+                  type="number"
+                  placeholder="e.g., 15 or -1"
+                  aria-label="Day of Month"
+                />
+              </div>
+            )}
+            {interval === 'Weekly' && (
+              <div>
+                <label htmlFor="dayOfWeek" className="form-label mt-3">Day of Week</label>
+                <select
+                  value={dayOfWeek}
+                  onChange={(e) => setDayOfWeek(e.target.value)}
+                  className="form-control form-control-lg"
+                  aria-label="Day of Week"
+                >
+                  <option value="Sunday">Sunday</option>
+                  <option value="Monday">Monday</option>
+                  <option value="Tuesday">Tuesday</option>
+                  <option value="Wednesday">Wednesday</option>
+                  <option value="Thursday">Thursday</option>
+                  <option value="Friday">Friday</option>
+                  <option value="Saturday">Saturday</option>
+                </select>
+              </div>
+            )}
+            <label htmlFor="totalNumberOfPayments" className="form-label mt-3">Total Payments (Optional)</label>
+            <input
+              value={totalNumberOfPayments}
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                if (value > 0 || e.target.value === '') setTotalNumberOfPayments(e.target.value);
+              }}
+              className="form-control form-control-lg"
+              type="number"
+              placeholder="e.g., 12"
+              aria-label="Total Number of Payments"
+            />
             <label htmlFor="account" className="form-label mt-4">Select or link a bank account</label>
             {linkedAccount && (
               <div>
@@ -195,16 +284,16 @@ const SetupSavings = () => {
                 </button>
               </div>
             )}
-            {(!linkedAccount && existingAccounts.length > 0) && (
+            {existingCounterparties.length > 0 && !linkedAccount && (
               <select
                 value={selectedAccount || ''}
-                onChange={e => setSelectedAccount(e.target.value)}
+                onChange={(e) => setSelectedAccount(e.target.value)}
                 className="form-select mt-2"
               >
                 <option value="">Select an existing account</option>
-                {existingAccounts.map(account => (
-                  <option key={account.id} value={account.id}>
-                    {account.name} (****{account.mask})
+                {existingCounterparties.map((counterparty) => (
+                  <option key={counterparty.id} value={counterparty.id}>
+                    {counterparty.name} (****{counterparty.mask})
                   </option>
                 ))}
               </select>
@@ -216,7 +305,7 @@ const SetupSavings = () => {
                   disabled={!ready || isLoading}
                   className="btn btn-secondary mt-4"
                 >
-                  <i className="bi bi-lock"></i>&nbsp;Link a New Bank Account
+                  <i className="bi bi-lock"></i> Link a New Bank Account
                 </button>
                 <h3
                   className='mt-2 mx-3'
@@ -243,14 +332,14 @@ const SetupSavings = () => {
                       }}
                     >
                       <p>
-                        Beforepay utilizes Plaid, a third-party service, to securely facilitate bank account linking. We do not store, access, or process your bank account details. Plaid provides a tokenized representation of your account, which is securely transmitted to our payment processor, Unit, for transaction processing. For more information on how your data is handled, please review Plaid's <a href="https://plaid.com/legal/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                        Beforepay utilizes Plaid, a third-party service, to securely facilitate bank account linking. We do not store, access, or process your bank account details. Plaid provides a tokenized representation of your account, which is securely transmitted to our payment processor, Dwolla, for transaction processing. For more information on how your data is handled, please review Plaid's <a href="https://plaid.com/legal/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
                       </p>
                     </div>
                   )}
                 </h3>
               </div>
             )}
-            <button onClick={handleSubmit} className="btn btn-primary w-50 mt-5" disabled={isLoading || user.status !== 'approved'}>
+            <button onClick={handleSubmit} className="btn btn-primary w-50 mt-5" disabled={isLoading}>
               {isLoading ? 'Processing...' : 'Create'}
             </button>
           </div>

@@ -21,13 +21,14 @@ const ViewSavings = () => {
       navigate('/');
       return;
     }
-
     const goal = savingsGoals.find((goal) => goal._id === savingsGoalId);
+
     if (!goal) {
       setError('Savings goal not found');
       setIsLoading(false);
       return;
     }
+
     setSavingsGoal(goal);
 
     const fetchTransactions = async () => {
@@ -49,7 +50,7 @@ const ViewSavings = () => {
       }
     };
 
-    fetchTransactions();
+    // fetchTransactions();
   }, [savingsGoalId, savingsGoals, user, navigate]);
 
   const handlePayout = async () => {
@@ -150,7 +151,11 @@ const ViewSavings = () => {
         <div className='row'>
           <div className='col-sm-10 offset-sm-1'>
             <h1>Your Savings Plan</h1>
-            <h4 className='text-muted'>{savingsGoal.bankName} - {savingsGoal.bankAccountName} - ${savingsGoal.savingsAmount} every {savingsGoal.savingsFrequency} <i className="bi bi-pencil-square"></i></h4>
+            <h4 className='text-muted'>
+              {savingsGoal.bankName} - {savingsGoal.bankAccountName} - ${savingsGoal.savingsAmount}
+              every {savingsGoal.savingsFrequency} 
+              <i onClick={() => navigate(`/setup-savings/${savingsGoalId}`)} className="bi bi-pencil-square"></i>
+            </h4>
             {transactions.length > 0 ? (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
