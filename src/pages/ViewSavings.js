@@ -14,44 +14,56 @@ const ViewSavings = () => {
   const [savingsGoal, setSavingsGoal] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
       navigate('/');
       return;
     }
-    const goal = savingsGoals.find((goal) => goal._id === savingsGoalId);
 
-    if (!goal) {
-      setError('Savings goal not found');
-      setIsLoading(false);
-      return;
-    }
-
-    setSavingsGoal(goal);
-
-    const fetchTransactions = async () => {
-      setIsLoading(true);
+    const fetchSavingsGoal = async () => {
       try {
-        const txRes = await axios.get(
-          `http://localhost:3001/api/bank/transaction-history/${savingsGoalId}`,
-          { withCredentials: true }
-        );
-        setTransactions(txRes.data.transactions);
+        const res = await axios.get(`http://localhost:3001/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
+        setSavingsGoal(res.data);
       } catch (err) {
-        setError(
-          err.response?.status === 404
-            ? 'Transaction history not found'
-            : err.response?.data?.error || 'Failed to load savings data'
-        );
-      } finally {
-        setIsLoading(false);
+        setError('Savings goal not found');
       }
     };
 
-    // fetchTransactions();
+    let goal = savingsGoals.find((goal) => goal._id === savingsGoalId);
+    console.log(goal);
+
+    if (!goal) {
+      fetchSavingsGoal();
+    } else {
+      setSavingsGoal(goal);
+    }
   }, [savingsGoalId, savingsGoals, user, navigate]);
+
+  useEffect(() => {
+    if (savingsGoal) {
+      const fetchTransactions = async () => {
+        try {
+          const txRes = await axios.get(
+            `http://localhost:3001/api/bank/transaction-history/${savingsGoalId}`,
+            { withCredentials: true }
+          );
+          setTransactions(txRes.data.transactions);
+        } catch (err) {
+          setError(
+            err.response?.status === 404
+              ? 'Transaction history not found'
+              : err.response?.data?.error || 'Failed to load savings data'
+          );
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchTransactions();
+    }
+  }, [savingsGoal, savingsGoalId]);
 
   const handlePayout = async () => {
     setIsLoading(true);
