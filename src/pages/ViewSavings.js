@@ -1,4 +1,3 @@
-// frontend/src/pages/ViewSavings.js
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -112,17 +111,22 @@ const ViewSavings = () => {
   }
 
   const progressPercentage = Math.min((savingsGoal.currentAmount / savingsGoal.targetAmount) * 100, 100);
+  const headerClasses = savingsGoal.product.thumbnail ? 'col-sm-7 mt-3' : 'col-sm-7 mt-3 offset-sm-1';
 
   return (
     <>
       <Navbar user={user} />
       <div className='container mt-3'>
         <div className='row'>
-          <div className='col-sm-3 offset-sm-1'>
-            <img src={savingsGoal.thumbnail || 'https://via.placeholder.com/200'} alt="Savings Goal image" className="card-img-top" />
-          </div>
-          <div className='col-sm-7 mt-3'>
-            <h1 className='mt-3'>{savingsGoal.goalName || savingsGoal.title}</h1>
+          {
+            savingsGoal.product.thumbnail && (
+              <div className='col-sm-3 offset-sm-1'>
+                <img src={savingsGoal.product.thumbnail || 'https://via.placeholder.com/200'} alt="Savings Goal image" className="card-img-top" />
+              </div>
+            )
+          }
+          <div className={headerClasses}>
+            <h1 className='mt-3'>{savingsGoal.goalName || savingsGoal.product.title}</h1>
             <div className='d-flex justify-content-between'>
               <div className="progress w-75 pt-4" role="progressbar" aria-label="Savings Progress" aria-valuenow={progressPercentage} aria-valuemin="0" aria-valuemax="100">
                 <div className="progress-bar" style={{ width: `${progressPercentage}%` }}></div>
@@ -139,7 +143,7 @@ const ViewSavings = () => {
             <div className='d-flex justify-content-between'>
               <div className="card-text" style={{ color: "#d4d8de" }}>
                 <b>
-                  <div className="product-source"><img className="product-source-icon" src={savingsGoal.sourceIcon} /> {savingsGoal.source}</div>
+                  <div className="product-source"><img className="product-source-icon" src={savingsGoal.product.sourceIcon} /> {savingsGoal.product.source}</div>
                 </b>
               </div>
               {user.status === 'approved' && savingsGoal.currentAmount > 0 && (
@@ -153,23 +157,45 @@ const ViewSavings = () => {
                 </button>
               )}
             </div>
-            {savingsGoal.rating && (
+            {savingsGoal.product.rating && (
               <p>
-                {savingsGoal.rating} <i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-half"></i> ({savingsGoal.reviews} reviews)
+                {savingsGoal.product.rating} <i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-half"></i> ({savingsGoal.product.reviews} reviews)
               </p>
             )}
           </div>
         </div>
-        <div className='row'>
+        {
+          savingsGoal.bank.bankName && (
+            <div className='row'>
+              <div className='col-sm-4 offset-sm-1'>
+                  <h4 className='text-muted'>
+                    {savingsGoal.bank.bankName} - ${savingsGoal.savingsAmount}
+                    &nbsp;{savingsGoal.schedule.interval}&nbsp; 
+                    <i onClick={() => navigate(`/setup-savings/${savingsGoalId}`)} className="bi bi-pencil-square"></i>
+                  </h4>
+              </div> 
+            </div>
+          )
+        }
+        {
+          !savingsGoal.bank.bankName && (
+            <div className='row my-3'>
+              <div className='col-sm-4 offset-sm-1'>
+                <button className='btn btn-primary' onClick={() => navigate(`/setup-savings/${savingsGoalId}`)}>
+                  Setup Transfers
+                </button>
+              </div> 
+            </div>
+          )
+        }
+        <div className='row mt-3'>
           <div className='col-sm-10 offset-sm-1'>
-            <h1>Your Savings Plan</h1>
-            <h4 className='text-muted'>
-              {savingsGoal.bankName} - {savingsGoal.bankAccountName} - ${savingsGoal.savingsAmount}
-              every {savingsGoal.savingsFrequency} 
-              <i onClick={() => navigate(`/setup-savings/${savingsGoalId}`)} className="bi bi-pencil-square"></i>
-            </h4>
+            {/* <h1>Your Savings Plan</h1> */}
+            <div className="card-header bg-dark text-white">
+              <h4 className="mb-0 p-2">Transfers</h4>
+            </div>
             {transactions.length > 0 ? (
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table className='table table-stripped'>
                 <thead>
                   <tr>
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Date</th>

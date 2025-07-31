@@ -1,5 +1,4 @@
-// frontend/src/pages/ViewSavingsGoals.js
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
@@ -40,13 +39,13 @@ const ViewSavingsGoals = () => {
           {savingsGoals.map((goal) => (
             <div className='col' key={goal._id}>
               <div className='card'>
-                <img src={goal.thumbnail || 'https://via.placeholder.com/200'} className='card-img-top' alt={goal.goalName || goal.title} />
+                <img src={goal.product.thumbnail || 'https://via.placeholder.com/200'} className='card-img-top' alt={goal.product.goalName || goal.product.title} />
                 <div className='card-body'>
                   <h5 className='card-title' onClick={() => handleViewSavings(goal._id)} style={{ cursor: 'pointer' }}>
-                    {goal.goalName || goal.title}
+                    {goal.product.goalName || goal.product.title}
                   </h5>
-                  <p className='card-text'>Saved: ${goal.currentAmount}</p>
-                  <p className='card-text'>Goal: ${goal.targetAmount}</p>
+                  <p className='card-text'>Saved: ${goal.product.currentAmount}</p>
+                  <p className='card-text'>Goal: ${goal.product.targetAmount}</p>
                   {user && user.status === 'approved' && (
                     <button className='btn btn-danger' onClick={() => handleDelete(goal._id)}>
                       Delete

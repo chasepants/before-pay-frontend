@@ -17,15 +17,12 @@ const SetupSavings = () => {
   const [plaidPublicToken, setPlaidPublicToken] = useState(null);
   const [plaidAccountId, setPlaidAccountId] = useState(null);
   const [linkedAccount, setLinkedAccount] = useState(null); // Store linked account details
-  const [existingCounterparties, setExistingCounterparties] = useState([]); // Store existing counterparties
   const [selectedAccount, setSelectedAccount] = useState(null); // Track selected account (new or existing)
   const [amount, setAmount] = useState('');
   const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
   const [interval, setInterval] = useState('Weekly'); // Default to Weekly
   const [dayOfMonth, setDayOfMonth] = useState('');
   const [dayOfWeek, setDayOfWeek] = useState('Monday'); // Default to Monday
-  const [totalNumberOfPayments, setTotalNumberOfPayments] = useState('');
   const [showTooltip, setShowTooltip] = useState(false); // State for tooltip visibility
 
   useEffect(() => {
@@ -59,19 +56,6 @@ const SetupSavings = () => {
       }
     };
     fetchPlaidToken();
-
-    const fetchExistingCounterparties = async () => {
-      try {
-        const response = await axios.get(`http://localhost:3001/api/bank/counterparties/${user._id}`, { withCredentials: true });
-        setExistingCounterparties(response.data.counterparties || []);
-        if (response.data.counterparties.length > 0 && !selectedAccount) {
-          setSelectedAccount(response.data.counterparties[0].id); // Auto-select first if none chosen
-        }
-      } catch (err) {
-        console.error('Failed to fetch existing counterparties:', err);
-      }
-    };
-    fetchExistingCounterparties();
   }, [user, savingsGoalId, navigate]);
 
   const { open, ready } = usePlaidLink({
@@ -111,11 +95,9 @@ const SetupSavings = () => {
 
     const schedule = {
       startTime,
-      endTime: endTime || undefined,
       interval,
       ...(interval === 'Monthly' && { dayOfMonth: parseInt(dayOfMonth) }),
       ...(interval === 'Weekly' && { dayOfWeek }),
-      totalNumberOfPayments: totalNumberOfPayments ? parseInt(totalNumberOfPayments) : undefined
     };
 
     setIsLoading(true);
@@ -205,14 +187,6 @@ const SetupSavings = () => {
               type="date"
               aria-label="Start Date"
             />
-            <label htmlFor="endTime" className="form-label mt-3">End Date (Optional)</label>
-            <input
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="form-control form-control-lg"
-              type="date"
-              aria-label="End Date"
-            />
             <label htmlFor="interval" className="form-label mt-3">Interval</label>
             <select
               value={interval}
@@ -260,18 +234,6 @@ const SetupSavings = () => {
                 </select>
               </div>
             )}
-            <label htmlFor="totalNumberOfPayments" className="form-label mt-3">Total Payments (Optional)</label>
-            <input
-              value={totalNumberOfPayments}
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (value > 0 || e.target.value === '') setTotalNumberOfPayments(e.target.value);
-              }}
-              className="form-control form-control-lg"
-              type="number"
-              placeholder="e.g., 12"
-              aria-label="Total Number of Payments"
-            />
             <label htmlFor="account" className="form-label mt-4">Select or link a bank account</label>
             {linkedAccount && (
               <div>
@@ -283,20 +245,6 @@ const SetupSavings = () => {
                   Change Account
                 </button>
               </div>
-            )}
-            {existingCounterparties.length > 0 && !linkedAccount && (
-              <select
-                value={selectedAccount || ''}
-                onChange={(e) => setSelectedAccount(e.target.value)}
-                className="form-select mt-2"
-              >
-                <option value="">Select an existing account</option>
-                {existingCounterparties.map((counterparty) => (
-                  <option key={counterparty.id} value={counterparty.id}>
-                    {counterparty.name} (****{counterparty.mask})
-                  </option>
-                ))}
-              </select>
             )}
             {!linkedAccount && (
               <div className='d-flex flex-row align-items-center justify-space-between'>

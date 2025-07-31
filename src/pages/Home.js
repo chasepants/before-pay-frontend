@@ -91,13 +91,17 @@ const Home = () => {
                     <tbody>
                       {savingsGoals.map((goal) => (
                         <tr key={goal._id}>
-                          <td className="align-middle">{goal.goalName || goal.title}</td>
+                          <td className="align-middle">{goal.goalName || goal.product.title}</td>
                           <td className="align-middle">${goal.currentAmount || 0}</td>
                           <td className="align-middle">${goal.targetAmount || 0}</td>
                           <td className="align-middle">{getNextTransfer(goal)}</td>
-                          <td className="align-middle">
-                            {goal.bankName || 'Unit'} (****{goal.bankLastFour})
-                          </td>
+                          {
+                            goal.bank && (
+                              <td className="align-middle">
+                                {goal.bank.bankName || 'Unit'} (****{goal.bank.bankLastFour})
+                              </td>
+                            )
+                          }
                           <td className="align-middle">
                             <button
                               className="btn btn-secondary btn-sm me-2"
