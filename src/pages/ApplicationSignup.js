@@ -93,7 +93,7 @@ const ApplicationSignup = () => {
     }
     console.log('Submitting application with:', formData); // Debug log
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/application', formData, { withCredentials: true });
+      const response = await axios.post('https://before-pay-backend.vercel.app/api/auth/application', formData, { withCredentials: true });
       console.log('Application response:', response.data);
       navigate('/pending');
     } catch (error) {

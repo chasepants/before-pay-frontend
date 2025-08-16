@@ -1,5 +1,4 @@
-// frontend/src/pages/Home.js
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Navbar from '../components/Navbar';
@@ -25,35 +24,37 @@ const Home = () => {
     navigate(`/view-savings/${goalId}`);
   };
 
-  // Calculate next transfer date (simplified)
-  const getNextTransfer = (goal) => {
-    if (!goal.savingsStartDate || !goal.savingsFrequency) return 'Not scheduled';
-    const start = new Date(goal.savingsStartDate);
-    const now = new Date();
-    let intervalMs = 0;
-    switch (goal.savingsFrequency) {
-      case 'week': intervalMs = 7 * 24 * 60 * 60 * 1000; break;
-      case 'biweek': intervalMs = 14 * 24 * 60 * 60 * 1000; break;
-      case 'month': intervalMs = 30 * 24 * 60 * 60 * 1000; break;
-      default: return 'Not scheduled';
-    }
-    let next = new Date(start);
-    while (next <= now) {
-      next = new Date(next.getTime() + intervalMs);
-    }
-    return next.toLocaleDateString();
+  const getCurrentBalance = () => {
+    return (user?.status === 'approved' ? 1500.75 : 0).toFixed(2);
   };
 
-  // Simulate current balance (to be replaced with real data later)
-  const getCurrentBalance = () => {
-    return (user?.status === 'approved' ? 1500.75 : 0).toFixed(2); // Example balance
-  };
+  const getNextRunDate = (schedule) => {
+    let today = new Date();
+    const todaysDate = today.getDate();
+    if ("Monthly" == schedule.interval && schedule.dayOfMonth >= todaysDate) {
+      return today.toDateString();
+    }
+
+    if ("Monthly" == schedule.interval && schedule.dayOfMonth < todaysDate) {
+      today.setMonth(today.getMonth() + 1);
+      today.setDate(schedule.dayOfMonth);
+      return today.toDateString();
+    }
+
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const todaysIndex = today.getDay();
+
+    if ("Weekly" == schedule.interval && days.indexOf(schedule.dayOfWeek)  === todaysIndex) {
+      return "Today";
+    }
+
+    return `On ${schedule.dayOfWeek}`;
+  }
 
   return (
     <>
       <Navbar user={user} />
       <div className="container mt-4">
-        {/* Subdued Header */}
         <div className="row mb-4">
           <div className="col-12">
             <h2 className="text-dark fw-bold">Welcome, {user?.firstName || 'User'}</h2>
@@ -61,7 +62,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Savings Goals Table */}
         <div className="row mb-5">
           <div className="col-12">
             <div className="card border-0 shadow-sm">
@@ -94,11 +94,18 @@ const Home = () => {
                           <td className="align-middle">{goal.goalName || goal.product.title}</td>
                           <td className="align-middle">${goal.currentAmount || 0}</td>
                           <td className="align-middle">${goal.targetAmount || 0}</td>
-                          <td className="align-middle">{getNextTransfer(goal)}</td>
+                          <td className="align-middle">
+                            {
+                              goal.schedule ? getNextRunDate(goal.schedule) : ``
+                            }
+                          </td>
                           {
-                            goal.bank && (
+                            goal.bank ? (
                               <td className="align-middle">
                                 {goal.bank.bankName || 'Unit'} (****{goal.bank.bankLastFour})
+                              </td>
+                            ) : (
+                              <td className="align-middle">
                               </td>
                             )
                           }
@@ -143,7 +150,7 @@ const Home = () => {
                 <p className="card-text">
                   {user && user.status === 'pending'
                     ? 'Pending Approval'
-                    : `Account: ${user.firstName}'s Savings (****${user.unitAccountId?.slice(-4) || '0000'})`}
+                    : `Account: ${user?.firstName}'s Savings (****${user?.unitAccountId?.slice(-4) || '0000'})`}
                 </p>
                 <p className="card-text">
                   Balance: <strong>${getCurrentBalance()}</strong>

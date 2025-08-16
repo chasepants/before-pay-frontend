@@ -16,14 +16,12 @@ const SetupSavings = () => {
   const [plaidToken, setPlaidToken] = useState(null);
   const [plaidPublicToken, setPlaidPublicToken] = useState(null);
   const [plaidAccountId, setPlaidAccountId] = useState(null);
-  const [linkedAccount, setLinkedAccount] = useState(null); // Store linked account details
-  const [selectedAccount, setSelectedAccount] = useState(null); // Track selected account (new or existing)
+  const [linkedAccount, setLinkedAccount] = useState(null);
+  const [selectedAccount, setSelectedAccount] = useState(null);
   const [amount, setAmount] = useState('');
   const [startTime, setStartTime] = useState('');
-  const [interval, setInterval] = useState('Weekly'); // Default to Weekly
-  const [dayOfMonth, setDayOfMonth] = useState('');
-  const [dayOfWeek, setDayOfWeek] = useState('Monday'); // Default to Monday
-  const [showTooltip, setShowTooltip] = useState(false); // State for tooltip visibility
+  const [interval, setInterval] = useState('Weekly');
+  const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -37,7 +35,7 @@ const SetupSavings = () => {
 
     const checkProfile = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/api/auth/profile-status', { withCredentials: true });
+        const response = await axios.get('https://before-pay-backend.vercel.app/api/auth/profile-status', { withCredentials: true });
         if (!response.data.completed) {
           navigate('/complete-profile');
         }
@@ -49,7 +47,7 @@ const SetupSavings = () => {
 
     const fetchPlaidToken = async () => {
       try {
-        const response = await axios.post('http://localhost:3001/api/bank/plaid-link-token', {}, { withCredentials: true });
+        const response = await axios.post('https://before-pay-backend.vercel.app/api/bank/plaid-link-token', {}, { withCredentials: true });
         setPlaidToken(response.data.link_token);
       } catch (err) {
         setError('Failed to initialize bank account linking');
@@ -84,8 +82,8 @@ const SetupSavings = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!selectedAccount || !amount || !interval || !startTime || (interval === 'Monthly' && !dayOfMonth) || (interval === 'Weekly' && !dayOfWeek)) {
-      setError('Please fill all required fields: account, amount, interval, start date, and day (of month or week).');
+    if (!selectedAccount || !amount || !interval || !startTime || !interval) {
+      setError('Please fill all required fields: account, amount, interval, and start date');
       return;
     }
     if (user.status !== 'approved') {
@@ -95,9 +93,7 @@ const SetupSavings = () => {
 
     const schedule = {
       startTime,
-      interval,
-      ...(interval === 'Monthly' && { dayOfMonth: parseInt(dayOfMonth) }),
-      ...(interval === 'Weekly' && { dayOfWeek }),
+      interval
     };
 
     setIsLoading(true);
@@ -105,7 +101,7 @@ const SetupSavings = () => {
 
     try {
       await axios.post(
-        'http://localhost:3001/api/bank/setup-savings',
+        'https://before-pay-backend.vercel.app/api/bank/setup-savings',
         {
           savingsGoalId,
           plaidAccessToken: plaidPublicToken || null, // Only send if newly linked
@@ -197,43 +193,6 @@ const SetupSavings = () => {
               <option value="Weekly">Weekly</option>
               <option value="Monthly">Monthly</option>
             </select>
-            {interval === 'Monthly' && (
-              <div>
-                <label htmlFor="dayOfMonth" className="form-label mt-3">Day of Month (1-28 or -5 to -1)</label>
-                <input
-                  value={dayOfMonth}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if ((value >= 1 && value <= 28) || (value >= -5 && value <= -1)) {
-                      setDayOfMonth(e.target.value);
-                    }
-                  }}
-                  className="form-control form-control-lg"
-                  type="number"
-                  placeholder="e.g., 15 or -1"
-                  aria-label="Day of Month"
-                />
-              </div>
-            )}
-            {interval === 'Weekly' && (
-              <div>
-                <label htmlFor="dayOfWeek" className="form-label mt-3">Day of Week</label>
-                <select
-                  value={dayOfWeek}
-                  onChange={(e) => setDayOfWeek(e.target.value)}
-                  className="form-control form-control-lg"
-                  aria-label="Day of Week"
-                >
-                  <option value="Sunday">Sunday</option>
-                  <option value="Monday">Monday</option>
-                  <option value="Tuesday">Tuesday</option>
-                  <option value="Wednesday">Wednesday</option>
-                  <option value="Thursday">Thursday</option>
-                  <option value="Friday">Friday</option>
-                  <option value="Saturday">Saturday</option>
-                </select>
-              </div>
-            )}
             <label htmlFor="account" className="form-label mt-4">Select or link a bank account</label>
             {linkedAccount && (
               <div>
@@ -253,7 +212,7 @@ const SetupSavings = () => {
                   disabled={!ready || isLoading}
                   className="btn btn-secondary mt-4"
                 >
-                  <i className="bi bi-lock"></i> Link a New Bank Account
+                  <i className="bi bi-lock"></i> Link a Bank Account
                 </button>
                 <h3
                   className='mt-2 mx-3'

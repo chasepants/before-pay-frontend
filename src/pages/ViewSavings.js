@@ -23,7 +23,7 @@ const ViewSavings = () => {
 
     const fetchSavingsGoal = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
+        const res = await axios.get(`https://before-pay-backend.vercel.app/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
         setSavingsGoal(res.data);
       } catch (err) {
         setError('Savings goal not found');
@@ -45,7 +45,7 @@ const ViewSavings = () => {
       const fetchTransactions = async () => {
         try {
           const txRes = await axios.get(
-            `http://localhost:3001/api/bank/transaction-history/${savingsGoalId}`,
+            `https://before-pay-backend.vercel.app/api/bank/transaction-history/${savingsGoalId}`,
             { withCredentials: true }
           );
           setTransactions(txRes.data.transactions);
@@ -69,13 +69,13 @@ const ViewSavings = () => {
     setError('');
     try {
       const res = await axios.post(
-        'http://localhost:3001/api/bank/payout',
+        'https://before-pay-backend.vercel.app/api/bank/payout',
         { savingsGoalId }, // Renamed from wishlistItemId
         { withCredentials: true }
       );
       alert('Savings transferred successfully!');
 
-      const refreshed = await axios.get(`http://localhost:3001/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
+      const refreshed = await axios.get(`https://before-pay-backend.vercel.app/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
       setSavingsGoal(refreshed.data);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to transfer savings');
@@ -165,7 +165,7 @@ const ViewSavings = () => {
           </div>
         </div>
         {
-          savingsGoal.bank.bankName && (
+          savingsGoal.bank && (
             <div className='row'>
               <div className='col-sm-4 offset-sm-1'>
                   <h4 className='text-muted'>
@@ -178,7 +178,7 @@ const ViewSavings = () => {
           )
         }
         {
-          !savingsGoal.bank.bankName && (
+          !savingsGoal.bank && (
             <div className='row my-3'>
               <div className='col-sm-4 offset-sm-1'>
                 <button className='btn btn-primary' onClick={() => navigate(`/setup-savings/${savingsGoalId}`)}>

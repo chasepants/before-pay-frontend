@@ -29,7 +29,7 @@ const App = () => {
     const fetchUser = async () => {
       dispatch(setUserLoading());
       try {
-        const userRes = await axios.get('http://localhost:3001/api/auth/current_user', { withCredentials: true });
+        const userRes = await axios.get('https://before-pay-backend.vercel.app/api/auth/current_user', { withCredentials: true });
         dispatch(setUser(userRes.data));
       } catch (err) {
         console.error('User fetch failed:', err);
@@ -50,7 +50,7 @@ const App = () => {
       const fetchSavingsGoals = async () => {
         dispatch(setSavingsGoalsLoading());
         try {
-          const savingsGoalsRes = await axios.get('http://localhost:3001/api/savings-goal', { withCredentials: true });
+          const savingsGoalsRes = await axios.get('https://before-pay-backend.vercel.app/api/savings-goal', { withCredentials: true });
           dispatch(setSavingsGoals(savingsGoalsRes.data));
         } catch (err) {
           console.error('Savings goals fetch failed:', err);

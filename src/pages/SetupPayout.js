@@ -18,7 +18,7 @@ const SetupPayout = () => {
       try {
         console.log('Fetching Financial Connections session for wishlistItemId:', wishlistItemId);
         const res = await axios.post(
-          'http://localhost:3001/api/bank/setup-payout',
+          'https://before-pay-backend.vercel.app/api/bank/setup-payout',
           { wishlistItemId },
           { withCredentials: true }
         );

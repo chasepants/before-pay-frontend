@@ -6,7 +6,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    window.location.href = 'http://localhost:3001/api/auth/google'; // Redirect to Google OAuth
+    window.location.href = 'https://before-pay-backend.vercel.app/api/auth/google'; // Redirect to Google OAuth
   };
 
   const handleLearnMore = () => {
