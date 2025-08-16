@@ -23,7 +23,7 @@ const ViewSavings = () => {
 
     const fetchSavingsGoal = async () => {
       try {
-        const res = await axios.get(`https://before-pay-backend.vercel.app/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
         setSavingsGoal(res.data);
       } catch (err) {
         setError('Savings goal not found');
@@ -45,7 +45,7 @@ const ViewSavings = () => {
       const fetchTransactions = async () => {
         try {
           const txRes = await axios.get(
-            `https://before-pay-backend.vercel.app/api/bank/transaction-history/${savingsGoalId}`,
+            `${process.env.REACT_APP_API_URL}/api/bank/transaction-history/${savingsGoalId}`,
             { withCredentials: true }
           );
           setTransactions(txRes.data.transactions);
@@ -69,13 +69,13 @@ const ViewSavings = () => {
     setError('');
     try {
       const res = await axios.post(
-        'https://before-pay-backend.vercel.app/api/bank/payout',
+        `${process.env.REACT_APP_API_URL}/api/bank/payout`,
         { savingsGoalId }, // Renamed from wishlistItemId
         { withCredentials: true }
       );
       alert('Savings transferred successfully!');
 
-      const refreshed = await axios.get(`https://before-pay-backend.vercel.app/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
+      const refreshed = await axios.get(`${process.env.REACT_APP_API_URL}/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
       setSavingsGoal(refreshed.data);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to transfer savings');

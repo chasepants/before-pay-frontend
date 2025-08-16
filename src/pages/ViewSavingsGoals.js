@@ -17,7 +17,7 @@ const ViewSavingsGoals = () => {
 
   const handleDelete = async (goalId) => {
     try {
-      await axios.delete(`https://before-pay-backend.vercel.app/api/savings-goal/${goalId}`, { withCredentials: true });
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/savings-goal/${goalId}`, { withCredentials: true });
       dispatch(removeSavingsGoal(goalId));
     } catch (err) {
       console.error('Delete failed:', err);

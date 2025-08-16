@@ -27,7 +27,7 @@ const Profile = () => {
 
   const fetchDocuments = async () => {
     try {
-      const response = await axios.get('https://before-pay-backend.vercel.app/api/auth/documents', { withCredentials: true });
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/documents`, { withCredentials: true });
       console.log(response)
       setDocuments(response.data.documents || []);
     } catch (err) {
@@ -45,7 +45,7 @@ const Profile = () => {
 
     try {
       await axios.put(
-        'https://before-pay-backend.vercel.app/api/auth/document/upload',
+        `${process.env.REACT_APP_API_URL}/api/auth/document/upload`,
         formData,
         {
           withCredentials: true,

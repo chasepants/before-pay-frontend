@@ -42,7 +42,7 @@ const CreateSavingsGoal = () => {
         targetAmount: parseFloat(formData.amount),
         product_link: formData.productLink || ''
       };
-      const res = await axios.post('https://before-pay-backend.vercel.app/api/savings-goal', newGoal, { withCredentials: true });
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/savings-goal`, newGoal, { withCredentials: true });
       dispatch(addSavingsGoal(res.data));
       setFormData({ goalName: '', description: '', amount: '', productLink: '' });
       setError('');
@@ -70,7 +70,7 @@ const CreateSavingsGoal = () => {
       return;
     }
     try {
-      const res = await axios.post('https://before-pay-backend.vercel.app/api/savings-goal', { userId: user._id, ...product, targetAmount: product.extracted_price }, { withCredentials: true });
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/savings-goal`, { userId: user._id, ...product, targetAmount: product.extracted_price }, { withCredentials: true });
       dispatch(addSavingsGoal(res.data));
     } catch (err) {
       console.error('Add to savings failed:', err);

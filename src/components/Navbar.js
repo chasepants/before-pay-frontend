@@ -12,7 +12,7 @@ const Navbar = ({ user }) => {
   };
 
   const handleLogout = () => {
-    axios.get('https://before-pay-backend.vercel.app/api/auth/logout', { withCredentials: true })
+    axios.get(`${process.env.REACT_APP_API_URL}/api/auth/logout`, { withCredentials: true })
       .then(() => {
         localStorage.removeItem('user');
         navigate('/');

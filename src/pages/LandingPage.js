@@ -6,7 +6,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    window.location.href = 'https://before-pay-backend.vercel.app/api/auth/google'; // Redirect to Google OAuth
+    window.location.href = `${process.env.REACT_APP_API_URL}/api/auth/google`; // Redirect to Google OAuth
   };
 
   const handleLearnMore = () => {

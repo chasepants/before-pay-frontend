@@ -35,7 +35,7 @@ const SetupSavings = () => {
 
     const checkProfile = async () => {
       try {
-        const response = await axios.get('https://before-pay-backend.vercel.app/api/auth/profile-status', { withCredentials: true });
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}api/auth/profile-status`, { withCredentials: true });
         if (!response.data.completed) {
           navigate('/complete-profile');
         }
@@ -47,7 +47,7 @@ const SetupSavings = () => {
 
     const fetchPlaidToken = async () => {
       try {
-        const response = await axios.post('https://before-pay-backend.vercel.app/api/bank/plaid-link-token', {}, { withCredentials: true });
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}api/bank/plaid-link-token`, {}, { withCredentials: true });
         setPlaidToken(response.data.link_token);
       } catch (err) {
         setError('Failed to initialize bank account linking');
@@ -101,7 +101,7 @@ const SetupSavings = () => {
 
     try {
       await axios.post(
-        'https://before-pay-backend.vercel.app/api/bank/setup-savings',
+        `${process.env.REACT_APP_API_URL}api/bank/setup-savings`,
         {
           savingsGoalId,
           plaidAccessToken: plaidPublicToken || null, // Only send if newly linked

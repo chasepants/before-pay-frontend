@@ -6,7 +6,7 @@ const Signup = () => {
   const navigate = useNavigate();
 
   const handleGoogleAuth = () => {
-    window.location.href = 'https://before-pay-backend.vercel.app/api/auth/google';
+    window.location.href = `${process.env.REACT_APP_API_URL}/api/auth/google`;
   };
 
   return (
