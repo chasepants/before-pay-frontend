@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import axios from 'axios';
+import api from '../api';
 import Navbar from '../components/Navbar';
 import { removeSavingsGoal } from '../store/savingsSlice';
 
@@ -17,7 +17,7 @@ const ViewSavingsGoals = () => {
 
   const handleDelete = async (goalId) => {
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/api/savings-goal/${goalId}`, { withCredentials: true });
+      await api.delete(`/api/savings-goal/${goalId}`);
       dispatch(removeSavingsGoal(goalId));
     } catch (err) {
       console.error('Delete failed:', err);

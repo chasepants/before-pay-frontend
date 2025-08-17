@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import { useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import Navbar from '../components/Navbar';
 import LoadingAnimation from '../components/LoadingAnimation';
 
@@ -35,7 +35,7 @@ const SetupSavings = () => {
 
     const checkProfile = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}api/auth/profile-status`, { withCredentials: true });
+        const response = await api.get(`/api/auth/profile-status`);
         if (!response.data.completed) {
           navigate('/complete-profile');
         }
@@ -47,7 +47,7 @@ const SetupSavings = () => {
 
     const fetchPlaidToken = async () => {
       try {
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}api/bank/plaid-link-token`, {}, { withCredentials: true });
+        const response = await api.post(`/api/bank/plaid-link-token`);
         setPlaidToken(response.data.link_token);
       } catch (err) {
         setError('Failed to initialize bank account linking');
@@ -100,16 +100,15 @@ const SetupSavings = () => {
     setError('');
 
     try {
-      await axios.post(
-        `${process.env.REACT_APP_API_URL}api/bank/setup-savings`,
+      await api.post(
+        `/api/bank/setup-savings`,
         {
           savingsGoalId,
           plaidAccessToken: plaidPublicToken || null, // Only send if newly linked
           plaidAccountId: selectedAccount,
           amount,
           schedule
-        },
-        { withCredentials: true }
+        }
       );
       alert('Savings plan set up successfully!');
       navigate('/home');

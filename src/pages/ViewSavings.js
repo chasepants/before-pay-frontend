@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import axios from 'axios';
+import api from '../api';
 import Navbar from '../components/Navbar';
 import LoadingAnimation from '../components/LoadingAnimation';
 
@@ -23,7 +23,7 @@ const ViewSavings = () => {
 
     const fetchSavingsGoal = async () => {
       try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
+        const res = await api.get(`/api/savings-goal/${savingsGoalId}`);
         setSavingsGoal(res.data);
       } catch (err) {
         setError('Savings goal not found');
@@ -44,10 +44,7 @@ const ViewSavings = () => {
     if (savingsGoal) {
       const fetchTransactions = async () => {
         try {
-          const txRes = await axios.get(
-            `${process.env.REACT_APP_API_URL}/api/bank/transaction-history/${savingsGoalId}`,
-            { withCredentials: true }
-          );
+          const txRes = await api.get(`/api/bank/transaction-history/${savingsGoalId}`);
           setTransactions(txRes.data.transactions);
         } catch (err) {
           setError(
@@ -68,14 +65,13 @@ const ViewSavings = () => {
     setIsLoading(true);
     setError('');
     try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/bank/payout`,
-        { savingsGoalId }, // Renamed from wishlistItemId
-        { withCredentials: true }
+      const res = await api.post(
+        `/api/bank/payout`,
+        { savingsGoalId }
       );
       alert('Savings transferred successfully!');
 
-      const refreshed = await axios.get(`${process.env.REACT_APP_API_URL}/api/savings-goal/${savingsGoalId}`, { withCredentials: true });
+      const refreshed = await api.get(`/api/savings-goal/${savingsGoalId}`);
       setSavingsGoal(refreshed.data);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to transfer savings');

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Navbar from '../components/Navbar';
 import LoadingAnimation from '../components/LoadingAnimation';
-import axios from 'axios';
+import api from '../api';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const Profile = () => {
 
   const fetchDocuments = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/documents`, { withCredentials: true });
+      const response = await api.get(`${process.env.REACT_APP_API_URL}/api/auth/documents`, { withCredentials: true });
       console.log(response)
       setDocuments(response.data.documents || []);
     } catch (err) {
@@ -44,8 +44,8 @@ const Profile = () => {
     formData.append('file', newDocument);
 
     try {
-      await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/auth/document/upload`,
+      await api.put(
+        `/api/auth/document/upload`,
         formData,
         {
           withCredentials: true,

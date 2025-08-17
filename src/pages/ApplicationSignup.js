@@ -1,8 +1,7 @@
-// frontend/src/pages/ApplicationSignup.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import axios from 'axios';
+import api from '../api'; 
 import Navbar from '../components/Navbar';
 
 const ApplicationSignup = () => {
@@ -93,7 +92,7 @@ const ApplicationSignup = () => {
     }
     console.log('Submitting application with:', formData); // Debug log
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/application`, formData, { withCredentials: true });
+      const response = await api.post(`/api/auth/application`);
       console.log('Application response:', response.data);
       navigate('/pending');
     } catch (error) {

@@ -1,5 +1,3 @@
-// frontend/src/pages/Pending.js
-import React from 'react';
 import { useSelector } from 'react-redux';
 import Navbar from '../components/Navbar';
 

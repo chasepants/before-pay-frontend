@@ -1,8 +1,7 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/beforepay-logo.png';
-import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap CSS is imported
+import api from '../api';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Navbar = ({ user }) => {
   const navigate = useNavigate();
@@ -12,7 +11,7 @@ const Navbar = ({ user }) => {
   };
 
   const handleLogout = () => {
-    axios.get(`${process.env.REACT_APP_API_URL}/api/auth/logout`, { withCredentials: true })
+    api.get(`/api/auth/logout`)
       .then(() => {
         localStorage.removeItem('user');
         navigate('/');

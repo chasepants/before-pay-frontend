@@ -1,8 +1,7 @@
-// frontend/src/App.js
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import axios from 'axios';
+import api from './api';
 import LandingPage from './pages/LandingPage';
 import Home from './pages/Home';
 import SetupSavings from './pages/SetupSavings';
@@ -14,7 +13,7 @@ import Profile from './pages/Profile';
 import ApplicationSignup from './pages/ApplicationSignup';
 import Pending from './pages/Pending';
 import CreateSavingsGoal from './pages/CreateSavingsGoal';
-import ViewSavingsGoals from './pages/ViewSavingsGoals'; // New route
+import ViewSavingsGoals from './pages/ViewSavingsGoals';
 import { setUser, setUserLoading, setUserError } from './store/userSlice';
 import { setSavingsGoals, setSavingsGoalsLoading, setSavingsGoalsError } from './store/savingsSlice';
 import LoadingAnimation from './components/LoadingAnimation';
@@ -26,22 +25,36 @@ const App = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Extract token from URL query parameter
+    const query = new URLSearchParams(window.location.search);
+    const token = query.get('token');
+    if (token) {
+      console.log('Storing token from URL:', token);
+      localStorage.setItem('authToken', token);
+      // Clear query parameters from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     const fetchUser = async () => {
       dispatch(setUserLoading());
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.log('No token found in localStorage');
+        dispatch(setUser(null));
+        return;
+      }
       try {
-        const userRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/current_user`, { withCredentials: true });
+        console.log('Fetching user from:', `${process.env.REACT_APP_API_URL}/api/auth/current_user`);
+        const userRes = await api.get('/api/auth/current_user'); // Use api instance
+        console.log('Current user response:', userRes.data);
         dispatch(setUser(userRes.data));
       } catch (err) {
         console.error('User fetch failed:', err);
+        console.error('Error response:', err.response);
         dispatch(setUserError('Failed to fetch user'));
-        if (err.response?.status === 401) {
-          dispatch(setUser(null));
-        } else {
-          setError('Failed to load user data. Please try again.');
-        }
+        dispatch(setUser(null));
       }
     };
-
     fetchUser();
   }, [dispatch]);
 
@@ -50,19 +63,14 @@ const App = () => {
       const fetchSavingsGoals = async () => {
         dispatch(setSavingsGoalsLoading());
         try {
-          const savingsGoalsRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/savings-goal`, { withCredentials: true });
+          const savingsGoalsRes = await api.get('/api/savings-goal'); // Use api instance
           dispatch(setSavingsGoals(savingsGoalsRes.data));
         } catch (err) {
           console.error('Savings goals fetch failed:', err);
           dispatch(setSavingsGoalsError(err.message));
-          if (err.response?.status === 401) {
-            dispatch(setUser(null));
-          } else {
-            setError('Failed to load savings goals data. Please try again.');
-          }
+          dispatch(setUser(null));
         }
       };
-
       fetchSavingsGoals();
     }
   }, [user, dispatch]);
@@ -107,7 +115,7 @@ const App = () => {
         <Route path="/application-signup" element={user && !user.unitApplicationId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
         <Route path="/pending" element={user && user.status === 'pending' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
         <Route path="/create-savings-goal" element={user ? <CreateSavingsGoal /> : <Navigate to="/" />} />
-        <Route path="/view-savings-goals" element={user ? <ViewSavingsGoals /> : <Navigate to="/" />} /> {/* New route */}
+        <Route path="/view-savings-goals" element={user ? <ViewSavingsGoals /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );

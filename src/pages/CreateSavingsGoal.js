@@ -1,19 +1,18 @@
-// frontend/src/pages/CreateSavingsGoal.js
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import axios from 'axios';
+import api from '../api';
 import Navbar from '../components/Navbar';
 import ProductCard from '../components/ProductCard';
 import mockSerpResults from '../mock_serp.js';
 import { addSavingsGoal } from '../store/savingsSlice';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap is included
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const CreateSavingsGoal = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
-  const { goals: savingsGoals } = useSelector((state) => state.savings); // Added to access savingsGoals
+  const { goals: savingsGoals } = useSelector((state) => state.savings);
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState([]);
   const [formData, setFormData] = useState({
@@ -42,19 +41,20 @@ const CreateSavingsGoal = () => {
         targetAmount: parseFloat(formData.amount),
         product_link: formData.productLink || ''
       };
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/savings-goal`, newGoal, { withCredentials: true });
+      const res = await api.post('/api/savings-goal', newGoal); // Use api instance
       dispatch(addSavingsGoal(res.data));
       setFormData({ goalName: '', description: '', amount: '', productLink: '' });
       setError('');
-      navigate('/view-savings-goals'); // Redirect to view goals
+      navigate('/view-savings-goals');
     } catch (err) {
       setError('Failed to create savings goal: ' + err.message);
+      console.error('Create savings goal error:', err);
     }
   };
 
   const handleSearch = async () => {
     try {
-      setProducts(mockSerpResults); // Mocked for now
+      setProducts(mockSerpResults);
     } catch (err) {
       console.error('Mock search failed:', err);
     }
@@ -65,12 +65,12 @@ const CreateSavingsGoal = () => {
       navigate('/pending');
       return;
     }
-    if (savingsGoals.some(goal => goal.product_id === product.product_id)) { // Now defined
+    if (savingsGoals.some(goal => goal.product_id === product.product_id)) {
       alert('Goal already in savings list');
       return;
     }
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/savings-goal`, { userId: user._id, ...product, targetAmount: product.extracted_price }, { withCredentials: true });
+      const res = await api.post('/api/savings-goal', { userId: user._id, ...product, targetAmount: product.extracted_price }); // Use api instance
       dispatch(addSavingsGoal(res.data));
     } catch (err) {
       console.error('Add to savings failed:', err);
