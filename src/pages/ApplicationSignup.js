@@ -1,36 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import api from '../api'; 
+import api from '../api';
 import Navbar from '../components/Navbar';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const ApplicationSignup = () => {
   const navigate = useNavigate();
   const { user, loading: userLoading } = useSelector((state) => state.user);
-
   const [formData, setFormData] = useState({
     ssn: '',
-    firstName: '', // Restored as separate field
-    lastName: '',  // Restored as separate field
+    firstName: '',
+    lastName: '',
     dateOfBirth: '',
     addressLine1: '',
     addressLine2: '',
     city: '',
     state: '',
     postalCode: '',
-    country: 'US', // Default to US as per Unit docs
-    email: '', // Pre-filled from user if available
+    country: 'US',
+    email: '',
     phone: '',
-    ip: '', // Can be set server-side
-    ein: '', // Optional for individuals, but included
-    dba: '', // Optional
-    soleProprietorship: false, // Optional, default false
-    sourceOfIncome: '', // e.g., EmploymentOrPayrollIncome
-    annualIncome: '', // e.g., Between50kAnd100k
-    occupation: '', // Restricted to predefined values
-    numberOfEmployees: '', // Optional
-    businessVertical: '', // Optional
-    website: '' // Optional
+    ip: '',
+    ein: '',
+    dba: '',
+    soleProprietorship: false,
+    sourceOfIncome: '',
+    annualIncome: '',
+    occupation: '',
+    numberOfEmployees: '',
+    businessVertical: '',
+    website: ''
   });
   const [error, setError] = useState('');
 
@@ -61,12 +61,21 @@ const ApplicationSignup = () => {
     'Student'
   ];
 
+  // US state codes
+  const usStates = [
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL',
+    'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME',
+    'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH',
+    'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI',
+    'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI',
+    'WY'
+  ];
+
   useEffect(() => {
-    if (userLoading) return; // Wait for user loading to complete
+    if (userLoading) return;
     if (!user || user.unitApplicationId) {
       navigate(user && user.status === 'approved' ? '/home' : '/');
     } else {
-      // Pre-fill email, firstName, and lastName from user data if available
       setFormData(prev => ({
         ...prev,
         email: user.email || '',
@@ -90,9 +99,9 @@ const ApplicationSignup = () => {
       setError('User not authenticated');
       return;
     }
-    console.log('Submitting application with:', formData); // Debug log
+    console.log('Submitting application with:', formData);
     try {
-      const response = await api.post(`/api/auth/application`);
+      const response = await api.post(`/api/auth/application`, formData);
       console.log('Application response:', response.data);
       navigate('/pending');
     } catch (error) {
@@ -101,13 +110,13 @@ const ApplicationSignup = () => {
     }
   };
 
-  if (userLoading || !user) return null; // Prevent render during loading or if unauthenticated
+  if (userLoading || !user) return null;
 
   return (
     <div className="container mb-4">
-      <Navbar />
+      <Navbar user={user} />
       <div className="row">
-        <div className="border border-black col-sm-6 mt-5 offset-sm-3 p-5 rounded-5 text-center">
+        <div className="col-sm-6 mt-5 offset-sm-3 p-5 rounded-5 text-center">
           <h1>APPLICATION FORM</h1>
           <h5>Complete your application to open a savings account</h5>
           {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -166,15 +175,20 @@ const ApplicationSignup = () => {
               placeholder="City"
               aria-label="City"
             />
-            <input
+            <select
               className="form-control form-control-lg mt-3"
-              type="text"
               name="state"
               value={formData.state}
               onChange={handleChange}
-              placeholder="State"
               aria-label="State"
-            />
+            >
+              <option value="">Select State</option>
+              {usStates.map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
+              ))}
+            </select>
             <input
               className="form-control form-control-lg mt-3"
               type="text"
@@ -249,7 +263,7 @@ const ApplicationSignup = () => {
               <option value="">Select Occupation</option>
               {occupations.map((occupation) => (
                 <option key={occupation} value={occupation}>
-                  {occupation.replace(/([A-Z])/g, ' $1').trim()} {/* Add spaces before capitals for readability */}
+                  {occupation.replace(/([A-Z])/g, ' $1').trim()}
                 </option>
               ))}
             </select>

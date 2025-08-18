@@ -1,70 +1,56 @@
 import { useNavigate } from 'react-router-dom';
-import logo from '../assets/beforepay-logo.png';
+import logo from '../assets/beforepay-logo.png'; // Update to saveahead-logo.png if rebranding
 import api from '../api';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const Navbar = ({ user }) => {
+import Container from 'react-bootstrap/Container';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
+
+const NavbarComponent = ({ user }) => {
   const navigate = useNavigate();
 
   const handleLogoClick = () => {
+    console.log('Logo clicked, navigating to /home');
     navigate('/home');
   };
 
   const handleLogout = () => {
-    api.get(`/api/auth/logout`)
+    console.log('Logout clicked');
+    api.get('/api/auth/logout')
       .then(() => {
-        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
+        console.log('authToken removed, navigating to /');
         navigate('/');
         window.location.reload();
       })
       .catch((error) => {
-        console.log(error);
+        console.error('Logout error:', error);
       });
   };
 
   return (
-    <nav
-      className="navbar navbar-expand-lg navbar-light d-flex justify-content-between"
-      style={{
-        backgroundColor: '#ffffff',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-        padding: '10px 20px'
-      }}
-    >
-      <a className="navbar-brand" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
-        <img src={logo} alt="Beforepay Logo" style={{ width: '150px' }} />
-      </a>
-
-      {user ? (
-        <div className="mx-4">
-          <ul className="navbar-nav">
-            <li className="nav-item">
-              <a
-                className="nav-link"
-                href="/complete-profile"
-                onClick={(e) => { e.preventDefault(); navigate('/profile'); }}
-                aria-label="Go to profile"
-              >
-                Profile
-              </a>
-            </li>
-            <li className="nav-item">
-              <button
-                className="btn btn-secondary mx-3"
-                onClick={handleLogout}
-                aria-label="Logout"
-              >
-                Logout
-              </button>
-            </li>
-          </ul>
-        </div>
-      ) : null}
-    </nav>
+    <Navbar expand="lg" bg="light" data-bs-theme="light">
+      <Container>
+        <Navbar.Brand onClick={(e) => { e.preventDefault(); handleLogoClick(); }} >
+          <img src={logo} alt="Beforepay Logo" style={{ width: '150px' }} />
+        </Navbar.Brand>
+        {
+          user ? (
+            <>
+              <Navbar.Toggle aria-controls="basic-navbar-nav" />
+              <Navbar.Collapse id="basic-navbar-nav">
+                  <Nav className="me-auto">
+                    <Nav.Link onClick={(e) => { e.preventDefault(); navigate('/profile'); }}>Profile</Nav.Link>
+                    <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+                  </Nav>
+              </Navbar.Collapse>
+            </>
+          ) : <></>
+        }
+      </Container>
+    </Navbar>
   );
-};
+}
 
-export default Navbar;
+export default NavbarComponent;
