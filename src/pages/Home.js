@@ -233,6 +233,19 @@ if (error) {
               </div>
             </div>
           </div>
+          <div className="col-md-4">
+            {
+              customerToken ? <unit-elements-activity
+                customer-token={customerToken}
+                account-id={user.unitAccountId}
+                theme=""
+                hide-actions-menu-button="false"
+                hide-selection-menu-button="false"
+                menu-items="details,statements,bankVerification"
+                hide-account-cta-banner="true"
+              ></unit-elements-activity> : <Placeholder  />
+            }
+          </div>
         </div>
       </div>
     </>
