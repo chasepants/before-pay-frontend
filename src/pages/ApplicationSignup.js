@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import api from '../api';
@@ -33,6 +33,9 @@ const ApplicationSignup = () => {
     website: ''
   });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [buttonText, setButtonText] = useState('Submit Application');
+  const intervalRef = useRef(null);
 
   // Predefined occupation values
   const occupations = [
@@ -85,6 +88,22 @@ const ApplicationSignup = () => {
     }
   }, [navigate, user, userLoading]);
 
+  useEffect(() => {
+    if (submitting) {
+      // Cycle button text for loading animation
+      const texts = ['Submit.', 'Submit..', 'Submit...'];
+      let index = 0;
+      intervalRef.current = setInterval(() => {
+        setButtonText(texts[index]);
+        index = (index + 1) % texts.length;
+      }, 500);
+    } else {
+      setButtonText('Submit Application');
+      clearInterval(intervalRef.current);
+    }
+    return () => clearInterval(intervalRef.current); // Cleanup on unmount
+  }, [submitting]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -99,6 +118,7 @@ const ApplicationSignup = () => {
       setError('User not authenticated');
       return;
     }
+    setSubmitting(true);
     console.log('Submitting application with:', formData);
     try {
       const response = await api.post(`/api/auth/application`, formData);
@@ -107,6 +127,8 @@ const ApplicationSignup = () => {
     } catch (error) {
       console.error('Application submit error:', error.response?.data || error.message);
       setError('Error submitting application: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -129,6 +151,7 @@ const ApplicationSignup = () => {
               onChange={handleChange}
               placeholder="First Name"
               aria-label="First Name"
+              disabled={submitting}
             />
             <input
               className="form-control form-control-lg mt-3"
@@ -138,6 +161,7 @@ const ApplicationSignup = () => {
               onChange={handleChange}
               placeholder="Last Name"
               aria-label="Last Name"
+              disabled={submitting}
             />
             <input
               className="form-control form-control-lg mt-3"
@@ -147,6 +171,7 @@ const ApplicationSignup = () => {
               onChange={handleChange}
               placeholder="Date of Birth"
               aria-label="Date of Birth"
+              disabled={submitting}
             />
             <input
               className="form-control form-control-lg mt-3"
@@ -156,6 +181,7 @@ const ApplicationSignup = () => {
               onChange={handleChange}
               placeholder="SSN"
               aria-label="SSN"
+              disabled={submitting}
             />
             <input
               className="form-control form-control-lg mt-3"
@@ -165,6 +191,7 @@ const ApplicationSignup = () => {
               onChange={handleChange}
               placeholder="Address Line 1"
               aria-label="Address Line 1"
+              disabled={submitting}
             />
             <input
               className="form-control form-control-lg mt-3"
@@ -174,6 +201,7 @@ const ApplicationSignup = () => {
               onChange={handleChange}
               placeholder="City"
               aria-label="City"
+              disabled={submitting}
             />
             <select
               className="form-control form-control-lg mt-3"
@@ -181,6 +209,7 @@ const ApplicationSignup = () => {
               value={formData.state}
               onChange={handleChange}
               aria-label="State"
+              disabled={submitting}
             >
               <option value="">Select State</option>
               {usStates.map((state) => (
@@ -197,6 +226,7 @@ const ApplicationSignup = () => {
               onChange={handleChange}
               placeholder="Postal Code"
               aria-label="Postal Code"
+              disabled={submitting}
             />
             <input
               className="form-control form-control-lg mt-3"
@@ -216,6 +246,7 @@ const ApplicationSignup = () => {
               onChange={handleChange}
               placeholder="Email"
               aria-label="Email"
+              disabled={submitting}
             />
             <input
               className="form-control form-control-lg mt-3"
@@ -225,6 +256,7 @@ const ApplicationSignup = () => {
               onChange={handleChange}
               placeholder="Phone"
               aria-label="Phone"
+              disabled={submitting}
             />
             <select
               className="form-control form-control-lg mt-3"
@@ -232,6 +264,7 @@ const ApplicationSignup = () => {
               value={formData.sourceOfIncome}
               onChange={handleChange}
               aria-label="Source of Income"
+              disabled={submitting}
             >
               <option value="">Select Source of Income</option>
               <option value="EmploymentOrPayrollIncome">Employment/Payroll Income</option>
@@ -244,6 +277,7 @@ const ApplicationSignup = () => {
               value={formData.annualIncome}
               onChange={handleChange}
               aria-label="Annual Income"
+              disabled={submitting}
             >
               <option value="">Select Annual Income</option>
               <option value="UpTo10k">Less than $10,000</option>
@@ -259,6 +293,7 @@ const ApplicationSignup = () => {
               value={formData.occupation}
               onChange={handleChange}
               aria-label="Occupation"
+              disabled={submitting}
             >
               <option value="">Select Occupation</option>
               {occupations.map((occupation) => (
@@ -267,8 +302,12 @@ const ApplicationSignup = () => {
                 </option>
               ))}
             </select>
-            <button className="btn btn-primary w-50 mt-5" type="submit">
-              Submit Application
+            <button
+              className="btn btn-primary w-50 mt-5"
+              type="submit"
+              disabled={submitting}
+            >
+              {buttonText}
             </button>
           </form>
         </div>

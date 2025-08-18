@@ -1,8 +1,20 @@
-import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
 import Navbar from '../components/Navbar';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Pending = () => {
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('Redirecting to /home after 10 seconds');
+      navigate('/home');
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [navigate]);
 
   return (
     <div className="container">

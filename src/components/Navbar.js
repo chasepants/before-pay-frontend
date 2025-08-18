@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import logo from '../assets/beforepay-logo.png'; // Update to saveahead-logo.png if rebranding
+import logo from '../assets/beforepay-logo.png';
 import api from '../api';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -30,7 +30,7 @@ const NavbarComponent = ({ user }) => {
   };
 
   return (
-    <Navbar expand="lg" bg="light" data-bs-theme="light">
+    <Navbar expand="lg" bg="white" data-bs-theme="light" >
       <Container>
         <Navbar.Brand onClick={(e) => { e.preventDefault(); handleLogoClick(); }} >
           <img src={logo} alt="Beforepay Logo" style={{ width: '150px' }} />

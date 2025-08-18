@@ -1,16 +1,55 @@
-import { useEffect } from 'react';
+import api from '../api';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Navbar from '../components/Navbar';
+import Placeholder from 'react-bootstrap/Placeholder';
 
 const Home = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
   const { goals: savingsGoals } = useSelector((state) => state.savings);
+  const [customerToken, setCustomerToken] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!user) navigate('/');
+
+    const fetchCustomerToken = async () => {
+      try {
+        const response = await api.get('/api/auth/customer-token');
+        console.log('Customer token:', response.data.token);
+        setCustomerToken(response.data.token);
+      } catch (err) {
+        console.error('Customer token fetch failed:', err.response?.data || err.message);
+        setError('Failed to load account information: ' + (err.response?.data?.error || err.message));
+      }
+    };
+
+    fetchCustomerToken();
   }, [navigate, user]);
+
+  useEffect(() => {
+    if (customerToken) {
+      const accountElement = document.querySelector('unit-elements-account');
+      if (accountElement) {
+        accountElement.addEventListener('unitOnLoad', (e) => {
+          console.log('Account component loaded:', e.detail);
+          if (e.detail.errors) {
+            console.error('Account component error:', e.detail.errors);
+            if (e.detail.errors[0]?.status === '401') {
+              setError('Customer token expired, please re-authenticate');
+              setCustomerToken(null);
+            }
+          }
+        });
+        accountElement.addEventListener('unitAccountChanged', async (e) => {
+          const eventData = await e.detail;
+          console.log('Account changed:', eventData.data.id);
+        });
+      }
+    }
+  }, [customerToken]);
 
   const handleCreateSavingsGoal = () => {
     if (user.status !== 'approved') {
@@ -22,10 +61,6 @@ const Home = () => {
 
   const handleViewSavings = (goalId) => {
     navigate(`/view-savings/${goalId}`);
-  };
-
-  const getCurrentBalance = () => {
-    return (user?.status === 'approved' ? 1500.75 : 0).toFixed(2);
   };
 
   const getNextRunDate = (schedule) => {
@@ -49,6 +84,25 @@ const Home = () => {
     }
 
     return `On ${schedule.dayOfWeek}`;
+  }
+
+if (error) {
+    return (
+      <div className="container mt-5">
+        <Navbar user={user} />
+        <div className="row">
+          <div className="col text-center">
+            <p style={{ color: 'red' }}>{error}</p>
+            <button
+              className="btn btn-primary"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -142,26 +196,16 @@ const Home = () => {
 
         <div className="row mb-4 mt-4">
           <div className="col-md-4">
-            <div className={`card border-0 shadow-sm ${user && user.status === 'pending' ? 'bg-secondary bg-opacity-10' : 'bg-light'}`}>
-              <div className={`card-header ${user && user.status === 'pending' ? 'bg-secondary' : 'bg-dark'} text-white`}>
-                Savings Account
-              </div>
-              <div className="card-body">
-                <p className="card-text">
-                  {user && user.status === 'pending'
-                    ? 'Pending Approval'
-                    : `Account: ${user?.firstName}'s Savings (****${user?.unitAccountId?.slice(-4) || '0000'})`}
-                </p>
-                <p className="card-text">
-                  Balance: <strong>${getCurrentBalance()}</strong>
-                </p>
-                {user && user.status === 'approved' && (
-                  <button className="btn btn-primary" onClick={() => navigate('/accounts')}>
-                    View More
-                  </button>
-                )}
-              </div>
-            </div>
+            {
+              customerToken ? <unit-elements-account
+                customer-token={customerToken}
+                theme=""
+                hide-actions-menu-button="false"
+                hide-selection-menu-button="false"
+                menu-items="details,statements,bankVerification"
+                hide-account-cta-banner="true"
+              ></unit-elements-account> : <Placeholder  />
+            }
           </div>
           <div className="col-md-4">
             <div className="card border-0 shadow-sm bg-light">
