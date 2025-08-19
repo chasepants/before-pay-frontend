@@ -1,11 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import logo from '../assets/beforepay-logo.png';
+import logo from '../assets/beforepay-logo.png'; // Update to saveahead-logo.png if rebranding
 import api from '../api';
+import { Navbar, Container, Nav } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
-import Container from 'react-bootstrap/Container';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
 
 const NavbarComponent = ({ user }) => {
   const navigate = useNavigate();
@@ -20,7 +17,8 @@ const NavbarComponent = ({ user }) => {
     api.get('/api/auth/logout')
       .then(() => {
         localStorage.removeItem('authToken');
-        console.log('authToken removed, navigating to /');
+        localStorage.removeItem('unitVerifiedCustomerToken');
+        console.log('authToken and unitVerifiedCustomerToken removed, navigating to /');
         navigate('/');
         window.location.reload();
       })
@@ -29,28 +27,64 @@ const NavbarComponent = ({ user }) => {
       });
   };
 
+  const handleApplicationClick = (e) => {
+    e.preventDefault();
+    console.log('Application link clicked, user:', user);
+    console.log('Navigating to /application-signup');
+    try {
+      navigate('/application-signup');
+      console.log('Navigation attempted to /application-signup');
+    } catch (err) {
+      console.error('Navigation error:', err);
+    }
+  };
+
+  const handleProfileClick = (e) => {
+    e.preventDefault();
+    console.log('Profile link clicked');
+    navigate('/profile');
+  };
+
+  const handleToggle = () => {
+    console.log('Hamburger menu toggled');
+    const navbarNav = document.getElementById('basic-navbar-nav');
+    console.log('NavbarNav classList:', navbarNav?.classList.toString());
+    console.log('Bootstrap collapse initialized:', typeof window.bootstrap?.Collapse !== 'undefined');
+  };
+
   return (
-    <Navbar expand="lg" bg="white" data-bs-theme="light" >
-      <Container>
-        <Navbar.Brand onClick={(e) => { e.preventDefault(); handleLogoClick(); }} >
-          <img src={logo} alt="Beforepay Logo" style={{ width: '150px' }} />
+    <Navbar
+      expand="lg"
+      data-bs-theme="light"
+    >
+      <Container fluid>
+        <Navbar.Brand onClick={(e) => { e.preventDefault(); handleLogoClick(); }}>
+          <img src={logo} alt="App Logo" style={{ width: '150px' }} />
         </Navbar.Brand>
-        {
-          user ? (
-            <>
-              <Navbar.Toggle aria-controls="basic-navbar-nav" />
-              <Navbar.Collapse id="basic-navbar-nav">
-                  <Nav className="me-auto">
-                    <Nav.Link onClick={(e) => { e.preventDefault(); navigate('/profile'); }}>Profile</Nav.Link>
-                    <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
-                  </Nav>
-              </Navbar.Collapse>
-            </>
-          ) : <></>
-        }
+        <Navbar.Toggle
+          aria-controls="basic-navbar-nav"
+          onClick={handleToggle}
+        />
+        {user ? (
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="ms-auto">
+              {user.unitCustomerId && user.status === 'approved' ? (
+                <Nav.Link onClick={handleProfileClick}>
+                  Profile
+                </Nav.Link>
+              ) : null}
+              {!user.unitCustomerId && user.status !== 'approved' ? (
+                <Nav.Link onClick={handleApplicationClick}>
+                  Application
+                </Nav.Link>
+              ) : null}
+              <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+            </Nav>
+          </Navbar.Collapse>
+        ) : null}
       </Container>
     </Navbar>
   );
-}
+};
 
 export default NavbarComponent;

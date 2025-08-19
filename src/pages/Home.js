@@ -22,7 +22,7 @@ const Home = () => {
         setCustomerToken(response.data.token);
       } catch (err) {
         console.error('Customer token fetch failed:', err.response?.data || err.message);
-        setError('Failed to load account information: ' + (err.response?.data?.error || err.message));
+        // setError('Failed to load account information: ' + (err.response?.data?.error || err.message));
       }
     };
 
@@ -86,7 +86,7 @@ const Home = () => {
     return `On ${schedule.dayOfWeek}`;
   }
 
-if (error) {
+  if (error) {
     return (
       <div className="container mt-5">
         <Navbar user={user} />
@@ -197,7 +197,7 @@ if (error) {
         <div className="row mb-4 mt-4">
           <div className="col-md-4">
             {
-              customerToken ? <unit-elements-account
+              "approved" === user.status && customerToken ? <unit-elements-account
                 customer-token={customerToken}
                 theme=""
                 hide-actions-menu-button="false"
@@ -208,34 +208,8 @@ if (error) {
             }
           </div>
           <div className="col-md-4">
-            <div className="card border-0 shadow-sm bg-light">
-              <div className="card-header bg-dark text-white">Application Status</div>
-              <div className="card-body">
-                <p className="card-text">
-                  <strong>Status:</strong>{' '}
-                  {user?.status === 'awaitingDocuments' ? 'Awaiting Documents' : user?.status}
-                  {user?.status === 'awaitingDocuments' && (
-                    <span
-                      className="ms-2 tooltip-container"
-                      onMouseEnter={(e) => (e.currentTarget.querySelector('.tooltip-text').style.display = 'block')}
-                      onMouseLeave={(e) => (e.currentTarget.querySelector('.tooltip-text').style.display = 'none')}
-                    >
-                      <i className="bi bi-info-circle text-muted"></i>
-                      <span className="tooltip-text">
-                        We need a few documents before we can approve your application. Please navigate to the Profile page by clicking the Profile button in the top right of your screen.
-                      </span>
-                    </span>
-                  )}
-                </p>
-                <p className="card-text"><strong>Name:</strong> {`${user?.firstName || ''} ${user?.lastName || ''}`.trim()}</p>
-                <p className="card-text"><strong>Occupation:</strong> {user?.occupation || 'Not specified'}</p>
-                <p className="card-text"><strong>Birthdate:</strong> {user?.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : 'Not provided'}</p>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4">
             {
-              customerToken ? <unit-elements-activity
+              "approved" === user.status && customerToken ? <unit-elements-activity
                 customer-token={customerToken}
                 account-id={user.unitAccountId}
                 theme=""

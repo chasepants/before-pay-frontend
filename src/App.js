@@ -112,7 +112,7 @@ const App = () => {
         <Route path="/setup-payout/:savingsGoalId" element={user ? <SetupPayout /> : <Navigate to="/" />} />
         <Route path="/view-savings/:savingsGoalId" element={user ? <ViewSavings /> : <Navigate to="/" />} />
         <Route path="/profile" element={user ? <Profile /> : <Navigate to="/" />} />
-        <Route path="/application-signup" element={user && !user.unitApplicationId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
+        <Route path="/application-signup" element={user && !user.unitCustomerId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
         <Route path="/pending" element={user && user.status === 'pending' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
         <Route path="/create-savings-goal" element={user ? <CreateSavingsGoal /> : <Navigate to="/" />} />
         <Route path="/view-savings-goals" element={user ? <ViewSavingsGoals /> : <Navigate to="/" />} />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import api from '../api';
@@ -8,310 +8,91 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const ApplicationSignup = () => {
   const navigate = useNavigate();
   const { user, loading: userLoading } = useSelector((state) => state.user);
-  const [formData, setFormData] = useState({
-    ssn: '',
-    firstName: '',
-    lastName: '',
-    dateOfBirth: '',
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'US',
-    email: '',
-    phone: '',
-    ip: '',
-    ein: '',
-    dba: '',
-    soleProprietorship: false,
-    sourceOfIncome: '',
-    annualIncome: '',
-    occupation: '',
-    numberOfEmployees: '',
-    businessVertical: '',
-    website: ''
-  });
+  const [applicationFormId, setApplicationFormId] = useState(null);
+  const [applicationFormToken, setApplicationFormToken] = useState(null);
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [buttonText, setButtonText] = useState('Submit Application');
-  const intervalRef = useRef(null);
-
-  // Predefined occupation values
-  const occupations = [
-    'ArchitectOrEngineer',
-    'BusinessAnalystAccountantOrFinancialAdvisor',
-    'CommunityAndSocialServicesWorker',
-    'ConstructionMechanicOrMaintenanceWorker',
-    'Doctor',
-    'Educator',
-    'EntertainmentSportsArtsOrMedia',
-    'ExecutiveOrManager',
-    'FarmerFishermanForester',
-    'FoodServiceWorker',
-    'GigWorker',
-    'HospitalityOfficeOrAdministrativeSupportWorker',
-    'HouseholdManager',
-    'JanitorHousekeeperLandscaper',
-    'Lawyer',
-    'ManufacturingOrProductionWorker',
-    'MilitaryOrPublicSafety',
-    'NurseHealthcareTechnicianOrHealthcareSupport',
-    'PersonalCareOrServiceWorker',
-    'PilotDriverOperator',
-    'SalesRepresentativeBrokerAgent',
-    'ScientistOrTechnologist',
-    'Student'
-  ];
-
-  // US state codes
-  const usStates = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL',
-    'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME',
-    'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH',
-    'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI',
-    'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI',
-    'WY'
-  ];
+  const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
-    if (userLoading) return;
-    if (!user || user.unitApplicationId) {
-      navigate(user && user.status === 'approved' ? '/home' : '/');
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        email: user.email || '',
-        firstName: user.firstName || '',
-        lastName: user.lastName || ''
-      }));
-    }
-  }, [navigate, user, userLoading]);
-
-  useEffect(() => {
-    if (submitting) {
-      // Cycle button text for loading animation
-      const texts = ['Submit.', 'Submit..', 'Submit...'];
-      let index = 0;
-      intervalRef.current = setInterval(() => {
-        setButtonText(texts[index]);
-        index = (index + 1) % texts.length;
-      }, 500);
-    } else {
-      setButtonText('Submit Application');
-      clearInterval(intervalRef.current);
-    }
-    return () => clearInterval(intervalRef.current); // Cleanup on unmount
-  }, [submitting]);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!user) {
-      setError('User not authenticated');
+    if (userLoading || !user || isFetching) return;
+    if (user.unitCustomerId && user.status === 'approved') {
+      console.log('User approved, navigating to /home');
+      navigate('/home');
       return;
     }
-    setSubmitting(true);
-    console.log('Submitting application with:', formData);
-    try {
-      const response = await api.post(`/api/auth/application`, formData);
-      console.log('Application response:', response.data);
-      navigate('/pending');
-    } catch (error) {
-      console.error('Application submit error:', error.response?.data || error.message);
-      setError('Error submitting application: ' + (error.response?.data?.error || error.message));
-    } finally {
-      setSubmitting(false);
+
+    const fetchApplicationForm = async () => {
+      setIsFetching(true);
+      try {
+        const response = await api.get('/api/auth/create-application-form');
+        console.log('Application form response:', response.data);
+        setApplicationFormId(response.data.id);
+        setApplicationFormToken(response.data.token);
+      } catch (err) {
+        console.error('Application form fetch failed:', err.response?.data || err.message);
+        setError('Failed to load application form: ' + (err.response?.data?.error || err.message));
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    if (!isFetching) {
+      fetchApplicationForm();
     }
-  };
+  }, [userLoading]);
+
+  useEffect(() => {
+    if (applicationFormId && applicationFormToken) {
+      const formElement = document.querySelector('unit-elements-application-form');
+      if (formElement) {
+        formElement.addEventListener('unitOnLoad', (e) => {
+          console.log('Application form loaded:', e.detail);
+          if (e.detail.errors) {
+            console.error('Application form error:', e.detail.errors);
+            setError('Failed to initialize application form: ' + (e.detail.errors[0]?.title || 'Unknown error'));
+          }
+        });
+        formElement.addEventListener('unitApplicationFormCompleted', (e) => {
+          console.log('Application form completed:', e.detail);
+          navigate('/pending');
+        });
+      }
+    }
+  }, [applicationFormId, applicationFormToken, navigate]);
 
   if (userLoading || !user) return null;
+
+  if (error) {
+    return (
+      <div className="container mt-5">
+        <Navbar user={user} />
+        <div className="row">
+          <div className="col text-center">
+            <p style={{ color: 'red' }}>{error}</p>
+            <button
+              className="btn btn-primary"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mb-4">
       <Navbar user={user} />
-      <div className="row">
-        <div className="col-sm-6 mt-5 offset-sm-3 p-5 rounded-5 text-center">
-          <h1>APPLICATION FORM</h1>
-          <h5>Complete your application to open a savings account</h5>
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-          <form onSubmit={handleSubmit}>
-            <input
-              className="form-control form-control-lg mt-3"
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              placeholder="First Name"
-              aria-label="First Name"
-              disabled={submitting}
-            />
-            <input
-              className="form-control form-control-lg mt-3"
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              placeholder="Last Name"
-              aria-label="Last Name"
-              disabled={submitting}
-            />
-            <input
-              className="form-control form-control-lg mt-3"
-              type="date"
-              name="dateOfBirth"
-              value={formData.dateOfBirth}
-              onChange={handleChange}
-              placeholder="Date of Birth"
-              aria-label="Date of Birth"
-              disabled={submitting}
-            />
-            <input
-              className="form-control form-control-lg mt-3"
-              type="text"
-              name="ssn"
-              value={formData.ssn}
-              onChange={handleChange}
-              placeholder="SSN"
-              aria-label="SSN"
-              disabled={submitting}
-            />
-            <input
-              className="form-control form-control-lg mt-3"
-              type="text"
-              name="addressLine1"
-              value={formData.addressLine1}
-              onChange={handleChange}
-              placeholder="Address Line 1"
-              aria-label="Address Line 1"
-              disabled={submitting}
-            />
-            <input
-              className="form-control form-control-lg mt-3"
-              type="text"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              placeholder="City"
-              aria-label="City"
-              disabled={submitting}
-            />
-            <select
-              className="form-control form-control-lg mt-3"
-              name="state"
-              value={formData.state}
-              onChange={handleChange}
-              aria-label="State"
-              disabled={submitting}
-            >
-              <option value="">Select State</option>
-              {usStates.map((state) => (
-                <option key={state} value={state}>
-                  {state}
-                </option>
-              ))}
-            </select>
-            <input
-              className="form-control form-control-lg mt-3"
-              type="text"
-              name="postalCode"
-              value={formData.postalCode}
-              onChange={handleChange}
-              placeholder="Postal Code"
-              aria-label="Postal Code"
-              disabled={submitting}
-            />
-            <input
-              className="form-control form-control-lg mt-3"
-              type="text"
-              name="country"
-              value={formData.country}
-              onChange={handleChange}
-              placeholder="Country"
-              aria-label="Country"
-              disabled
-            />
-            <input
-              className="form-control form-control-lg mt-3"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Email"
-              aria-label="Email"
-              disabled={submitting}
-            />
-            <input
-              className="form-control form-control-lg mt-3"
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Phone"
-              aria-label="Phone"
-              disabled={submitting}
-            />
-            <select
-              className="form-control form-control-lg mt-3"
-              name="sourceOfIncome"
-              value={formData.sourceOfIncome}
-              onChange={handleChange}
-              aria-label="Source of Income"
-              disabled={submitting}
-            >
-              <option value="">Select Source of Income</option>
-              <option value="EmploymentOrPayrollIncome">Employment/Payroll Income</option>
-              <option value="SelfEmploymentIncome">Self-Employment Income</option>
-              <option value="InvestmentIncome">Investment Income</option>
-            </select>
-            <select
-              className="form-control form-control-lg mt-3"
-              name="annualIncome"
-              value={formData.annualIncome}
-              onChange={handleChange}
-              aria-label="Annual Income"
-              disabled={submitting}
-            >
-              <option value="">Select Annual Income</option>
-              <option value="UpTo10k">Less than $10,000</option>
-              <option value="Between10kAnd25k">$10,000 than $25,000</option>
-              <option value="Between25kAnd50k">$25,000 and $50,000</option>
-              <option value="Between50kAnd100k">$50,000 and $100,000</option>
-              <option value="Between100kAnd250k">$100,000 and $250,000</option>
-              <option value="Over250k">$250,000+</option>
-            </select>
-            <select
-              className="form-control form-control-lg mt-3"
-              name="occupation"
-              value={formData.occupation}
-              onChange={handleChange}
-              aria-label="Occupation"
-              disabled={submitting}
-            >
-              <option value="">Select Occupation</option>
-              {occupations.map((occupation) => (
-                <option key={occupation} value={occupation}>
-                  {occupation.replace(/([A-Z])/g, ' $1').trim()}
-                </option>
-              ))}
-            </select>
-            <button
-              className="btn btn-primary w-50 mt-5"
-              type="submit"
-              disabled={submitting}
-            >
-              {buttonText}
-            </button>
-          </form>
-        </div>
-      </div>
+      {applicationFormId && applicationFormToken ? (
+        <unit-elements-application-form
+          application-form-id={applicationFormId}
+          application-form-token={applicationFormToken}
+          style={{ display: 'block', minHeight: '600px', width: '100%' }}
+        ></unit-elements-application-form>
+      ) : (
+        <p>Loading application form...</p>
+      )}
     </div>
   );
 };
