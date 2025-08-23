@@ -1,139 +1,226 @@
-// frontend/src/pages/Home.js
-import { useState, useEffect } from 'react';
+import api from '../api';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import axios from 'axios';
-import ProductCard from '../components/ProductCard';
-import WishlistItemCard from '../components/WishlistItemCard';
-import mockSerpResults from '../mock_serp.js';
+import { useSelector } from 'react-redux';
 import Navbar from '../components/Navbar';
-import { addWishlistItem, removeWishlistItem } from '../store/wishlistSlice';
+import Placeholder from 'react-bootstrap/Placeholder';
 
 const Home = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const [search, setSearch] = useState('');
-  const [products, setProducts] = useState([]);
-  
   const { user } = useSelector((state) => state.user);
-  const { items: wishlist } = useSelector((state) => state.wishlist);
+  const { goals: savingsGoals } = useSelector((state) => state.savings);
+  const [customerToken, setCustomerToken] = useState(null);
+  const [error, setError] = useState(null);
 
-  const handleSearch = async () => {
-    try {
-      // const res = await axios.get(`http://localhost:3001/api/wishlist/search?q=${search}`, { withCredentials: true });
-      // setProducts(res.data);
-      setProducts(mockSerpResults);
-    } catch (err) {
-      console.error('Mock search failed:', err);
+  useEffect(() => {
+    if (!user) navigate('/');
+
+    const fetchCustomerToken = async () => {
+      try {
+        const response = await api.get('/api/auth/customer-token');
+        console.log('Customer token:', response.data.token);
+        setCustomerToken(response.data.token);
+      } catch (err) {
+        console.error('Customer token fetch failed:', err.response?.data || err.message);
+        // setError('Failed to load account information: ' + (err.response?.data?.error || err.message));
+      }
+    };
+
+    fetchCustomerToken();
+  }, [navigate, user]);
+
+  useEffect(() => {
+    if (customerToken) {
+      const accountElement = document.querySelector('unit-elements-account');
+      if (accountElement) {
+        accountElement.addEventListener('unitOnLoad', (e) => {
+          console.log('Account component loaded:', e.detail);
+          if (e.detail.errors) {
+            console.error('Account component error:', e.detail.errors);
+            if (e.detail.errors[0]?.status === '401') {
+              setError('Customer token expired, please re-authenticate');
+              setCustomerToken(null);
+            }
+          }
+        });
+        accountElement.addEventListener('unitAccountChanged', async (e) => {
+          const eventData = await e.detail;
+          console.log('Account changed:', eventData.data.id);
+        });
+      }
     }
-  };
+  }, [customerToken]);
 
-  const addToWishlist = async (product) => {
-    if (wishlist.some(item => item.product_id === product.product_id)) {
-      alert('Product already in wishlist');
+  const handleCreateSavingsGoal = () => {
+    if (user.status !== 'approved') {
+      alert('You must be approved to create savings goals.');
       return;
     }
-    try {
-      const res = await axios.post('http://localhost:3001/api/wishlist', { ...product, savings_goal: product.extracted_price }, { withCredentials: true });
-      dispatch(addWishlistItem(res.data));
-    } catch (err) {
-      console.error('Add to wishlist failed:', err);
-    }
+    navigate('/create-savings-goal');
   };
 
-  const handleDelete = async (itemId) => {
-    try {
-      await axios.delete(`http://localhost:3001/api/wishlist/${itemId}`, { withCredentials: true });
-      dispatch(removeWishlistItem(itemId));
-    } catch (err) {
-      console.error('Delete failed:', err);
-    }
+  const handleViewSavings = (goalId) => {
+    navigate(`/view-savings/${goalId}`);
   };
+
+  const getNextRunDate = (schedule) => {
+    let today = new Date();
+    const todaysDate = today.getDate();
+    if ("Monthly" == schedule.interval && schedule.dayOfMonth >= todaysDate) {
+      return today.toDateString();
+    }
+
+    if ("Monthly" == schedule.interval && schedule.dayOfMonth < todaysDate) {
+      today.setMonth(today.getMonth() + 1);
+      today.setDate(schedule.dayOfMonth);
+      return today.toDateString();
+    }
+
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const todaysIndex = today.getDay();
+
+    if ("Weekly" == schedule.interval && days.indexOf(schedule.dayOfWeek)  === todaysIndex) {
+      return "Today";
+    }
+
+    return `On ${schedule.dayOfWeek}`;
+  }
+
+  if (error) {
+    return (
+      <div className="container mt-5">
+        <Navbar user={user} />
+        <div className="row">
+          <div className="col text-center">
+            <p style={{ color: 'red' }}>{error}</p>
+            <button
+              className="btn btn-primary"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
       <Navbar user={user} />
-      <div className='container mt-5'>
-        <div className='row'>
-          <h1 className='text-center fw-bold fs-4'>SEARCH FOR PRODUCTS TO ADD TO YOUR SAVINGS LIST</h1>
+      <div className="container mt-4">
+        <div className="row mb-4">
+          <div className="col-12">
+            <h2 className="text-dark fw-bold">Welcome, {user?.firstName || 'User'}</h2>
+            {savingsGoals.length === 0 && <p className="text-muted">Manage your savings with Beforepay.</p>}
+          </div>
         </div>
-        <div className='row mt-3'>
-          <div className='col-sm-6 offset-sm-3'>
-            <div className="input-group mb-3">
-              <input
-                onChange={(e) => setSearch(e.target.value)}
-                value={search}
-                type="text"
-                className="form-control"
-                placeholder="Search for products..."
-                aria-label="Search for Products"
-                aria-describedby="button-addon2"
-              />
-              <button
-                onClick={handleSearch}
-                className="btn btn-primary"
-                type="button"
-                id="button-addon2"
-              >
-                Search
-              </button>
+
+        <div className="row mb-5">
+          <div className="col-12">
+            <div className="card border-0 shadow-sm">
+              <div className="card-header bg-dark text-white">
+                <h4 className="mb-0">Savings Goals</h4>
+              </div>
+              <div className="card-body p-0">
+                {savingsGoals.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-muted">No savings goals yet. Start saving today!</p>
+                    <button className="btn btn-primary" onClick={handleCreateSavingsGoal}>
+                      Create Your First Goal
+                    </button>
+                  </div>
+                ) : (
+                  <table className="table table-striped">
+                    <thead className="bg-light">
+                      <tr>
+                        <th>Goal Name</th>
+                        <th>Saved</th>
+                        <th>Goal</th>
+                        <th>Next Run</th>
+                        <th>Transfer From</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {savingsGoals.map((goal) => (
+                        <tr key={goal._id}>
+                          <td className="align-middle">{goal.goalName || goal.product.title}</td>
+                          <td className="align-middle">${goal.currentAmount || 0}</td>
+                          <td className="align-middle">${goal.targetAmount || 0}</td>
+                          <td className="align-middle">
+                            {
+                              goal.schedule ? getNextRunDate(goal.schedule) : ``
+                            }
+                          </td>
+                          {
+                            goal.bank ? (
+                              <td className="align-middle">
+                                {goal.bank.bankName || 'Unit'} (****{goal.bank.bankLastFour})
+                              </td>
+                            ) : (
+                              <td className="align-middle">
+                              </td>
+                            )
+                          }
+                          <td className="align-middle">
+                            <button
+                              className="btn btn-secondary btn-sm me-2"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleViewSavings(goal._id);
+                              }}
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
           </div>
         </div>
-        <div className='row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 m-4'>
-          {products.map((p, i) => {
-            const isInWishlist = wishlist.some(item => item.product_id === p.product_id);
-            return (
-              <div className='col' key={i}>
-                <ProductCard
-                  name={p.title}
-                  price={p.price}
-                  oldPrice={p.old_price}
-                  url={p.product_link}
-                  imageUrl={p.thumbnail}
-                  source={p.source}
-                  sourceIcon={p.source_icon}
-                  rating={p.rating}
-                  reviews={p.reviews}
-                  badge={p.badge}
-                  tag={p.tag}
-                  delivery={p.delivery}
-                  onButtonClick={() => user ? addToWishlist(p) : navigate('/signup')}
-                  isInWishlist={isInWishlist}
-                />
-              </div>
-            );
-          })}
-        </div>
-        {user && (
-          <>
-            <h1 className='mt-5 fs-3 fw-bold'>SAVINGS LIST</h1>
-            <div className='row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 m-4'>
-              {wishlist.map(item => (
-                <div className='col' key={item._id}>
-                  <WishlistItemCard
-                    wishlistItemId={item._id}
-                    name={item.title}
-                    price={item.price}
-                    oldPrice={item.old_price}
-                    url={item.product_link}
-                    imageUrl={item.thumbnail}
-                    source={item.source}
-                    sourceIcon={item.source_icon}
-                    rating={item.rating}
-                    reviews={item.reviews}
-                    savingsGoal={item.savings_goal}
-                    savingsProgress={item.savings_progress}
-                    fundingSourceId={item.fundingSourceId}
-                    bankName={item.bankName}
-                    bankAccount={item.bankAccountName}
-                    onDelete={() => handleDelete(item._id)}
-                  />
-                </div>
-              ))}
+
+        {savingsGoals.length > 0 && (
+          <div className="row mb-5">
+            <div className="col-2 offset-sm-10 flex-end">
+              <button className="btn btn-primary" onClick={handleCreateSavingsGoal}>
+                Add New Goal
+              </button>
             </div>
-          </>
+          </div>
         )}
+
+        <div className="row mb-4 mt-4">
+          <div className="col-md-4">
+            {
+              "approved" === user.status && customerToken ? <unit-elements-account
+                customer-token={customerToken}
+                theme=""
+                hide-actions-menu-button="false"
+                hide-selection-menu-button="false"
+                menu-items="details,statements,bankVerification"
+                hide-account-cta-banner="true"
+              ></unit-elements-account> : <Placeholder  />
+            }
+          </div>
+          <div className="col-md-4">
+            {
+              "approved" === user.status && customerToken ? <unit-elements-activity
+                customer-token={customerToken}
+                account-id={user.unitAccountId}
+                theme=""
+                hide-actions-menu-button="false"
+                hide-selection-menu-button="false"
+                menu-items="details,statements,bankVerification"
+                hide-account-cta-banner="true"
+              ></unit-elements-activity> : <Placeholder  />
+            }
+          </div>
+        </div>
       </div>
     </>
   );

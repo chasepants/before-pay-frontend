@@ -145,10 +145,6 @@
   transition: background-color 0.3s;
 }
 
-.add-to-wishlist:hover {
-  background-color: #3367d6;
-}
-
 .added-text {
   background-color: transparent;
   color: green;

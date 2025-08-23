@@ -1,41 +1,41 @@
+// frontend/src/pages/SetupSavings.js
 import React, { useState, useEffect } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import { useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import Navbar from '../components/Navbar';
 import LoadingAnimation from '../components/LoadingAnimation';
 
 const SetupSavings = () => {
   const navigate = useNavigate();
-  const { wishlistItemId } = useParams();
+  const { savingsGoalId } = useParams();
   const { user } = useSelector((state) => state.user);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [plaidToken, setPlaidToken] = useState(null);
   const [plaidPublicToken, setPlaidPublicToken] = useState(null);
   const [plaidAccountId, setPlaidAccountId] = useState(null);
-  const [linkedAccount, setLinkedAccount] = useState(null); // Store linked account details
-  const [existingAccounts, setExistingAccounts] = useState([]); // Store existing funding sources
-  const [selectedAccount, setSelectedAccount] = useState(null); // Track selected account (new or existing)
+  const [linkedAccount, setLinkedAccount] = useState(null);
+  const [selectedAccount, setSelectedAccount] = useState(null);
   const [amount, setAmount] = useState('');
-  const [frequency, setFrequency] = useState('week');
-  const [startDate, setStartDate] = useState('');
-  const [showTooltip, setShowTooltip] = useState(false); // State for tooltip visibility
+  const [startTime, setStartTime] = useState('');
+  const [interval, setInterval] = useState('Weekly');
+  const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
     if (!user) {
       navigate('/');
       return;
     }
-    if (!wishlistItemId) {
-      setError('Invalid wishlist item ID');
+    if (!savingsGoalId) {
+      setError('Invalid savings goal ID');
       return;
     }
 
     const checkProfile = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/api/auth/profile-status', { withCredentials: true });
+        const response = await api.get(`/api/auth/profile-status`);
         if (!response.data.completed) {
           navigate('/complete-profile');
         }
@@ -47,25 +47,14 @@ const SetupSavings = () => {
 
     const fetchPlaidToken = async () => {
       try {
-        const response = await axios.post('http://localhost:3001/api/bank/plaid-link-token', {}, { withCredentials: true });
+        const response = await api.post(`/api/bank/plaid-link-token`);
         setPlaidToken(response.data.link_token);
       } catch (err) {
         setError('Failed to initialize bank account linking');
       }
     };
     fetchPlaidToken();
-
-    // Fetch existing funding sources for the user
-    const fetchExistingAccounts = async () => {
-      try {
-        const response = await axios.get(`http://localhost:3001/api/bank/existing-funding-sources`, { withCredentials: true });
-        setExistingAccounts(response.data.fundingSources || []);
-      } catch (err) {
-        console.error('Failed to fetch existing funding sources:', err);
-      }
-    };
-    fetchExistingAccounts();
-  }, [user, wishlistItemId, navigate]);
+  }, [user, savingsGoalId, navigate]);
 
   const { open, ready } = usePlaidLink({
     token: plaidToken,
@@ -93,30 +82,33 @@ const SetupSavings = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!selectedAccount) {
-      setError('Please select or link a bank account');
+    if (!selectedAccount || !amount || !interval || !startTime || !interval) {
+      setError('Please fill all required fields: account, amount, interval, and start date');
       return;
     }
-    if (!amount || !frequency || !startDate) {
-      setError('Please fill in all fields');
+    if (user.status !== 'approved') {
+      setError('Account not approved yet');
       return;
     }
+
+    const schedule = {
+      startTime,
+      interval
+    };
 
     setIsLoading(true);
     setError('');
 
     try {
-      await axios.post(
-        'http://localhost:3001/api/bank/setup-savings',
+      await api.post(
+        `/api/bank/setup-savings`,
         {
-          wishlistItemId,
+          savingsGoalId,
           plaidAccessToken: plaidPublicToken || null, // Only send if newly linked
           plaidAccountId: selectedAccount,
           amount,
-          frequency,
-          start_date: startDate
-        },
-        { withCredentials: true }
+          schedule
+        }
       );
       alert('Savings plan set up successfully!');
       navigate('/home');
@@ -134,7 +126,6 @@ const SetupSavings = () => {
     setSelectedAccount(null); // Reset to allow relinking
   };
 
-  // Toggle tooltip visibility on hover
   const handleInfoHover = (isHovering) => {
     setShowTooltip(isHovering);
   };
@@ -174,17 +165,33 @@ const SetupSavings = () => {
         <div className="row">
           <div className="col-sm-6 mt-5 p-5">
             <h5>Create A Savings Plan</h5>
-            <label htmlFor="schedule" className="form-label mt-3">How often do you want to save?</label>
-            <select value={frequency} onChange={e => setFrequency(e.target.value)} className="form-select" aria-label="schedule">
-              <option value="">---</option>
-              <option value="week">Every week</option>
-              <option value="biweek">Every 2 weeks</option>
-              <option value="month">Every month</option>
-            </select>
             <label htmlFor="amount" className="form-label mt-3">How much do you want to save?</label>
-            <input value={amount} onChange={e => setAmount(e.target.value)} className="form-control form-control-lg" type="text" placeholder="$50" aria-label="savings Amount"/>
-            <label htmlFor="date" className="form-label mt-3">When do you want to start?</label>
-            <input value={startDate} onChange={e => setStartDate(e.target.value)} className="form-control form-control-lg" type="text" placeholder="mm/dd/yyyy" aria-label="Start Date"/>
+            <input
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="form-control form-control-lg"
+              type="text"
+              placeholder="$50"
+              aria-label="Savings Amount"
+            />
+            <label htmlFor="startTime" className="form-label mt-3">Start Date</label>
+            <input
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="form-control form-control-lg"
+              type="date"
+              aria-label="Start Date"
+            />
+            <label htmlFor="interval" className="form-label mt-3">Interval</label>
+            <select
+              value={interval}
+              onChange={(e) => setInterval(e.target.value)}
+              className="form-control form-control-lg"
+              aria-label="Interval"
+            >
+              <option value="Weekly">Weekly</option>
+              <option value="Monthly">Monthly</option>
+            </select>
             <label htmlFor="account" className="form-label mt-4">Select or link a bank account</label>
             {linkedAccount && (
               <div>
@@ -197,20 +204,6 @@ const SetupSavings = () => {
                 </button>
               </div>
             )}
-            {(!linkedAccount && existingAccounts.length > 0) && (
-              <select
-                value={selectedAccount || ''}
-                onChange={e => setSelectedAccount(e.target.value)}
-                className="form-select mt-2"
-              >
-                <option value="">Select an existing account</option>
-                {existingAccounts.map(account => (
-                  <option key={account.id} value={account.id}>
-                    {account.name} (****{account.mask})
-                  </option>
-                ))}
-              </select>
-            )}
             {!linkedAccount && (
               <div className='d-flex flex-row align-items-center justify-space-between'>
                 <button
@@ -218,7 +211,7 @@ const SetupSavings = () => {
                   disabled={!ready || isLoading}
                   className="btn btn-secondary mt-4"
                 >
-                  <i className="bi bi-lock"></i>&nbsp;Link a New Bank Account
+                  <i className="bi bi-lock"></i> Link a Bank Account
                 </button>
                 <h3
                   className='mt-2 mx-3'
@@ -236,12 +229,12 @@ const SetupSavings = () => {
                         borderRadius: '4px',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                         zIndex: 1000,
-                        width: '50%', // Increased width for horizontal stretch
-                        maxHeight: '50%', // Limit height to prevent overflow
-                        overflowY: 'auto', // Add scrollbar if text exceeds height
-                        marginLeft: '-200px', // Center horizontally relative to icon
+                        width: '50%',
+                        maxHeight: '50%',
+                        overflowY: 'auto',
+                        marginLeft: '-200px',
                         marginTop: '10px',
-                        whiteSpace: 'normal', // Allow text to wrap naturally
+                        whiteSpace: 'normal',
                       }}
                     >
                       <p>

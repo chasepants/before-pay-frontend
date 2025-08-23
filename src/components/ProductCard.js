@@ -15,9 +15,9 @@ const ProductCard = ({
   tag,
   delivery,
   onButtonClick,
-  isInWishlist
+  isInSavings
 }) => {
-  const buttonContent = isInWishlist ? (
+  const buttonContent = isInSavings ? (
     <span className="text-success">Added ✓</span>
   ) : (
     <a href="#" className="btn btn-primary w-100" onClick={(e) => { e.preventDefault(); onButtonClick(); }}>ADD TO SAVINGS</a>

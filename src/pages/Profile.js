@@ -1,148 +1,155 @@
+// frontend/src/pages/Profile.js
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-
 import Navbar from '../components/Navbar';
-
-import axios from 'axios';
 import LoadingAnimation from '../components/LoadingAnimation';
+import api from '../api';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.user);
-
-  const [completed, setCompleted] = useState(false);
+  const { user, loading: userLoading } = useSelector((state) => state.user);
   const [profileLoaded, setProfileLoaded] = useState(false);
-  const [address, setAddress] = useState({ line1: '', city: '', state: '', postal_code: '' });
-  const [ssnLast4, setSsnLast4] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
   const [error, setError] = useState('');
+  const [documents, setDocuments] = useState([]);
+  const [newDocument, setNewDocument] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    if (userLoading) return;
     if (!user) {
       navigate('/');
       return;
     }
-    const checkProfile = async () => {
-      try {
-        const response = await axios.get('http://localhost:3001/api/auth/profile-status', { withCredentials: true });
-        setCompleted(response.data.completed);
-        
-        if (response.data.completed) {
-          setAddress(user.address);
-          setDateOfBirth(user.dateOfBirth);
-          setSsnLast4(user.ssnLast4);
-        }
-      } catch (err) {
-        console.error('Profile check failed:', err);
-      }
-      setProfileLoaded(true);
-    };
-    checkProfile();
-  }, []);
+    setProfileLoaded(true);
+    fetchDocuments();
+  }, [user, userLoading, navigate]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const fetchDocuments = async () => {
     try {
-      await axios.post(
-        'http://localhost:3001/api/auth/complete-profile',
-        { address, ssnLast4, dateOfBirth },
-        { withCredentials: true }
-      );
-      navigate('/home');
+      const response = await api.get(`${process.env.REACT_APP_API_URL}/api/auth/documents`, { withCredentials: true });
+      console.log(response)
+      setDocuments(response.data.documents || []);
     } catch (err) {
-      setError('Failed to save profile information');
+      setError('Failed to fetch documents: ' + err.message);
     }
   };
 
-  if (!profileLoaded) {
-    return <LoadingAnimation />
+  const handleDocumentUpload = async (docId) => {
+    if (!newDocument || !user.unitApplicationId) return;
+    setIsLoading(true);
+    const formData = new FormData();
+    formData.append('applicationId', user.unitApplicationId);
+    formData.append('documentId', docId);
+    formData.append('file', newDocument);
+
+    try {
+      await api.put(
+        `/api/auth/document/upload`,
+        formData,
+        {
+          withCredentials: true,
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+      );
+      await fetchDocuments(); // Refresh document list
+      setNewDocument(null);
+      setError('');
+    } catch (err) {
+      setError('Failed to upload document: ' + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    setNewDocument(e.target.files[0]); // Single file for now
+  };
+
+  if (!profileLoaded || userLoading) {
+    return <LoadingAnimation />;
   }
 
   return (
     <div>
       <Navbar user={user} />
-      <div className='container mt-5'>
+      <div className='container my-5'>
         <div className='row'>
-          <div className="border border-black col-sm-6 mt-5 offset-sm-3 p-5 rounded-5">
-            <div className='text-center mb-3'>
-              {completed && 
-                <>
-                  <h1>Update Your Profile</h1>
-                </>
-              }
-              {!completed && 
-                <>
-                  <h1>Complete Your Profile</h1>
-                  <p>We need your address and the last 4 digits of your SSN to set up your savings account.</p>
-                </>
-              }
+          <div className='col-12'>
+            <div className='card border-0 shadow-sm bg-light p-4'>
+              <div className='card-body d-flex justify-content-between'>
+                <div>
+                  <p><strong>Name:</strong> {`${user.firstName || ''} ${user.lastName || ''}`.trim()}</p>
+                  <p><strong>Email:</strong> {user.email}</p>
+                  <p><strong>Phone:</strong> {user.phone || 'Not provided'}</p>
+                  <p><strong>Occupation:</strong> {user.occupation || 'Not specified'}</p>
+                  <p><strong>Status:</strong> {user.status === 'awaitingDocuments' ? 'Awaiting Documents' : user.status}</p>
+                </div>
+                <div>
+                  <p><strong>Address:</strong> {user.address?.line1 || ''}, {user.address?.city || ''}, {user.address?.state || ''} {user.address?.postalCode || ''}</p>
+                  <p><strong>Birthdate:</strong> {user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : 'Not provided'}</p>
+                  <p><strong>SSN Last 4:</strong> {user.ssnLast4 || 'Not provided'}</p>
+                  <p><strong>Annual Income:</strong> {user.annualIncome || 'Not specified'}</p>
+                  <p><strong>Source of Income:</strong> {user.sourceOfIncome || 'Not specified'}</p>
+                </div>
+              </div>
             </div>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <label for="address" className="form-label mt-4"><h4>Address</h4></label>
-            <input
-              className="form-control form-control-lg"
-              placeholder="Street Address (i.e. 123 Main St)"
-              aria-label="Address"
-              type="text"
-              value={address.line1}
-              onChange={(e) => setAddress({ ...address, line1: e.target.value })}
-              required
-            />
-            <input
-              className="form-control form-control-lg mt-3"
-              placeholder="City"
-              aria-label="City"
-              type="text"
-              value={address.city}
-              onChange={(e) => setAddress({ ...address, city: e.target.value })}
-              required
-            />
-            <input
-              className="form-control form-control-lg mt-3"
-              placeholder="State"
-              aria-label="State"
-              type="text"
-              value={address.state}
-              onChange={(e) => setAddress({ ...address, state: e.target.value })}
-              required
-            />
-            <input
-              className="form-control form-control-lg mt-3"
-              placeholder="Postal Code"
-              aria-label="Postal Code"
-              type="text"
-              value={address.postal_code}
-              onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
-              required
-            />
-            <label for="birthdate" className="form-label mt-4"><h4>Birthdate</h4></label>
-            <input
-              className="form-control form-control-lg"
-              aria-label="Birth Date"
-              type="text"
-              placeholder='YYYY-MM-DD'
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-              required
-            />
-            <label for="ssn" className="form-label mt-4"><h4>SSN Last 4</h4></label>
-            <input
-              className="form-control form-control-lg"
-              placeholder="1234"
-              aria-label="SSN Last 4"
-              type="text"
-              value={ssnLast4}
-              onChange={(e) => setSsnLast4(e.target.value)}
-              required
-              maxLength={4}
-            />
-            <button onSubmit={handleSubmit} className="btn btn-primary w-50 mt-5" type="submit">
-              Save
-            </button>
           </div>
         </div>
+
+        {user.status === 'awaitingDocuments' && (
+          <div className='row mt-5'>
+            <div className='col-12'>
+              <h4>Required Documents</h4>
+              {error && <p className='text-danger'>{error}</p>}
+              <table className='table table-striped'>
+                <thead>
+                  <tr>
+                    <th>Document Type</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {documents.map((doc) => (
+                    <tr key={doc.id}>
+                      <td className='align-middle'>
+                        {doc.attributes.documentType}
+                        <span
+                          className='ms-2 tooltip-container'
+                          onMouseEnter={(e) => (e.currentTarget.querySelector('.tooltip-text').style.display = 'block')}
+                          onMouseLeave={(e) => (e.currentTarget.querySelector('.tooltip-text').style.display = 'none')}
+                        >
+                          <i className='bi bi-info-circle text-muted'></i>
+                          <span className='tooltip-text'>{doc.attributes.description}</span>
+                        </span>
+                      </td>
+                      <td className='align-middle'>{doc.attributes.status}</td>
+                      <td className='align-middle'>
+                        {doc.attributes.status === 'Required' && (
+                          <div>
+                            <input
+                              type='file'
+                              className='form-control form-control-sm mb-2'
+                              onChange={(e) => handleFileChange(e)}
+                            />
+                            <button
+                              className='btn btn-primary btn-sm'
+                              onClick={() => handleDocumentUpload(doc.id)}
+                              disabled={isLoading || !newDocument}
+                            >
+                              {isLoading ? 'Uploading...' : 'Upload'}
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

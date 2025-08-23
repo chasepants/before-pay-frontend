@@ -2,7 +2,7 @@
 @import '~bootstrap-icons/font/bootstrap-icons.css';
 
 /** VARIABLES */ 
-$primary: #ff914d;
+$primary: #ffbd59;
 
 /** TAGS */
 body {
@@ -19,7 +19,7 @@ h1 {
 /** CLASSES */
 .bi-star-fill,
 .bi-star-half {
-  color: #ff914d;
+  color: #ffbd59;
 }
 
 .btn {
@@ -40,12 +40,6 @@ h1 {
   border-color: transparent !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
-}
-
-.card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e0e0e0;
 }
 
 .card-body {

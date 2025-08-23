@@ -1,8 +1,7 @@
-// frontend/src/App.js
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import axios from 'axios';
+import api from './api';
 import LandingPage from './pages/LandingPage';
 import Home from './pages/Home';
 import SetupSavings from './pages/SetupSavings';
@@ -11,72 +10,80 @@ import ViewSavings from './pages/ViewSavings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
-import Accounts from './pages/Accounts';
+import ApplicationSignup from './pages/ApplicationSignup';
+import Pending from './pages/Pending';
+import CreateSavingsGoal from './pages/CreateSavingsGoal';
+import ViewSavingsGoals from './pages/ViewSavingsGoals';
 import { setUser, setUserLoading, setUserError } from './store/userSlice';
-import { setWishlist, setWishlistLoading, setWishlistError } from './store/wishlistSlice';
+import { setSavingsGoals, setSavingsGoalsLoading, setSavingsGoalsError } from './store/savingsSlice';
 import LoadingAnimation from './components/LoadingAnimation';
 
 const App = () => {
   const dispatch = useDispatch();
   const { user, loading: userLoading } = useSelector((state) => state.user);
-  const { loading: wishlistLoading } = useSelector((state) => state.wishlist);
+  const { loading: savingsGoalsLoading, error: savingsGoalsError } = useSelector((state) => state.savings);
   const [error, setError] = useState(null);
 
-  // Fetch user on mount
   useEffect(() => {
+    // Extract token from URL query parameter
+    const query = new URLSearchParams(window.location.search);
+    const token = query.get('token');
+    if (token) {
+      console.log('Storing token from URL:', token);
+      localStorage.setItem('authToken', token);
+      // Clear query parameters from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     const fetchUser = async () => {
       dispatch(setUserLoading());
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.log('No token found in localStorage');
+        dispatch(setUser(null));
+        return;
+      }
       try {
-        const userRes = await axios.get('http://localhost:3001/api/auth/current_user', { withCredentials: true });
+        console.log('Fetching user from:', `${process.env.REACT_APP_API_URL}/api/auth/current_user`);
+        const userRes = await api.get('/api/auth/current_user'); // Use api instance
+        console.log('Current user response:', userRes.data);
         dispatch(setUser(userRes.data));
       } catch (err) {
         console.error('User fetch failed:', err);
+        console.error('Error response:', err.response);
         dispatch(setUserError('Failed to fetch user'));
-        if (err.response?.status === 401) {
-          // Handle unauthorized case
-          dispatch(setUser(null));
-        } else {
-          setError('Failed to load user data. Please try again.');
-        }
+        dispatch(setUser(null));
       }
     };
-
     fetchUser();
   }, [dispatch]);
 
-  // Fetch wishlist when user is available
   useEffect(() => {
     if (user) {
-      const fetchWishlist = async () => {
-        dispatch(setWishlistLoading());
+      const fetchSavingsGoals = async () => {
+        dispatch(setSavingsGoalsLoading());
         try {
-          const wishlistRes = await axios.get('http://localhost:3001/api/wishlist', { withCredentials: true });
-          dispatch(setWishlist(wishlistRes.data));
+          const savingsGoalsRes = await api.get('/api/savings-goal'); // Use api instance
+          dispatch(setSavingsGoals(savingsGoalsRes.data));
         } catch (err) {
-          console.error('Wishlist fetch failed:', err);
-          dispatch(setWishlistError(err.message));
-          if (err.response?.status === 401) {
-            // Handle unauthorized case
-            dispatch(setUser(null));
-          } else {
-            setError('Failed to load wishlist data. Please try again.');
-          }
+          console.error('Savings goals fetch failed:', err);
+          dispatch(setSavingsGoalsError(err.message));
+          dispatch(setUser(null));
         }
       };
-
-      fetchWishlist();
+      fetchSavingsGoals();
     }
   }, [user, dispatch]);
 
-  if (userLoading || (user && wishlistLoading)) {
-    console.log("Loading user and wishlist")
+  if (userLoading || (user && savingsGoalsLoading)) {
+    console.log("Loading user and savings goals");
     return <LoadingAnimation />;
   }
 
-  if (error) {
+  if (error || savingsGoalsError) {
     return (
       <div style={{ padding: '16px' }}>
-        <p style={{ color: 'red' }}>{error}</p>
+        <p style={{ color: 'red' }}>{error || savingsGoalsError}</p>
         <button
           onClick={() => window.location.reload()}
           style={{
@@ -101,11 +108,14 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/setup-savings/:wishlistItemId" element={user ? <SetupSavings /> : <Navigate to="/" />} />
-        <Route path="/setup-payout/:wishlistItemId" element={user ?  <SetupPayout /> : <Navigate to="/" />} />
-        <Route path="/view-savings/:wishlistItemId" element={user ?  <ViewSavings /> : <Navigate to="/" />} />
+        <Route path="/setup-savings/:savingsGoalId" element={user ? <SetupSavings /> : <Navigate to="/" />} />
+        <Route path="/setup-payout/:savingsGoalId" element={user ? <SetupPayout /> : <Navigate to="/" />} />
+        <Route path="/view-savings/:savingsGoalId" element={user ? <ViewSavings /> : <Navigate to="/" />} />
         <Route path="/profile" element={user ? <Profile /> : <Navigate to="/" />} />
-        <Route path="/accounts" element={user ? <Accounts /> : <Navigate to="/" />} />
+        <Route path="/application-signup" element={user && !user.unitCustomerId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
+        <Route path="/pending" element={user && user.status === 'pending' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
+        <Route path="/create-savings-goal" element={user ? <CreateSavingsGoal /> : <Navigate to="/" />} />
+        <Route path="/view-savings-goals" element={user ? <ViewSavingsGoals /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );

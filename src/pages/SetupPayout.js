@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 
 const SetupPayout = () => {
   const { wishlistItemId } = useParams();
@@ -17,10 +17,9 @@ const SetupPayout = () => {
     const fetchClientSecret = async () => {
       try {
         console.log('Fetching Financial Connections session for wishlistItemId:', wishlistItemId);
-        const res = await axios.post(
-          'http://localhost:3001/api/bank/setup-payout',
-          { wishlistItemId },
-          { withCredentials: true }
+        const res = await api.post(
+          `/api/bank/setup-payout`,
+          { wishlistItemId }
         );
         console.log('Financial Connections response:', res.data);
         if (res.data.client_secret) {
