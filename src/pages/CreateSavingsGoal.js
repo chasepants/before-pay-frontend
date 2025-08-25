@@ -45,7 +45,7 @@ const CreateSavingsGoal = () => {
       dispatch(addSavingsGoal(res.data));
       setFormData({ goalName: '', description: '', amount: '', productLink: '' });
       setError('');
-      navigate('/view-savings-goals');
+      navigate(`/setup-savings/${res.data._id}`);
     } catch (err) {
       setError('Failed to create savings goal: ' + err.message);
       console.error('Create savings goal error:', err);
@@ -72,6 +72,7 @@ const CreateSavingsGoal = () => {
     try {
       const res = await api.post('/api/savings-goal', { userId: user._id, ...product, targetAmount: product.extracted_price }); // Use api instance
       dispatch(addSavingsGoal(res.data));
+      navigate(`/setup-savings/${res.data._id}`);
     } catch (err) {
       console.error('Add to savings failed:', err);
     }

@@ -9,14 +9,13 @@ import SetupPayout from './pages/SetupPayout';
 import ViewSavings from './pages/ViewSavings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Profile from './pages/Profile';
 import ApplicationSignup from './pages/ApplicationSignup';
 import Pending from './pages/Pending';
 import CreateSavingsGoal from './pages/CreateSavingsGoal';
-import ViewSavingsGoals from './pages/ViewSavingsGoals';
 import { setUser, setUserLoading, setUserError } from './store/userSlice';
 import { setSavingsGoals, setSavingsGoalsLoading, setSavingsGoalsError } from './store/savingsSlice';
 import LoadingAnimation from './components/LoadingAnimation';
+import Denied from './pages/Denied';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -109,13 +108,11 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
         <Route path="/home" element={<Home />} />
         <Route path="/setup-savings/:savingsGoalId" element={user ? <SetupSavings /> : <Navigate to="/" />} />
-        <Route path="/setup-payout/:savingsGoalId" element={user ? <SetupPayout /> : <Navigate to="/" />} />
         <Route path="/view-savings/:savingsGoalId" element={user ? <ViewSavings /> : <Navigate to="/" />} />
-        <Route path="/profile" element={user ? <Profile /> : <Navigate to="/" />} />
         <Route path="/application-signup" element={user && !user.unitCustomerId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
         <Route path="/pending" element={user && user.status === 'pending' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
         <Route path="/create-savings-goal" element={user ? <CreateSavingsGoal /> : <Navigate to="/" />} />
-        <Route path="/view-savings-goals" element={user ? <ViewSavingsGoals /> : <Navigate to="/" />} />
+        <Route path="/denied" element={<Denied />} />
       </Routes>
     </Router>
   );

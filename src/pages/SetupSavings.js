@@ -33,17 +33,10 @@ const SetupSavings = () => {
       return;
     }
 
-    const checkProfile = async () => {
-      try {
-        const response = await api.get(`/api/auth/profile-status`);
-        if (!response.data.completed) {
-          navigate('/complete-profile');
-        }
-      } catch (err) {
-        setError('Failed to check profile status');
-      }
-    };
-    checkProfile();
+    if (!user.unitCustomerId || user.status !== 'approved') {
+      setError('You must complete your Unit application and be approved to set up savings');
+      return;
+    }
 
     const fetchPlaidToken = async () => {
       try {
@@ -163,7 +156,7 @@ const SetupSavings = () => {
       <div className="container mt-5">
         <div className='row'></div>
         <div className="row">
-          <div className="col-sm-6 mt-5 p-5">
+          <div className="col-sm-6">
             <h5>Create A Savings Plan</h5>
             <label htmlFor="amount" className="form-label mt-3">How much do you want to save?</label>
             <input

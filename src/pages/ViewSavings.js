@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { ProgressBar } from 'react-bootstrap'; // Add this import
 import api from '../api';
 import Navbar from '../components/Navbar';
 import LoadingAnimation from '../components/LoadingAnimation';
@@ -80,6 +81,37 @@ const ViewSavings = () => {
     }
   };
 
+  // Calculate progress with different states
+  const calculateProgress = () => {
+    // Add safety check for null savingsGoal
+    if (!savingsGoal || !savingsGoal.transfers) {
+      return {
+        completedAmount: 0,
+        pendingAmount: 0,
+        totalAmount: savingsGoal?.targetAmount || 0,
+        completedPercentage: 0,
+        pendingPercentage: 0
+      };
+    }
+
+    const completedTransfers = savingsGoal.transfers.filter(t => t.status === 'completed');
+    const pendingTransfers = savingsGoal.transfers.filter(t => t.status === 'pending');
+    
+    const completedAmount = completedTransfers.reduce((sum, t) => sum + t.amount, 0);
+    const pendingAmount = pendingTransfers.reduce((sum, t) => sum + t.amount, 0);
+    
+    const completedPercentage = (completedAmount / savingsGoal.targetAmount) * 100;
+    const pendingPercentage = (pendingAmount / savingsGoal.targetAmount) * 100;
+    
+    return {
+      completedAmount,
+      pendingAmount,
+      totalAmount: savingsGoal.targetAmount,
+      completedPercentage: Math.min(completedPercentage, 100),
+      pendingPercentage: Math.min(pendingPercentage, 100 - completedPercentage)
+    };
+  };
+
   if (error) {
     return (
       <div style={{ padding: '16px' }}>
@@ -106,7 +138,9 @@ const ViewSavings = () => {
     return <LoadingAnimation />;
   }
 
-  const progressPercentage = Math.min((savingsGoal.currentAmount / savingsGoal.targetAmount) * 100, 100);
+  // Only calculate progress after we know savingsGoal exists
+  const progress = calculateProgress();
+
   const headerClasses = savingsGoal.product.thumbnail ? 'col-sm-7 mt-3' : 'col-sm-7 mt-3 offset-sm-1';
 
   return (
@@ -124,18 +158,43 @@ const ViewSavings = () => {
           <div className={headerClasses}>
             <h1 className='mt-3'>{savingsGoal.goalName || savingsGoal.product.title}</h1>
             <div className='d-flex justify-content-between'>
-              <div className="progress w-75 pt-4" role="progressbar" aria-label="Savings Progress" aria-valuenow={progressPercentage} aria-valuemin="0" aria-valuemax="100">
-                <div className="progress-bar" style={{ width: `${progressPercentage}%` }}></div>
-              </div>
-              <div>
-                <h5 className="card-text">
-                  <b>
-                    <span style={{ color: "#d4d8de" }}>${savingsGoal.currentAmount}</span>/
-                    <span style={{ color: "#7ed957" }}>${savingsGoal.targetAmount}</span> 
-                  </b>
-                </h5>
+              <div className="w-75 pt-4">
+                <ProgressBar>
+                  {/* Completed payments in green */}
+                  {progress.completedPercentage > 0 && (
+                    <ProgressBar 
+                      striped 
+                      variant="success" 
+                      now={progress.completedPercentage} 
+                      key={1}
+                      title={`$${progress.completedAmount} completed`}
+                    />
+                  )}
+                  {/* Pending payments in yellow */}
+                  {progress.pendingPercentage > 0 && (
+                    <ProgressBar 
+                      variant="warning" 
+                      now={progress.pendingPercentage} 
+                      key={2}
+                      title={`$${progress.pendingAmount} pending`}
+                    />
+                  )}
+                </ProgressBar>
               </div>
             </div>
+            
+            {/* Progress breakdown */}
+            <div className="mt-2">
+              <small className="text-muted">
+                <span className="text-success">●</span> ${progress.completedAmount} completed
+                {progress.pendingAmount > 0 && (
+                  <>
+                    <span className="text-warning ms-3">●</span> ${progress.pendingAmount} pending
+                  </>
+                )}
+              </small>
+            </div>
+
             <div className='d-flex justify-content-between'>
               <div className="card-text" style={{ color: "#d4d8de" }}>
                 <b>
@@ -190,7 +249,7 @@ const ViewSavings = () => {
             <div className="card-header bg-dark text-white">
               <h4 className="mb-0 p-2">Transfers</h4>
             </div>
-            {transactions.length > 0 ? (
+            {savingsGoal.transfers && savingsGoal.transfers.length > 0 ? (
               <table className='table table-stripped'>
                 <thead>
                   <tr>
@@ -201,20 +260,28 @@ const ViewSavings = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((tx, index) => (
+                  {savingsGoal.transfers.map((transfer, index) => (
                     <tr key={index}>
                       <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                        {new Date(tx.date * 1000).toLocaleDateString()}
+                        {new Date(transfer.date).toLocaleDateString()}
                       </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>${tx.amount < 0 ? tx.amount * -1 : tx.amount}</td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>{tx.status}</td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>{tx.amount < 0 ? "credit" : tx.type}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>${transfer.amount}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>
+                        <span className={`badge ${
+                          transfer.status === 'completed' ? 'bg-success' : 
+                          transfer.status === 'pending' ? 'bg-warning' : 
+                          'bg-danger'
+                        }`}>
+                          {transfer.status}
+                        </span>
+                      </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>{transfer.type}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             ) : (
-              <p>No transactions found.</p>
+              <p>No transfers found.</p>
             )}
           </div>
         </div>

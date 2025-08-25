@@ -12,26 +12,32 @@ const Home = () => {
   const [customerToken, setCustomerToken] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!user) navigate('/');
-
-    const fetchCustomerToken = async () => {
-      try {
-        const response = await api.get('/api/auth/customer-token');
-        console.log('Customer token:', response.data.token);
-        setCustomerToken(response.data.token);
-      } catch (err) {
-        console.error('Customer token fetch failed:', err.response?.data || err.message);
-        // setError('Failed to load account information: ' + (err.response?.data?.error || err.message));
+  // Move fetchCustomerToken outside useEffect so it can be called from event listeners
+  const fetchCustomerToken = async () => {
+    try {
+      const response = await api.get('/api/auth/customer-token');
+      console.log('Customer token:', response.data.token);
+      setCustomerToken(response.data.token);
+    } catch (err) {
+      console.error('Customer token fetch failed:', err.response?.data || err.message);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('authToken');
+        navigate('/');
       }
-    };
+    }
+  };
 
-    fetchCustomerToken();
-  }, [navigate, user]);
+  useEffect(() => {
+    if (user) {
+      fetchCustomerToken();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (customerToken) {
       const accountElement = document.querySelector('unit-elements-account');
+      const activityElement = document.querySelector('unit-elements-activity');
+      
       if (accountElement) {
         accountElement.addEventListener('unitOnLoad', (e) => {
           console.log('Account component loaded:', e.detail);
@@ -43,9 +49,14 @@ const Home = () => {
             }
           }
         });
-        accountElement.addEventListener('unitAccountChanged', async (e) => {
-          const eventData = await e.detail;
-          console.log('Account changed:', eventData.data.id);
+      }
+      
+      if (activityElement) {
+        activityElement.addEventListener('unitOnLoad', (e) => {
+          console.log('Activity component loaded:', e.detail);
+          if (e.detail.errors) {
+            console.error('Activity component error:', e.detail.errors);
+          }
         });
       }
     }
@@ -111,26 +122,19 @@ const Home = () => {
       <div className="container mt-4">
         <div className="row mb-4">
           <div className="col-12">
-            <h2 className="text-dark fw-bold">Welcome, {user?.firstName || 'User'}</h2>
+            <h2 className="text-dark fw-bold">Welcome, {'Rowe!' || 'User'}</h2>
             {savingsGoals.length === 0 && <p className="text-muted">Manage your savings with Beforepay.</p>}
           </div>
         </div>
 
-        <div className="row mb-5">
+        <div className="row mb-3">
           <div className="col-12">
             <div className="card border-0 shadow-sm">
               <div className="card-header bg-dark text-white">
                 <h4 className="mb-0">Savings Goals</h4>
               </div>
               <div className="card-body p-0">
-                {savingsGoals.length === 0 ? (
-                  <div className="text-center py-4">
-                    <p className="text-muted">No savings goals yet. Start saving today!</p>
-                    <button className="btn btn-primary" onClick={handleCreateSavingsGoal}>
-                      Create Your First Goal
-                    </button>
-                  </div>
-                ) : (
+                {savingsGoals.length > 0 ? (
                   <table className="table table-striped">
                     <thead className="bg-light">
                       <tr>
@@ -176,35 +180,47 @@ const Home = () => {
                           </td>
                         </tr>
                       ))}
+                      <tr className="border-0">
+                        <td colSpan="5" className="border-0"></td> {/* Empty cells for first 5 columns */}
+                        <td className="text-center border-0">
+                          <button className="btn btn-primary" onClick={handleCreateSavingsGoal}>
+                            <i className="bi bi-plus-circle me-1"></i>
+                            Add New Goal
+                          </button>
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-muted">No savings goals yet. Start saving today!</p>
+                    <button className="btn btn-primary" onClick={handleCreateSavingsGoal}>
+                      Create Your First Goal
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         </div>
 
-        {savingsGoals.length > 0 && (
-          <div className="row mb-5">
-            <div className="col-2 offset-sm-10 flex-end">
-              <button className="btn btn-primary" onClick={handleCreateSavingsGoal}>
-                Add New Goal
-              </button>
-            </div>
-          </div>
-        )}
-
         <div className="row mb-4 mt-4">
           <div className="col-md-4">
             {
-              "approved" === user.status && customerToken ? <unit-elements-account
-                customer-token={customerToken}
-                theme=""
-                hide-actions-menu-button="false"
-                hide-selection-menu-button="false"
-                menu-items="details,statements,bankVerification"
-                hide-account-cta-banner="true"
-              ></unit-elements-account> : <Placeholder  />
+              "approved" === user.status && customerToken ? (
+                <div className="card border-0 shadow-sm">
+                  <div className="card-body p-0">
+                    <unit-elements-account
+                      customer-token={customerToken}
+                      theme=""
+                      hide-actions-menu-button="false"
+                      hide-selection-menu-button="false"
+                      menu-items="details,statements,bankVerification"
+                      hide-account-cta-banner="true"
+                    ></unit-elements-account>
+                  </div>
+                </div>
+              ) : <Placeholder  />
             }
           </div>
           <div className="col-md-4">

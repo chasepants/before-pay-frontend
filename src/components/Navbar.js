@@ -39,12 +39,6 @@ const NavbarComponent = ({ user }) => {
     }
   };
 
-  const handleProfileClick = (e) => {
-    e.preventDefault();
-    console.log('Profile link clicked');
-    navigate('/profile');
-  };
-
   const handleToggle = () => {
     console.log('Hamburger menu toggled');
     const navbarNav = document.getElementById('basic-navbar-nav');
@@ -68,11 +62,6 @@ const NavbarComponent = ({ user }) => {
         {user ? (
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto">
-              {user.unitCustomerId && user.status === 'approved' ? (
-                <Nav.Link onClick={handleProfileClick}>
-                  Profile
-                </Nav.Link>
-              ) : null}
               {!user.unitCustomerId && user.status !== 'approved' ? (
                 <Nav.Link onClick={handleApplicationClick}>
                   Application
