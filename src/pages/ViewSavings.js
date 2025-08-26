@@ -342,7 +342,7 @@ const ViewSavings = () => {
                   <tr>
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Date</th>
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Amount</th>
-                    <th style={{ border: '1px solid #ccc', padding: '8px' }}>Payment ID</th>
+                    <th style={{ border: '1px solid #ccc', padding: '8px' }}>Transaction ID</th> {/* Changed from Payment ID */}
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Status</th>
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Type</th>
                   </tr>
@@ -366,8 +366,8 @@ const ViewSavings = () => {
                       >
                         ${transfer.amount}
                       </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                        {transfer.transferId}
+                      <td style={{ border: '1px solid #ccc', padding: '8px', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {transfer.transactionId || transfer.transferId || 'N/A'}
                       </td>
                       <td style={{ border: '1px solid #ccc', padding: '8px' }}>
                         <span className={`badge ${
