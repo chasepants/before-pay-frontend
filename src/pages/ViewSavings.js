@@ -348,25 +348,46 @@ const ViewSavings = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {savingsGoal.transfers.map((t, index) => (
-                    <tr key={index}>
+                  {savingsGoal.transfers.map((transfer, index) => (
+                    <tr 
+                      key={index}
+                      className={transfer.type === 'credit' ? 'table-danger' : ''}
+                    >
                       <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                        {new Date(t.date).toLocaleDateString()}
+                        {new Date(transfer.date).toLocaleDateString()}
                       </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>${t.amount}</td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {t.transferId}
+                      <td 
+                        style={{ 
+                          border: '1px solid #ccc', 
+                          padding: '8px',
+                          color: transfer.type === 'credit' ? '#dc3545' : 'inherit',
+                          fontWeight: transfer.type === 'credit' ? 'bold' : 'normal'
+                        }}
+                      >
+                        ${transfer.amount}
+                      </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>
+                        {transfer.transferId}
                       </td>
                       <td style={{ border: '1px solid #ccc', padding: '8px' }}>
                         <span className={`badge ${
-                          t.status === 'completed' ? 'bg-success' : 
-                          t.status === 'pending' ? 'bg-warning' : 
+                          transfer.status === 'completed' ? 'bg-success' : 
+                          transfer.status === 'pending' ? 'bg-warning' : 
                           'bg-danger'
                         }`}>
-                          {t.status}
+                          {transfer.status}
                         </span>
                       </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>{t.type}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>
+                        <span 
+                          style={{ 
+                            color: transfer.type === 'credit' ? '#dc3545' : 'inherit',
+                            fontWeight: transfer.type === 'credit' ? 'bold' : 'normal'
+                          }}
+                        >
+                          {transfer.type}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
