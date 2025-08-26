@@ -1,9 +1,10 @@
 import api from '../api';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import Navbar from '../components/Navbar';
 import Placeholder from 'react-bootstrap/Placeholder';
+import { setSavingsGoals } from '../store/savingsSlice';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const Home = () => {
   const { goals: savingsGoals } = useSelector((state) => state.savings);
   const [customerToken, setCustomerToken] = useState(null);
   const [error, setError] = useState(null);
+  const dispatch = useDispatch();
 
   // Move fetchCustomerToken outside useEffect so it can be called from event listeners
   const fetchCustomerToken = async () => {
@@ -74,6 +76,17 @@ const Home = () => {
     navigate(`/view-savings/${goalId}`);
   };
 
+  const togglePause = async (goal) => {
+    console.log(`Pausing ${goal}`)
+    try {
+      await api.patch(`/api/savings-goal/${goal._id}/pause`, { isPaused: !goal.isPaused });
+      const refreshed = await api.get('/api/savings-goal');
+      dispatch(setSavingsGoals(refreshed.data));
+    } catch (e) {
+      console.error('Toggle pause failed:', e);
+    }
+  };
+
   const getNextRunDate = (schedule) => {
     let today = new Date();
     const todaysDate = today.getDate();
@@ -122,7 +135,7 @@ const Home = () => {
       <div className="container mt-4">
         <div className="row mb-4">
           <div className="col-12">
-            <h2 className="text-dark fw-bold">Welcome, {'Rowe!' || 'User'}</h2>
+            <h2 className="text-dark fw-bold">Welcome, {user.firstName || 'User'}</h2>
             {savingsGoals.length === 0 && <p className="text-muted">Manage your savings with Beforepay.</p>}
           </div>
         </div>
@@ -144,6 +157,7 @@ const Home = () => {
                         <th>Next Run</th>
                         <th>Transfer From</th>
                         <th>Actions</th>
+                        <th></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -178,10 +192,19 @@ const Home = () => {
                               View
                             </button>
                           </td>
+                          <td className="align-middle">
+                            <button
+                              className={`btn btn-sm ${goal.isPaused ? 'btn-success' : 'btn-danger'}`}
+                              onClick={(e) => { e.preventDefault(); togglePause(goal); }}
+                              title={goal.isPaused ? 'Resume goal' : 'Pause goal'}
+                            >
+                              {goal.isPaused ? 'Resume' : 'Pause'}
+                            </button>
+                          </td>
                         </tr>
                       ))}
                       <tr className="border-0">
-                        <td colSpan="5" className="border-0"></td> {/* Empty cells for first 5 columns */}
+                        <td colSpan="6" className="border-0"></td> {/* Empty cells for first 5 columns */}
                         <td className="text-center border-0">
                           <button className="btn btn-primary" onClick={handleCreateSavingsGoal}>
                             <i className="bi bi-plus-circle me-1"></i>

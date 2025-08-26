@@ -15,6 +15,10 @@ const ViewSavings = () => {
   const [transactions, setTransactions] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [editGoalName, setEditGoalName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editTargetAmount, setEditTargetAmount] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -40,6 +44,15 @@ const ViewSavings = () => {
       setSavingsGoal(goal);
     }
   }, [savingsGoalId, savingsGoals, user, navigate]);
+
+  // 2) when goal loads, seed fields
+  useEffect(() => {
+    if (savingsGoal) {
+      setEditGoalName(savingsGoal.goalName || '');
+      setEditDescription(savingsGoal.product?.description || savingsGoal.description || '');
+      setEditTargetAmount(savingsGoal.targetAmount ?? '');
+    }
+  }, [savingsGoal]);
 
   useEffect(() => {
     if (savingsGoal) {
@@ -78,6 +91,22 @@ const ViewSavings = () => {
       setError(err.response?.data?.error || 'Failed to transfer savings');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // 3) save handler
+  const handleSave = async () => {
+    try {
+      const payload = {
+        goalName: editGoalName,
+        description: editDescription,
+        targetAmount: editTargetAmount === '' ? undefined : Number(editTargetAmount)
+      };
+      const res = await api.put(`/api/savings-goal/${savingsGoalId}`, payload);
+      setSavingsGoal(res.data);
+      setEditing(false);
+    } catch (e) {
+      setError(e.response?.data?.error || 'Failed to update goal');
     }
   };
 
@@ -143,6 +172,7 @@ const ViewSavings = () => {
 
   const headerClasses = savingsGoal.product.thumbnail ? 'col-sm-7 mt-3' : 'col-sm-7 mt-3 offset-sm-1';
 
+  // 4) UI (replace title/description section)
   return (
     <>
       <Navbar user={user} />
@@ -156,7 +186,44 @@ const ViewSavings = () => {
             )
           }
           <div className={headerClasses}>
-            <h1 className='mt-3'>{savingsGoal.goalName || savingsGoal.product.title}</h1>
+            <div className="d-flex align-items-start">
+              <h1 className='mt-3 mb-0' style={{ flex: 1 }}>
+                {editing ? (
+                  <input
+                    className="form-control"
+                    value={editGoalName}
+                    onChange={(e) => setEditGoalName(e.target.value)}
+                  />
+                ) : (
+                  (savingsGoal.goalName || savingsGoal.product.title)
+                )}
+              </h1>
+              {!editing && (
+                <i
+                  className="bi bi-pencil-square"
+                  role="button"
+                  aria-label="Edit goal"
+                  title="Edit goal"
+                  style={{ fontSize: '1.25rem', cursor: 'pointer', marginTop: '0.6rem' }}
+                  onClick={() => setEditing(true)}
+                />
+              )}
+            </div>
+            {editing ? (
+              <textarea
+                className="form-control mb-2"
+                rows={3}
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Description"
+              />
+            ) : (
+              (savingsGoal.product?.description || savingsGoal.description) && (
+                <p className="text-muted mb-2">
+                  {savingsGoal.product?.description || savingsGoal.description}
+                </p>
+              )
+            )}
             <div className='d-flex justify-content-between'>
               <div className="w-75 pt-4">
                 <ProgressBar>
@@ -181,9 +248,31 @@ const ViewSavings = () => {
                   )}
                 </ProgressBar>
               </div>
-            </div>
-            
-            {/* Progress breakdown */}
+              <div>
+                {/* 5) Savings amount field (near schedule/bank details is fine) */}
+                <div className='row'>
+                  <div className='col-sm-10 offset-sm-1'>
+                    {editing ? (
+                      <div className="d-flex align-items-center gap-2">
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={editTargetAmount}
+                          onChange={(e) => setEditTargetAmount(e.target.value)}
+                          placeholder="Target amount"
+                          min="0"
+                          step="1"
+                        />
+                      </div>
+                    ) : (
+                      <h5 className="card-text">
+                        <b>${savingsGoal.currentAmount} / ${savingsGoal.targetAmount}</b>
+                      </h5>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>            
             <div className="mt-2">
               <small className="text-muted">
                 <span className="text-success">●</span> ${progress.completedAmount} completed
@@ -201,27 +290,25 @@ const ViewSavings = () => {
                   <div className="product-source"><img className="product-source-icon" src={savingsGoal.product.sourceIcon} /> {savingsGoal.product.source}</div>
                 </b>
               </div>
-              {user.status === 'approved' && savingsGoal.currentAmount > 0 && (
-                <button
-                  type='button'
-                  className='btn btn-link'
-                  onClick={handlePayout}
-                  disabled={isLoading}
-                >
-                  TRANSFER BACK
-                </button>
-              )}
             </div>
             {savingsGoal.product.rating && (
               <p>
                 {savingsGoal.product.rating} <i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-half"></i> ({savingsGoal.product.reviews} reviews)
               </p>
             )}
+            <div className=''>
+              {editing && (
+                <>
+                  <button className="btn btn-primary btn-sm me-2" onClick={handleSave}>Save</button>
+                  <button className="btn btn-outline-secondary btn-sm" onClick={() => setEditing(false)}>Cancel</button>
+                </>
+              )}
+            </div>
           </div>
         </div>
         {
           savingsGoal.bank && (
-            <div className='row'>
+            <div className='row mt-4'>
               <div className='col-sm-4 offset-sm-1'>
                   <h4 className='text-muted'>
                     {savingsGoal.bank.bankName} - ${savingsGoal.savingsAmount}
@@ -255,27 +342,31 @@ const ViewSavings = () => {
                   <tr>
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Date</th>
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Amount</th>
+                    <th style={{ border: '1px solid #ccc', padding: '8px' }}>Payment ID</th>
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Status</th>
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Type</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {savingsGoal.transfers.map((transfer, index) => (
+                  {savingsGoal.transfers.map((t, index) => (
                     <tr key={index}>
                       <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                        {new Date(transfer.date).toLocaleDateString()}
+                        {new Date(t.date).toLocaleDateString()}
                       </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>${transfer.amount}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>${t.amount}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {t.transferId}
+                      </td>
                       <td style={{ border: '1px solid #ccc', padding: '8px' }}>
                         <span className={`badge ${
-                          transfer.status === 'completed' ? 'bg-success' : 
-                          transfer.status === 'pending' ? 'bg-warning' : 
+                          t.status === 'completed' ? 'bg-success' : 
+                          t.status === 'pending' ? 'bg-warning' : 
                           'bg-danger'
                         }`}>
-                          {transfer.status}
+                          {t.status}
                         </span>
                       </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>{transfer.type}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>{t.type}</td>
                     </tr>
                   ))}
                 </tbody>
