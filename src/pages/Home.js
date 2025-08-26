@@ -206,10 +206,15 @@ const Home = () => {
                       <tr className="border-0">
                         <td colSpan="6" className="border-0"></td> {/* Empty cells for first 5 columns */}
                         <td className="text-center border-0">
-                          <button className="btn btn-primary" onClick={handleCreateSavingsGoal}>
-                            <i className="bi bi-plus-circle me-1"></i>
-                            Add New Goal
-                          </button>
+                          <div className="d-grid gap-2 d-sm-flex justify-content-sm-end">
+                            <button className="btn btn-outline-secondary" onClick={() => navigate('/transfer-back')}>
+                              Transfer Back
+                            </button>
+                            <button className="btn btn-primary" onClick={handleCreateSavingsGoal}>
+                              <i className="bi bi-plus-circle me-1"></i>
+                              Add New Goal
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     </tbody>

@@ -16,6 +16,7 @@ import { setUser, setUserLoading, setUserError } from './store/userSlice';
 import { setSavingsGoals, setSavingsGoalsLoading, setSavingsGoalsError } from './store/savingsSlice';
 import LoadingAnimation from './components/LoadingAnimation';
 import Denied from './pages/Denied';
+import TransferBack from './pages/TransferBack';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -113,6 +114,7 @@ const App = () => {
         <Route path="/pending" element={user && user.status === 'pending' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
         <Route path="/create-savings-goal" element={user ? <CreateSavingsGoal /> : <Navigate to="/" />} />
         <Route path="/denied" element={<Denied />} />
+        <Route path="/transfer-back" element={user ? <TransferBack /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );
