@@ -123,10 +123,11 @@ const ViewSavings = () => {
       };
     }
 
-    const completedTransfers = savingsGoal.transfers.filter(t => t.status === 'completed');
-    const pendingTransfers = savingsGoal.transfers.filter(t => t.status === 'pending');
+    const completedDebitTransfers = savingsGoal.transfers.filter(t => t.status === 'completed' && t.type === 'debit');
+    const completedCreditTransfers = savingsGoal.transfers.filter(t => t.status === 'completed' && t.type === 'credit');
+    const pendingTransfers = savingsGoal.transfers.filter(t => t.status === 'pending' && t.type === 'debit');
     
-    const completedAmount = completedTransfers.reduce((sum, t) => sum + t.amount, 0);
+    const completedAmount = completedDebitTransfers.reduce((sum, t) => sum + t.amount, 0) - completedCreditTransfers.reduce((sum, t) => sum + t.amount, 0);
     const pendingAmount = pendingTransfers.reduce((sum, t) => sum + t.amount, 0);
     
     const completedPercentage = (completedAmount / savingsGoal.targetAmount) * 100;
@@ -275,7 +276,7 @@ const ViewSavings = () => {
             </div>            
             <div className="mt-2">
               <small className="text-muted">
-                <span className="text-success">●</span> ${progress.completedAmount} completed
+                <span className="text-success">●</span> ${savingsGoal.currentAmount} completed
                 {progress.pendingAmount > 0 && (
                   <>
                     <span className="text-warning ms-3">●</span> ${progress.pendingAmount} pending

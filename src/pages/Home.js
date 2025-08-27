@@ -135,7 +135,7 @@ const Home = () => {
       <div className="container mt-4">
         <div className="row mb-4">
           <div className="col-12">
-            <h2 className="text-dark fw-bold">Welcome, {user.firstName || 'User'}</h2>
+            <h2 className="text-dark fw-bold">{user.firstName ? `Welcome, ${user.firstName}` : ''}</h2>
             {savingsGoals.length === 0 && <p className="text-muted">Manage your savings with Beforepay.</p>}
           </div>
         </div>
