@@ -19,6 +19,14 @@ const ViewSavings = () => {
   const [editGoalName, setEditGoalName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editTargetAmount, setEditTargetAmount] = useState('');
+  const [aiImage, setAiImage] = useState(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [aiInsights, setAiInsights] = useState([]);
+  const [showInsights, setShowInsights] = useState(false);
+  const [showProductSearch, setShowProductSearch] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -45,12 +53,23 @@ const ViewSavings = () => {
     }
   }, [savingsGoalId, savingsGoals, user, navigate]);
 
-  // 2) when goal loads, seed fields
+  // Fix 1: Add back the useEffect to initialize aiImage from saved data
   useEffect(() => {
     if (savingsGoal) {
+      // Initialize aiImage from the saved goal data
+      if (savingsGoal.aiGeneratedImage) {
+        setAiImage(savingsGoal.aiGeneratedImage);
+      }
+      
+      // Initialize other fields
       setEditGoalName(savingsGoal.goalName || '');
       setEditDescription(savingsGoal.product?.description || savingsGoal.description || '');
       setEditTargetAmount(savingsGoal.targetAmount ?? '');
+      
+      // Prepopulate search query with goal name for product-type goals
+      if (savingsGoal.category === 'product') {
+        setSearchQuery(savingsGoal.goalName || '');
+      }
     }
   }, [savingsGoal]);
 
@@ -142,6 +161,66 @@ const ViewSavings = () => {
     };
   };
 
+  const generateAiImage = async () => {
+    setIsGeneratingImage(true);
+    try {
+      const response = await api.post(`/api/savings-goal/${savingsGoalId}/generate-image`);
+      setAiImage(response.data.imageUrl);
+      // Refresh the goal data
+      const refreshed = await api.get(`/api/savings-goal/${savingsGoalId}`);
+      setSavingsGoal(refreshed.data);
+    } catch (error) {
+      setError('Failed to generate AI image');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const getAiInsight = async (insightType) => {
+    try {
+      const response = await api.post(`/api/savings-goal/${savingsGoalId}/ai-insights`, { insightType });
+      const newInsight = {
+        type: insightType,
+        content: response.data.insight,
+        createdAt: new Date()
+      };
+      setAiInsights(prev => [...prev, newInsight]);
+    } catch (error) {
+      setError('Failed to get AI insight');
+    }
+  };
+
+  const searchProducts = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      const response = await api.post(`/api/savings-goal/${savingsGoalId}/web-search`, { 
+        searchQuery: searchQuery.trim() 
+      });
+      console.log(response.data.products);
+      setSearchResults(response.data.products);
+    } catch (error) {
+      setError('Failed to search for products');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const saveProduct = async (product) => {
+    try {
+      const response = await api.post(`/api/savings-goal/${savingsGoalId}/save-product`, { 
+        productData: product 
+      });
+      setSavingsGoal(response.data.goal);
+      setShowProductSearch(false);
+      setSearchResults([]);
+      setSearchQuery('');
+    } catch (error) {
+      setError('Failed to save product');
+    }
+  };
+
   if (error) {
     return (
       <div style={{ padding: '16px' }}>
@@ -171,7 +250,7 @@ const ViewSavings = () => {
   // Only calculate progress after we know savingsGoal exists
   const progress = calculateProgress();
 
-  const headerClasses = savingsGoal.product.thumbnail ? 'col-sm-7 mt-3' : 'col-sm-7 mt-3 offset-sm-1';
+  const headerClasses = savingsGoal.product.thumbnail ? 'col-sm-7 mt-3 offset-sm-1' : 'col-sm-7 mt-3 offset-sm-1';
 
   // 4) UI (replace title/description section)
   return (
@@ -179,15 +258,51 @@ const ViewSavings = () => {
       <Navbar user={user} />
       <div className='container mt-3'>
         <div className='row'>
-          {
-            savingsGoal.product.thumbnail && (
-              <div className='col-sm-3 offset-sm-1'>
-                <img src={savingsGoal.product.thumbnail || 'https://via.placeholder.com/200'} alt="Savings Goal image" className="card-img-top" />
-              </div>
-            )
-          }
+          {/* Existing goal content */}
           <div className={headerClasses}>
             <div className="d-flex align-items-start">
+              {/* Show product thumbnail first, fallback to AI image, then placeholder */}
+              {(savingsGoal.product?.thumbnail || aiImage) ? (
+                <img 
+                  src={savingsGoal.product?.thumbnail || aiImage} 
+                  alt={savingsGoal.product?.thumbnail ? "Product Image" : "AI Generated Goal Icon"} 
+                  className="rounded-circle mb-3" 
+                  style={{ 
+                    width: '120px', 
+                    height: '120px', 
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    flexShrink: 0,
+                    minWidth: '120px',
+                    minHeight: '120px'
+                  }}
+                />
+              ) : (
+                <div className="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" 
+                     style={{ 
+                       width: '120px', 
+                       height: '120px',
+                       flexShrink: 0,
+                       minWidth: '120px',
+                       minHeight: '120px'
+                     }}>
+                  <i className="bi bi-image text-muted" style={{ fontSize: '2rem' }}></i>
+                </div>
+              )}
+              {
+                editing && (
+                  <button 
+                  className="btn btn-outline-primary btn-sm me-2"
+                  onClick={generateAiImage}
+                  disabled={isGeneratingImage}
+                  title="Generate AI Image"
+                >
+                  <i className="bi bi-magic"></i> {/* Icon instead of text */}
+                  {isGeneratingImage && <span className="ms-1">...</span>} {/* Show loading indicator */}
+                </button>
+                )
+              }
+              <div className='mx-3'>
               <h1 className='mt-3 mb-0' style={{ flex: 1 }}>
                 {editing ? (
                   <input
@@ -199,18 +314,7 @@ const ViewSavings = () => {
                   (savingsGoal.goalName || savingsGoal.product.title)
                 )}
               </h1>
-              {!editing && (
-                <i
-                  className="bi bi-pencil-square"
-                  role="button"
-                  aria-label="Edit goal"
-                  title="Edit goal"
-                  style={{ fontSize: '1.25rem', cursor: 'pointer', marginTop: '0.6rem' }}
-                  onClick={() => setEditing(true)}
-                />
-              )}
-            </div>
-            {editing ? (
+              {editing ? (
               <textarea
                 className="form-control mb-2"
                 rows={3}
@@ -225,6 +329,18 @@ const ViewSavings = () => {
                 </p>
               )
             )}
+              </div>
+              {!editing && (
+                <i
+                  className="bi bi-pencil-square"
+                  role="button"
+                  aria-label="Edit goal"
+                  title="Edit goal"
+                  style={{ fontSize: '1.25rem', cursor: 'pointer', marginTop: '0.6rem' }}
+                  onClick={() => setEditing(true)}
+                />
+              )}
+            </div>
             <div className='d-flex justify-content-between'>
               <div className="w-75 pt-4">
                 <ProgressBar>
@@ -288,7 +404,33 @@ const ViewSavings = () => {
             <div className='d-flex justify-content-between'>
               <div className="card-text" style={{ color: "#d4d8de" }}>
                 <b>
-                  <div className="product-source"><img className="product-source-icon" src={savingsGoal.product.sourceIcon} /> {savingsGoal.product.source}</div>
+                  {savingsGoal.product?.source && (
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <p className="card-text mb-0" style={{ fontSize: '0.75rem', color: '#6c757d' }}>
+                        <i className="bi bi-shop me-1"></i>
+                        {savingsGoal.product.source}
+                      </p>
+                      {savingsGoal.product?.productLink && (
+                        <a 
+                          href={savingsGoal.product.productLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-outline-primary btn-sm"
+                          style={{ 
+                            color: '#0d6efd', 
+                            borderColor: '#0d6efd', 
+                            backgroundColor: 'transparent',
+                            fontSize: '0.7rem',
+                            padding: '0.25rem 0.5rem'
+                          }}
+                          title="Open product page"
+                        >
+                          <i className="bi bi-box-arrow-up-right me-1"></i>
+                          View Product
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </b>
               </div>
             </div>
@@ -398,6 +540,163 @@ const ViewSavings = () => {
             )}
           </div>
         </div>
+
+        {/* Product Search Section - NEW, for product-type goals */}
+        {savingsGoal.category === 'product' && (
+          <div className="row my-4">
+            <div className="col-sm-10 offset-sm-1">
+              <div className="card">
+                <div className="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                  <button 
+                    className="btn btn-outline-light btn-sm"
+                    onClick={() => setShowProductSearch(!showProductSearch)}
+                    style={{
+                      color: '#ffffff',
+                      borderColor: '#ffffff',
+                      backgroundColor: 'transparent'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.color = '#ffbd59';
+                      e.target.style.borderColor = '#ffbd59';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.color = '#ffffff';
+                      e.target.style.borderColor = '#ffffff';
+                    }}
+                  >
+                    {showProductSearch ? 'Hide' : 'Show'} Product Search
+                  </button>
+                </div>
+                
+                {showProductSearch && (
+                  <div className="card-body">
+                    <div className="row mb-3">
+                      <div className="col-md-8">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search for products..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && searchProducts()}
+                        />
+                      </div>
+                      <div className="col-md-4">
+                        <button 
+                          className="btn btn-success w-100"
+                          onClick={searchProducts}
+                          disabled={isSearching || !searchQuery.trim()}
+                        >
+                          {isSearching ? 'Searching...' : 'Search'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Search Results */}
+                    {searchResults.length > 0 && (
+                      <div className="mt-3">
+                        <h6>Search Results:</h6>
+                        <div className="d-flex overflow-auto" style={{ gap: '1rem', paddingBottom: '0.5rem' }}>
+                          {searchResults.map((product, index) => (
+                            <div key={index} className="card" style={{ width: '320px', flexShrink: 0 }}>
+                              {product.thumbnail && (
+                                <img 
+                                  src={product.thumbnail} 
+                                  className="card-img-top" 
+                                  alt={product.title}
+                                  style={{ height: '150px', objectFit: 'cover' }}
+                                />
+                              )}
+                              <div className="card-body">
+                                {/* Clickable title that opens the product URL */}
+                                <h6 className="card-title" style={{ fontSize: '0.9rem', height: '2.5rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                  <a 
+                                    href={product.productLink} // Changed from productLink to link
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    style={{ color: 'inherit', textDecoration: 'none' }}
+                                    title={product.title}
+                                  >
+                                    {product.title}
+                                  </a>
+                                </h6>
+                                
+                                {/* Store name */}
+                                {product.source && (
+                                  <p className="card-text mb-1" style={{ fontSize: '0.75rem', color: '#6c757d' }}>
+                                    <i className="bi bi-shop me-1"></i>
+                                    {product.source}
+                                  </p>
+                                )}
+                                
+                                {/* Price information */}
+                                <p className="card-text mb-2" style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>
+                                  <span style={{ color: '#198754' }}>${product.price}</span>
+                                  {product.old_price && (
+                                    <span className="text-muted ms-2" style={{ textDecoration: 'line-through' }}>
+                                      ${product.old_price}
+                                    </span>
+                                  )}
+                                </p>
+                                
+                                {/* Rating and reviews */}
+                                {product.rating && (
+                                  <div className="mb-2" style={{ fontSize: '0.8rem' }}>
+                                    <div className="d-flex align-items-center mb-1">
+                                      <span className="text-warning me-1">
+                                        {'★'.repeat(Math.floor(product.rating))}
+                                        {product.rating % 1 !== 0 && '☆'}
+                                      </span>
+                                      <span className="text-muted ms-1">
+                                        {product.rating.toFixed(1)}
+                                      </span>
+                                    </div>
+                                    {product.reviews && (
+                                      <small className="text-muted">
+                                        ({product.reviews} reviews)
+                                      </small>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                {/* Action buttons */}
+                                <div className="d-flex gap-2">
+                                  <button 
+                                    className="btn btn-outline-success btn-sm flex-fill"
+                                    onClick={() => saveProduct(product)}
+                                    style={{ 
+                                      color: '#198754', 
+                                      borderColor: '#198754', 
+                                      backgroundColor: 'transparent' 
+                                    }}
+                                  >
+                                    Save as Savings Goal
+                                  </button>
+                                  <button 
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => window.open(product.productLink, '_blank', 'noopener,noreferrer')} // Changed from productLink to link
+                                    style={{ 
+                                      color: '#0d6efd', 
+                                      borderColor: '#0d6efd', 
+                                      backgroundColor: 'transparent' 
+                                    }}
+                                    title="Open product page"
+                                  >
+                                    <i className="bi bi-box-arrow-up-right"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

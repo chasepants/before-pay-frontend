@@ -142,11 +142,11 @@ const Home = () => {
 
         <div className="row mb-3">
           <div className="col-12">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-dark text-white">
-                <h4 className="mb-0">Savings Goals</h4>
+            <div className="border-0 shadow-sm">
+              <div className="bg-dark text-white">
+                <h4 className="mb-0 p-2">Savings Goals</h4>
               </div>
-              <div className="card-body p-0">
+              <div className="p-0">
                 {savingsGoals.length > 0 ? (
                   <table className="table table-striped">
                     <thead className="bg-light">
@@ -204,7 +204,7 @@ const Home = () => {
                         </tr>
                       ))}
                       <tr className="border-0">
-                        <td colSpan="6" className="border-0"></td> {/* Empty cells for first 5 columns */}
+                        <td colSpan="6" className="border-0"></td>
                         <td className="text-center border-0">
                           <div className="d-grid gap-2 d-sm-flex justify-content-sm-end">
                             <button className="btn btn-secondary" onClick={() => navigate('/transfer-back')}>

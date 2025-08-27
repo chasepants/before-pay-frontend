@@ -22,6 +22,7 @@ const CreateSavingsGoal = () => {
     productLink: ''
   });
   const [error, setError] = useState('');
+  const [category, setCategory] = useState('');
 
   useEffect(() => {
     if (!user) navigate('/');
@@ -29,21 +30,23 @@ const CreateSavingsGoal = () => {
 
   const handleManualSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.goalName || !formData.amount) {
-      setError('Goal name and amount are required');
+    if (!formData.goalName || !formData.description || !formData.amount || !category) {
+      setError('Goal name, description, amount, and category are required');
       return;
     }
     try {
       const newGoal = {
         userId: user._id,
         goalName: formData.goalName,
-        description: formData.description || '',
+        description: formData.description,
         targetAmount: parseFloat(formData.amount),
+        category: category,
         product_link: formData.productLink || ''
       };
-      const res = await api.post('/api/savings-goal', newGoal); // Use api instance
+      const res = await api.post('/api/savings-goal', newGoal);
       dispatch(addSavingsGoal(res.data));
       setFormData({ goalName: '', description: '', amount: '', productLink: '' });
+      setCategory(''); // Reset category to empty
       setError('');
       navigate(`/setup-savings/${res.data._id}`);
     } catch (err) {
@@ -104,8 +107,9 @@ const CreateSavingsGoal = () => {
                 name='description'
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder='Description (Optional)'
+                placeholder='Description'
                 aria-label='Description'
+                required
               />
               <input
                 className='form-control form-control-lg mt-2'
@@ -116,6 +120,21 @@ const CreateSavingsGoal = () => {
                 placeholder='Target Amount'
                 aria-label='Target Amount'
               />
+              <select 
+                className="form-control form-control-lg mt-2" 
+                value={category} 
+                onChange={(e) => setCategory(e.target.value)}
+                aria-label='Category'
+                required
+              >
+                <option value="" disabled>Category</option>
+                <option value="product">Product</option>
+                <option value="trip">Trip</option>
+                <option value="donation">Donation</option>
+                <option value="education">Education</option>
+                <option value="home">Home</option>
+                <option value="other">Other</option>
+              </select>
               <input
                 className='form-control form-control-lg mt-2'
                 type='text'
