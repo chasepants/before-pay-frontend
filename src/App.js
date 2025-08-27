@@ -17,6 +17,7 @@ import { setSavingsGoals, setSavingsGoalsLoading, setSavingsGoalsError } from '.
 import LoadingAnimation from './components/LoadingAnimation';
 import Denied from './pages/Denied';
 import TransferBack from './pages/TransferBack';
+import StayNotified from './pages/StayNotified';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -101,20 +102,31 @@ const App = () => {
     );
   }
 
+  const isProduction = process.env.NODE_ENV === 'production';
+
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/setup-savings/:savingsGoalId" element={user ? <SetupSavings /> : <Navigate to="/" />} />
-        <Route path="/view-savings/:savingsGoalId" element={user ? <ViewSavings /> : <Navigate to="/" />} />
-        <Route path="/application-signup" element={user && !user.unitCustomerId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
-        <Route path="/pending" element={user && user.status === 'pending' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
-        <Route path="/create-savings-goal" element={user ? <CreateSavingsGoal /> : <Navigate to="/" />} />
-        <Route path="/denied" element={<Denied />} />
-        <Route path="/transfer-back" element={user ? <TransferBack /> : <Navigate to="/" />} />
+        {isProduction ? (
+          <>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/stay-notified" element={<StayNotified />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        ) : (
+          <>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/stay-notified" element={<StayNotified />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/setup-savings/:savingsGoalId" element={user ? <SetupSavings /> : <Navigate to="/" />} />
+            <Route path="/view-savings/:savingsGoalId" element={user ? <ViewSavings /> : <Navigate to="/" />} />
+            <Route path="/application-signup" element={user && !user.unitCustomerId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
+            <Route path="/pending" element={user && user.status === 'pending' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
+            <Route path="/create-savings-goal" element={user ? <CreateSavingsGoal /> : <Navigate to="/" />} />
+            <Route path="/denied" element={<Denied />} />
+            <Route path="/transfer-back" element={user ? <TransferBack /> : <Navigate to="/" />} />
+          </>
+        )}
       </Routes>
     </Router>
   );

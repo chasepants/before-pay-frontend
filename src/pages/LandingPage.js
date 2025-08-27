@@ -63,7 +63,9 @@ marginBottom: '30px',
 <Row className="w-50 justify-content-center">
 <Col xs={12} sm={6} md={4} className="mb-3">
 <Button
-onClick={handleGetStarted}
+onClick={() => navigate(
+  process.env.NODE_ENV === 'production' ? '/stay-notified' : '/signup'
+)}
 style={{
 backgroundColor: '#ffbd59',
 color: 'white',
