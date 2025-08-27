@@ -68,3 +68,77 @@ h1 {
 $card-cap-bg: #ffffff; // Override card header background to white
 
 @import '~bootstrap/scss/bootstrap.scss';
+
+// Fix outline button styles
+.btn-outline-primary {
+  color: #0d6efd !important;
+  border-color: #0d6efd !important;
+  background-color: transparent !important;
+  
+  &:hover {
+    color: #fff !important;
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+  }
+  
+  &:focus {
+    color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background-color: transparent !important;
+  }
+}
+
+.btn-outline-secondary {
+  color: #6c757d !important;
+  border-color: #6c757d !important;
+  background-color: transparent !important;
+  
+  &:hover {
+    color: #fff !important;
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+  }
+}
+
+.btn-outline-warning {
+  color: #ffc107 !important;
+  border-color: #ffc107 !important;
+  background-color: transparent !important;
+  
+  &:hover {
+    color: #000 !important;
+    background-color: #ffc107 !important;
+    border-color: #ffc107 !important;
+  }
+}
+
+.btn-outline-danger {
+  color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  background-color: transparent !important;
+  
+  &:hover {
+    color: #fff !important;
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+  }
+}
+
+// Fix outline button styles for success variant
+.btn-outline-success {
+  color: #198754 !important;
+  border-color: #198754 !important;
+  background-color: transparent !important;
+  
+  &:hover {
+    color: #fff !important;
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+  }
+  
+  &:focus {
+    color: #198754 !important;
+    border-color: #198754 !important;
+    background-color: transparent !important;
+  }
+}
