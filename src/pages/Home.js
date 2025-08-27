@@ -207,7 +207,7 @@ const Home = () => {
                         <td colSpan="6" className="border-0"></td> {/* Empty cells for first 5 columns */}
                         <td className="text-center border-0">
                           <div className="d-grid gap-2 d-sm-flex justify-content-sm-end">
-                            <button className="btn btn-outline-secondary" onClick={() => navigate('/transfer-back')}>
+                            <button className="btn btn-secondary" onClick={() => navigate('/transfer-back')}>
                               Transfer Back
                             </button>
                             <button className="btn btn-primary" onClick={handleCreateSavingsGoal}>
