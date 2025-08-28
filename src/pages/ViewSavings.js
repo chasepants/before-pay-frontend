@@ -125,26 +125,6 @@ const ViewSavings = () => {
     }
   }, [savingsGoal, savingsGoalId]);
 
-  const handlePayout = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const res = await api.post(
-        `/api/bank/payout`,
-        { savingsGoalId }
-      );
-      alert('Savings transferred successfully!');
-
-      const refreshed = await api.get(`/api/savings-goal/${savingsGoalId}`);
-      setSavingsGoal(refreshed.data);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to transfer savings');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 3) save handler
   const handleSave = async () => {
     try {
       const response = await api.put(`/api/savings-goal/${savingsGoalId}`, {
@@ -289,17 +269,13 @@ const ViewSavings = () => {
 
   const headerClasses = savingsGoal.product?.thumbnail ? 'col-sm-7 mt-3 offset-sm-1' : 'col-sm-7 mt-3 offset-sm-1';
 
-  // 4) UI (replace title/description section)
   return (
     <>
       <Navbar user={user} />
       <div className='container mt-3'>
         <div className='row'>
-          {/* Existing goal content */}
           <div className={headerClasses}>
-            {/* Better inline editing approach */}
             <div className="d-flex align-items-start">
-              {/* Show product thumbnail first, fallback to AI image, then placeholder */}
               {(savingsGoal.product?.thumbnail || aiImage) ? (
                 <img 
                   src={savingsGoal.product?.thumbnail || aiImage} 
@@ -329,7 +305,6 @@ const ViewSavings = () => {
               )}
               
               <div className="ms-3 flex-grow-1">
-                {/* Goal Name - inline edit */}
                 <div className="mb-2 d-flex justify-content-between align-items-start">
                   {editing ? (
                     <input
@@ -345,7 +320,6 @@ const ViewSavings = () => {
                   ) : (
                     <h3 className="mb-2">{savingsGoal.goalName || savingsGoal.product?.title}</h3>
                   )}
-                  
                   <button 
                     className="btn btn-outline-primary btn-sm"
                     onClick={openEditModal}
@@ -364,15 +338,12 @@ const ViewSavings = () => {
                         </>
                       )
                     }
-                    {/* Reviews if available */}
                     {savingsGoal.product.rating && (
                       <span className="text-muted small">
                         <i className="bi bi-star-fill text-warning me-1"></i>
                         {savingsGoal.product.rating} ({savingsGoal.product.reviews} reviews)
                       </span>
                     )}
-                    
-                    {/* Product link icon */}
                     {savingsGoal.product?.productLink && (
                       <a 
                         href={savingsGoal.product.productLink}
@@ -386,75 +357,50 @@ const ViewSavings = () => {
                     )}
                   </div>
                   <div className="mb-3">
-                    {editing ? (
-                      <textarea
-                        className="form-control border-0 p-0"
-                        rows="2"
-                        value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
-                        style={{ 
-                          backgroundColor: 'transparent',
-                          boxShadow: 'none',
-                          resize: 'none'
-                        }}
-                      />
-                    ) : (
-                      <p className="text-muted mb-2">{savingsGoal.description || 'No description provided.'}</p>
-                    )}
+                      <p className="text-muted mb-2">{savingsGoal.description || savingsGoal.product.description || 'No description provided.'}</p>
                   </div></>
                 )}
 
-                {/* Description - only show if no product info */}
                 {!savingsGoal.product && (
                   <div className="mb-3">
-                    {editing ? (
-                      <textarea
-                        className="form-control border-0 p-0"
-                        rows="2"
-                        value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
-                        style={{ 
-                          backgroundColor: 'transparent',
-                          boxShadow: 'none',
-                          resize: 'none'
-                        }}
-                      />
-                    ) : (
                       <p className="text-muted mb-2">{savingsGoal.description || 'No description provided.'}</p>
-                    )}
                   </div>
                 )}
-
-                {/* Progress Bar - current amount / target amount */}
                 <div className="mb-3">
                   <div className="d-flex justify-content-between align-items-center mb-1">
                     <small className="text-muted">Progress</small>
                     <small className="text-muted">
                       ${savingsGoal.currentAmount || 0} / ${savingsGoal.targetAmount || 0}
                     </small>
-              </div>
-                  <div className="progress" style={{ height: '8px' }}>
-                    <div 
-                      className="progress-bar" 
-                      style={{ 
-                        width: `${Math.min((savingsGoal.currentAmount || 0) / (savingsGoal.targetAmount || 1) * 100, 100)}%` 
-                      }}
-                    ></div>
-              </div>
-            </div>
+                </div>
+                <div className="progress" style={{ height: '8px' }}>
+                  <div 
+                    className="progress-bar" 
+                    style={{ 
+                      width: `${Math.min((savingsGoal.currentAmount || 0) / (savingsGoal.targetAmount || 1) * 100, 100)}%` 
+                    }}
+                  >
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
         {
           savingsGoal.bank && (
             <div className='row mt-4'>
-              <div className='col-sm-4 offset-sm-1'>
-                  <h4 className='text-muted'>
+              <div className='col-sm-4 offset-sm-1 d-flex align-items-center'>
+                  <h5>
                     {savingsGoal.bank.bankName} - ${savingsGoal.savingsAmount}
-                    &nbsp;{savingsGoal.schedule.interval}&nbsp; 
-                    <i onClick={() => navigate(`/setup-savings/${savingsGoalId}`)} className="bi bi-pencil-square"></i>
-                  </h4>
+                    &nbsp;{savingsGoal.schedule.interval}&nbsp;
+                  </h5>
+                  <button 
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() => navigate(`/setup-savings/${savingsGoalId}`)}
+                  >
+                    <i className="bi bi-pencil-square"></i>
+                  </button>
               </div> 
             </div>
           )
@@ -470,7 +416,7 @@ const ViewSavings = () => {
             </div>
           )
         }
-        <div className='row mt-3'>
+        <div className='row'>
           <div className='col-sm-10 offset-sm-1'>
             {/* <h1>Your Savings Plan</h1> */}
             <div className="card-header bg-dark text-white">

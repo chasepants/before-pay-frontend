@@ -263,3 +263,32 @@ $success: #18a558 !important;
     color: white !important;
   }
 }
+
+// Fix mobile scrolling bounce issue
+html, body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+// Prevent bounce on mobile devices
+body {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+// Alternative approach - less aggressive
+@media (max-width: 768px) {
+  html, body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .container {
+    padding-bottom: 100px; // Add extra padding at bottom for mobile
+  }
+}

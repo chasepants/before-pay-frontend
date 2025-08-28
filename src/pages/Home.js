@@ -180,7 +180,6 @@ const Home = () => {
             )}
           </div>
         </div> */}
-
         {/* Action Buttons - Mobile First */}
         <div className="row mb-3">
           <div className="col-12">
