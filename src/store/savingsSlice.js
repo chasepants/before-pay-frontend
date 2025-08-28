@@ -5,8 +5,13 @@ const savingsSlice = createSlice({
   name: 'savings',
   initialState: { goals: [], loading: false, error: null },
   reducers: {
-    setSavingsGoals: (state, action) => { state.goals = action.payload; },
-    setSavingsGoalsLoading: (state, action) => { state.loading = action.payload; },
+    setSavingsGoals: (state, action) => { 
+      state.goals = action.payload; 
+      state.loading = false; // Set loading to false when goals are loaded
+    },
+    setSavingsGoalsLoading: (state, action) => { 
+      state.loading = action.payload !== undefined ? action.payload : true; 
+    },
     setSavingsGoalsError: (state, action) => { state.error = action.payload; },
     addSavingsGoal: (state, action) => { state.goals.push(action.payload); },
     removeSavingsGoal: (state, action) => {

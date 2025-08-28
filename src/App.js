@@ -59,12 +59,13 @@ const App = () => {
     fetchUser();
   }, [dispatch]);
 
+  // Fix the broken useEffect and add proper dependencies
   useEffect(() => {
     if (user) {
       const fetchSavingsGoals = async () => {
-        dispatch(setSavingsGoalsLoading());
+        dispatch(setSavingsGoalsLoading(true)); // Pass true as argument
         try {
-          const savingsGoalsRes = await api.get('/api/savings-goal'); // Use api instance
+          const savingsGoalsRes = await api.get('/api/savings-goal');
           dispatch(setSavingsGoals(savingsGoalsRes.data));
         } catch (err) {
           console.error('Savings goals fetch failed:', err);
@@ -74,7 +75,7 @@ const App = () => {
       };
       fetchSavingsGoals();
     }
-  }, [user, dispatch]);
+  }, [user, dispatch]); // Add missing dependencies
 
   if (userLoading || (user && savingsGoalsLoading)) {
     console.log("Loading user and savings goals");

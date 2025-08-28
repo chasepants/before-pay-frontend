@@ -28,6 +28,37 @@ const ViewSavings = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Add state for modal
+  const [selectedTransfer, setSelectedTransfer] = useState(null);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+
+  // Add state for save feedback
+  const [saveFeedback, setSaveFeedback] = useState('');
+
+  // Add state for edit modal
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // Add function to open edit modal
+  const openEditModal = () => {
+    console.log('Opening edit modal with savingsGoal:', savingsGoal); // Debug log
+    setEditGoalName(savingsGoal.goalName || '');
+    setEditDescription(savingsGoal.description || savingsGoal.product?.description || '');
+    setEditTargetAmount(savingsGoal.targetAmount || '');
+    setShowEditModal(true);
+  };
+
+  // Add function to close edit modal
+  const closeEditModal = () => {
+    setShowEditModal(false);
+    setSaveFeedback('');
+  };
+
+  // Add modal close function
+  const closeTransferModal = () => {
+    setSelectedTransfer(null);
+    setShowTransferModal(false);
+  };
+
   useEffect(() => {
     if (!user) {
       navigate('/');
@@ -116,16 +147,25 @@ const ViewSavings = () => {
   // 3) save handler
   const handleSave = async () => {
     try {
-      const payload = {
+      const response = await api.put(`/api/savings-goal/${savingsGoalId}`, {
         goalName: editGoalName,
         description: editDescription,
-        targetAmount: editTargetAmount === '' ? undefined : Number(editTargetAmount)
-      };
-      const res = await api.put(`/api/savings-goal/${savingsGoalId}`, payload);
-      setSavingsGoal(res.data);
-      setEditing(false);
-    } catch (e) {
-      setError(e.response?.data?.error || 'Failed to update goal');
+        targetAmount: parseFloat(editTargetAmount)
+      });
+      
+      setSavingsGoal(response.data);
+      
+      // Show success feedback
+      setSaveFeedback('Changes saved successfully!');
+      
+      // Close modal after 1.5 seconds
+      setTimeout(() => {
+        closeEditModal();
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Failed to update savings goal:', error);
+      setError('Failed to save changes');
     }
   };
 
@@ -247,10 +287,7 @@ const ViewSavings = () => {
     return <LoadingAnimation />;
   }
 
-  // Only calculate progress after we know savingsGoal exists
-  const progress = calculateProgress();
-
-  const headerClasses = savingsGoal.product.thumbnail ? 'col-sm-7 mt-3 offset-sm-1' : 'col-sm-7 mt-3 offset-sm-1';
+  const headerClasses = savingsGoal.product?.thumbnail ? 'col-sm-7 mt-3 offset-sm-1' : 'col-sm-7 mt-3 offset-sm-1';
 
   // 4) UI (replace title/description section)
   return (
@@ -260,6 +297,7 @@ const ViewSavings = () => {
         <div className='row'>
           {/* Existing goal content */}
           <div className={headerClasses}>
+            {/* Better inline editing approach */}
             <div className="d-flex align-items-start">
               {/* Show product thumbnail first, fallback to AI image, then placeholder */}
               {(savingsGoal.product?.thumbnail || aiImage) ? (
@@ -289,163 +327,100 @@ const ViewSavings = () => {
                   <i className="bi bi-image text-muted" style={{ fontSize: '2rem' }}></i>
                 </div>
               )}
-              {
-                editing && (
+              
+              <div className="ms-3 flex-grow-1">
+                {/* Goal Name - inline edit */}
+                <div className="mb-2 d-flex justify-content-between align-items-start">
+                  {editing ? (
+                    <input
+                      type="text"
+                      className="form-control border-0 p-0"
+                      value={editGoalName}
+                      onChange={(e) => setEditGoalName(e.target.value)}
+                      style={{ 
+                        backgroundColor: 'transparent',
+                        boxShadow: 'none'
+                      }}
+                    />
+                  ) : (
+                    <h3 className="mb-2">{savingsGoal.goalName || savingsGoal.product?.title}</h3>
+                  )}
+                  
                   <button 
-                  className="btn btn-outline-primary btn-sm me-2"
-                  onClick={generateAiImage}
-                  disabled={isGeneratingImage}
-                  title="Generate AI Image"
-                >
-                  <i className="bi bi-magic"></i> {/* Icon instead of text */}
-                  {isGeneratingImage && <span className="ms-1">...</span>} {/* Show loading indicator */}
-                </button>
-                )
-              }
-              <div className='mx-3'>
-              <h1 className='mt-3 mb-0' style={{ flex: 1 }}>
-                {editing ? (
-                  <input
-                    className="form-control"
-                    value={editGoalName}
-                    onChange={(e) => setEditGoalName(e.target.value)}
-                  />
-                ) : (
-                  (savingsGoal.goalName || savingsGoal.product.title)
-                )}
-              </h1>
-              {editing ? (
-              <textarea
-                className="form-control mb-2"
-                rows={3}
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                placeholder="Description"
-              />
-            ) : (
-              (savingsGoal.product?.description || savingsGoal.description) && (
-                <p className="text-muted mb-2">
-                  {savingsGoal.product?.description || savingsGoal.description}
-                </p>
-              )
-            )}
-              </div>
-              {!editing && (
-                <i
-                  className="bi bi-pencil-square"
-                  role="button"
-                  aria-label="Edit goal"
-                  title="Edit goal"
-                  style={{ fontSize: '1.25rem', cursor: 'pointer', marginTop: '0.6rem' }}
-                  onClick={() => setEditing(true)}
-                />
-              )}
-            </div>
-            <div className='d-flex justify-content-between'>
-              <div className="w-75 pt-4">
-                <ProgressBar>
-                  {/* Completed payments in green */}
-                  {progress.completedPercentage > 0 && (
-                    <ProgressBar 
-                      striped 
-                      variant="success" 
-                      now={progress.completedPercentage} 
-                      key={1}
-                      title={`$${progress.completedAmount} completed`}
-                    />
-                  )}
-                  {/* Pending payments in yellow */}
-                  {progress.pendingPercentage > 0 && (
-                    <ProgressBar 
-                      variant="warning" 
-                      now={progress.pendingPercentage} 
-                      key={2}
-                      title={`$${progress.pendingAmount} pending`}
-                    />
-                  )}
-                </ProgressBar>
-              </div>
-              <div>
-                {/* 5) Savings amount field (near schedule/bank details is fine) */}
-                <div className='row'>
-                  <div className='col-sm-10 offset-sm-1'>
-                    {editing ? (
-                      <div className="d-flex align-items-center gap-2">
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={editTargetAmount}
-                          onChange={(e) => setEditTargetAmount(e.target.value)}
-                          placeholder="Target amount"
-                          min="0"
-                          step="1"
-                        />
-                      </div>
-                    ) : (
-                      <h5 className="card-text">
-                        <b>${savingsGoal.currentAmount} / ${savingsGoal.targetAmount}</b>
-                      </h5>
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={openEditModal}
+                    title="Edit goal details"
+                  >
+                    <i className="bi bi-pencil-square"></i>
+                  </button>
+                </div>
+                {savingsGoal.product && (
+                  <div className="mb-2 d-flex align-items-center gap-2">
+                    <i className="bi bi-shop text-muted"></i>
+                    <span className="text-muted small">{savingsGoal.product.source}</span>
+                    
+                    {/* Reviews if available */}
+                    {savingsGoal.product.rating && (
+                      <span className="text-muted small">
+                        <i className="bi bi-star-fill text-warning me-1"></i>
+                        {savingsGoal.product.rating} ({savingsGoal.product.reviews} reviews)
+                      </span>
+                    )}
+                    
+                    {/* Product link icon */}
+                    {savingsGoal.product?.productLink && (
+                      <a 
+                        href={savingsGoal.product.productLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary"
+                        title="Open product page"
+                      >
+                        <i className="bi bi-box-arrow-up-right"></i>
+                      </a>
                     )}
                   </div>
-                </div>
-              </div>
-            </div>            
-            <div className="mt-2">
-              <small className="text-muted">
-                <span className="text-success">●</span> ${savingsGoal.currentAmount} completed
-                {progress.pendingAmount > 0 && (
-                  <>
-                    <span className="text-warning ms-3">●</span> ${progress.pendingAmount} pending
-                  </>
                 )}
-              </small>
-            </div>
 
-            <div className='d-flex justify-content-between'>
-              <div className="card-text" style={{ color: "#d4d8de" }}>
-                <b>
-                  {savingsGoal.product?.source && (
-                    <div className="d-flex justify-content-between align-items-center mb-1">
-                      <p className="card-text mb-0" style={{ fontSize: '0.75rem', color: '#6c757d' }}>
-                        <i className="bi bi-shop me-1"></i>
-                        {savingsGoal.product.source}
-                      </p>
-                      {savingsGoal.product?.productLink && (
-                        <a 
-                          href={savingsGoal.product.productLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-outline-primary btn-sm"
-                          style={{ 
-                            color: '#0d6efd', 
-                            borderColor: '#0d6efd', 
-                            backgroundColor: 'transparent',
-                            fontSize: '0.7rem',
-                            padding: '0.25rem 0.5rem'
-                          }}
-                          title="Open product page"
-                        >
-                          <i className="bi bi-box-arrow-up-right me-1"></i>
-                          View Product
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </b>
+                {/* Description - only show if no product info */}
+                {!savingsGoal.product && (
+                  <div className="mb-3">
+                    {editing ? (
+                      <textarea
+                        className="form-control border-0 p-0"
+                        rows="2"
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        style={{ 
+                          backgroundColor: 'transparent',
+                          boxShadow: 'none',
+                          resize: 'none'
+                        }}
+                      />
+                    ) : (
+                      <p className="text-muted mb-2">{savingsGoal.description || 'No description provided.'}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Progress Bar - current amount / target amount */}
+                <div className="mb-3">
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <small className="text-muted">Progress</small>
+                    <small className="text-muted">
+                      ${savingsGoal.currentAmount || 0} / ${savingsGoal.targetAmount || 0}
+                    </small>
+              </div>
+                  <div className="progress" style={{ height: '8px' }}>
+                    <div 
+                      className="progress-bar" 
+                      style={{ 
+                        width: `${Math.min((savingsGoal.currentAmount || 0) / (savingsGoal.targetAmount || 1) * 100, 100)}%` 
+                      }}
+                    ></div>
               </div>
             </div>
-            {savingsGoal.product.rating && (
-              <p>
-                {savingsGoal.product.rating} <i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-half"></i> ({savingsGoal.product.reviews} reviews)
-              </p>
-            )}
-            <div className=''>
-              {editing && (
-                <>
-                  <button className="btn btn-primary btn-sm me-2" onClick={handleSave}>Save</button>
-                  <button className="btn btn-outline-secondary btn-sm" onClick={() => setEditing(false)}>Cancel</button>
-                </>
-              )}
+              </div>
             </div>
           </div>
         </div>
@@ -479,62 +454,159 @@ const ViewSavings = () => {
             <div className="card-header bg-dark text-white">
               <h4 className="mb-0 p-2">Transfers</h4>
             </div>
+            {/* Reorder columns to put Transaction ID first */}
             {savingsGoal.transfers && savingsGoal.transfers.length > 0 ? (
+              <>
+                {/* Desktop Table */}
+                <div className="d-none d-md-block">
               <table className='table table-stripped'>
                 <thead>
                   <tr>
+                        <th style={{ border: '1px solid #ccc', padding: '8px' }}>Transaction ID</th>
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Date</th>
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Amount</th>
-                    <th style={{ border: '1px solid #ccc', padding: '8px' }}>Transaction ID</th> {/* Changed from Payment ID */}
                     <th style={{ border: '1px solid #ccc', padding: '8px' }}>Status</th>
-                    <th style={{ border: '1px solid #ccc', padding: '8px' }}>Type</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {savingsGoal.transfers.map((transfer, index) => (
-                    <tr 
-                      key={index}
-                      className={transfer.type === 'credit' ? 'table-danger' : ''}
-                    >
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                        {new Date(transfer.date).toLocaleDateString()}
-                      </td>
-                      <td 
-                        style={{ 
-                          border: '1px solid #ccc', 
-                          padding: '8px',
-                          color: transfer.type === 'credit' ? '#dc3545' : 'inherit',
-                          fontWeight: transfer.type === 'credit' ? 'bold' : 'normal'
-                        }}
-                      >
-                        ${transfer.amount}
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {transfer.transactionId || transfer.transferId || 'N/A'}
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                        <span className={`badge ${
-                          transfer.status === 'completed' ? 'bg-success' : 
-                          transfer.status === 'pending' ? 'bg-warning' : 
-                          'bg-danger'
-                        }`}>
-                          {transfer.status}
-                        </span>
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                        <span 
-                          style={{ 
-                            color: transfer.type === 'credit' ? '#dc3545' : 'inherit',
-                            fontWeight: transfer.type === 'credit' ? 'bold' : 'normal'
-                          }}
+                      {savingsGoal.transfers.map((transfer, index) => (
+                        <tr 
+                          key={index}
+                          className={transfer.type === 'credit' ? 'table-danger' : ''}
                         >
-                          {transfer.type}
-                        </span>
+                          <td style={{ border: '1px solid #ccc', padding: '8px', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {transfer.transactionId || transfer.transferId || 'N/A'}
+                          </td>
+                          <td style={{ border: '1px solid #ccc', padding: '8px' }}>
+                            {new Date(transfer.date).toLocaleDateString()}
+                          </td>
+                          <td 
+                            style={{ 
+                              border: '1px solid #ccc', 
+                              padding: '8px',
+                              color: transfer.type === 'credit' ? '#dc3545' : 'inherit',
+                              fontWeight: transfer.type === 'credit' ? 'bold' : 'normal'
+                            }}
+                          >
+                            {transfer.type === 'credit' ? 
+                              `($${Math.abs(transfer.amount)})` : 
+                              `$${transfer.amount}`
+                            }
+                          </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px' }}>
+                            <span className={`badge ${
+                              transfer.status === 'completed' ? 'bg-success' : 
+                              transfer.status === 'pending' ? 'bg-warning' : 
+                              'bg-danger'
+                            }`}>
+                              {transfer.status}
+                            </span>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="d-md-none">
+                  {savingsGoal.transfers.map((transfer, index) => (
+                    <div 
+                      key={index} 
+                      className={`mb-2 ${transfer.type === 'credit' ? 'border-danger' : 'border-success'}`}
+                    >
+                      <div className="card-body p-3">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <div className="fw-bold">
+                              {new Date(transfer.date).toLocaleDateString()}
+                            </div>
+                            <div 
+                              className={`h5 mb-0 ${transfer.type === 'credit' ? 'text-danger' : 'text-success'}`}
+                            >
+                              {transfer.type === 'credit' ? 
+                                `($${Math.abs(transfer.amount)})` : 
+                                `$${transfer.amount}`
+                              }
+                            </div>
+                          </div>
+                          <button
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => {
+                              setSelectedTransfer(transfer);
+                              setShowTransferModal(true);
+                            }}
+                          >
+                            <i className="bi bi-eye"></i> Details
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Transfer Details Modal */}
+                {showTransferModal && selectedTransfer && 
+                  <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Transfer Details</h5>
+                          <button 
+                            type="button" 
+                            className="btn-close" 
+                            onClick={closeTransferModal}
+                          ></button>
+                        </div>
+                        <div className="modal-body">
+                          <div className="row mb-2">
+                            <div className="col-4 fw-bold">Transaction ID:</div>
+                            <div className="col-8">{selectedTransfer.transactionId || selectedTransfer.transferId || 'N/A'}</div>
+                          </div>
+                          <div className="row mb-2">
+                            <div className="col-4 fw-bold">Date:</div>
+                            <div className="col-8">{new Date(selectedTransfer.date).toLocaleDateString()}</div>
+                          </div>
+                          <div className="row mb-2">
+                            <div className="col-4 fw-bold">Amount:</div>
+                            <div className={`col-8 ${selectedTransfer.type === 'credit' ? 'text-danger' : 'text-success'}`}>
+                              {selectedTransfer.type === 'credit' ? 
+                                `($${Math.abs(selectedTransfer.amount)})` : 
+                                `$${selectedTransfer.amount}`
+                              }
+                            </div>
+                          </div>
+                          <div className="row mb-2">
+                            <div className="col-4 fw-bold">Status:</div>
+                            <div className="col-8">
+                              <span className={`badge ${
+                                selectedTransfer.status === 'completed' ? 'bg-success' : 
+                                selectedTransfer.status === 'pending' ? 'bg-warning' : 
+                                'bg-danger'
+                              }`}>
+                                {selectedTransfer.status}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="row mb-2">
+                            <div className="col-4 fw-bold">Type:</div>
+                            <div className="col-8">{selectedTransfer.type}</div>
+                          </div>
+                        </div>
+                        <div className="modal-footer">
+                          <button 
+                            type="button" 
+                            className="btn btn-secondary" 
+                            onClick={closeTransferModal}
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </>
             ) : (
               <p>No transfers found.</p>
             )}
@@ -599,7 +671,7 @@ const ViewSavings = () => {
                         <div className="d-flex overflow-auto" style={{ gap: '1rem', paddingBottom: '0.5rem' }}>
                           {searchResults.map((product, index) => (
                             <div key={index} className="card" style={{ width: '320px', flexShrink: 0 }}>
-                              {product.thumbnail && (
+                              {product?.thumbnail && (
                                 <img 
                                   src={product.thumbnail} 
                                   className="card-img-top" 
@@ -698,6 +770,108 @@ const ViewSavings = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Goal Modal */}
+      {showEditModal && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Savings Goal</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={closeEditModal}
+                ></button>
+              </div>
+              <div className="modal-body">
+                {/* Image and Magic Wand Row */}
+                <div className="d-flex align-items-center mb-3">
+                  <div className="me-3">
+                    {(savingsGoal.product?.thumbnail || aiImage) ? (
+                      <img 
+                        src={savingsGoal.product?.thumbnail || aiImage} 
+                        alt="Goal Image" 
+                        className="rounded" 
+                        style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <div className="bg-light rounded d-flex align-items-center justify-content-center" 
+                           style={{ width: '80px', height: '80px' }}>
+                        <i className="bi bi-image text-muted" style={{ fontSize: '1.5rem' }}></i>
+                      </div>
+                    )}
+                  </div>
+                  <button 
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={generateAiImage}
+                    disabled={isGeneratingImage}
+                    title="Generate AI Image"
+                  >
+                    <i className="bi bi-magic"></i> Generate AI Image
+                  </button>
+                </div>
+
+                {/* Form Fields */}
+                <div className="mb-3">
+                  <label className="form-label">Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editGoalName}
+                    onChange={(e) => setEditGoalName(e.target.value)}
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="Enter description..."
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Goal Amount</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={editTargetAmount}
+                    onChange={(e) => setEditTargetAmount(e.target.value)}
+                  />
+                </div>
+
+                {/* Success feedback message */}
+                {saveFeedback && (
+                  <div className="alert alert-success" role="alert">
+                    <i className="bi bi-check-circle-fill me-2"></i>
+                    {saveFeedback}
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={closeEditModal}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-primary" 
+                  onClick={handleSave}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
