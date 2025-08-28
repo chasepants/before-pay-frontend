@@ -126,6 +126,7 @@ const App = () => {
             <Route path="/denied" element={<Denied />} />
             <Route path="/transfer-back" element={user ? <TransferBack /> : <Navigate to="/" />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
           </>
         )}
       </Routes>
