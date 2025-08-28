@@ -142,3 +142,124 @@ $card-cap-bg: #ffffff; // Override card header background to white
     background-color: transparent !important;
   }
 }
+
+// Custom Color Palette Overrides
+$primary: #116530 !important;
+$secondary: #21b6a8 !important;
+$info: #a3ebb1 !important;
+$success: #18a558 !important;
+
+// Override Bootstrap color classes
+.bg-primary {
+  background-color: #116530 !important;
+}
+
+.bg-secondary {
+  background-color: #21b6a8 !important;
+}
+
+.bg-info {
+  background-color: #a3ebb1 !important;
+}
+
+.bg-success {
+  background-color: #18a558 !important;
+}
+
+.text-primary {
+  color: #116530 !important;
+}
+
+.text-secondary {
+  color: #21b6a8 !important;
+}
+
+.text-info {
+  color: #a3ebb1 !important;
+}
+
+.text-success {
+  color: #18a558 !important;
+}
+
+.btn-primary {
+  background-color: #116530 !important;
+  border-color: #116530 !important;
+  
+  &:hover, &:focus, &:active {
+    background-color: darken(#116530, 10%) !important;
+    border-color: darken(#116530, 10%) !important;
+  }
+}
+
+.btn-secondary {
+  background-color: #21b6a8 !important;
+  border-color: #21b6a8 !important;
+  
+  &:hover, &:focus, &:active {
+    background-color: darken(#21b6a8, 10%) !important;
+    border-color: darken(#21b6a8, 10%) !important;
+  }
+}
+
+.btn-info {
+  background-color: #a3ebb1 !important;
+  border-color: #a3ebb1 !important;
+  color: #000 !important; // Dark text for light background
+  
+  &:hover, &:focus, &:active {
+    background-color: darken(#a3ebb1, 10%) !important;
+    border-color: darken(#a3ebb1, 10%) !important;
+  }
+}
+
+.btn-success {
+  background-color: #18a558 !important;
+  border-color: #18a558 !important;
+  
+  &:hover, &:focus, &:active {
+    background-color: darken(#18a558, 10%) !important;
+    border-color: darken(#18a558, 10%) !important;
+  }
+}
+
+// Outline button variants
+.btn-outline-primary {
+  color: #116530 !important;
+  border-color: #116530 !important;
+  
+  &:hover, &:focus, &:active {
+    background-color: #116530 !important;
+    color: white !important;
+  }
+}
+
+.btn-outline-secondary {
+  color: #21b6a8 !important;
+  border-color: #21b6a8 !important;
+  
+  &:hover, &:focus, &:active {
+    background-color: #21b6a8 !important;
+    color: white !important;
+  }
+}
+
+.btn-outline-info {
+  color: #a3ebb1 !important;
+  border-color: #a3ebb1 !important;
+  
+  &:hover, &:focus, &:active {
+    background-color: #a3ebb1 !important;
+    color: #000 !important;
+  }
+}
+
+.btn-outline-success {
+  color: #18a558 !important;
+  border-color: #18a558 !important;
+  
+  &:hover, &:focus, &:active {
+    background-color: #18a558 !important;
+    color: white !important;
+  }
+}
