@@ -2,7 +2,7 @@
 @import '~bootstrap-icons/font/bootstrap-icons.css';
 
 /** VARIABLES */ 
-$primary: #ffbd59;
+$primary: #116530;
 
 /** TAGS */
 body {
@@ -19,7 +19,7 @@ h1 {
 /** CLASSES */
 .bi-star-fill,
 .bi-star-half {
-  color: #ffbd59;
+  color: #116530;
 }
 
 .btn {
@@ -101,14 +101,14 @@ $card-cap-bg: #ffffff; // Override card header background to white
 }
 
 .btn-outline-warning {
-  color: #ffc107 !important;
-  border-color: #ffc107 !important;
+  color: #116530 !important;
+  border-color: #116530 !important;
   background-color: transparent !important;
   
   &:hover {
     color: #000 !important;
-    background-color: #ffc107 !important;
-    border-color: #ffc107 !important;
+    background-color: #116530 !important;
+    border-color: #116530 !important;
   }
 }
 

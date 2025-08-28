@@ -556,8 +556,8 @@ const ViewSavings = () => {
                       backgroundColor: 'transparent'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.color = '#ffbd59';
-                      e.target.style.borderColor = '#ffbd59';
+                      e.target.style.color = '#116530';
+                      e.target.style.borderColor = '#116530';
                     }}
                     onMouseLeave={(e) => {
                       e.target.style.color = '#ffffff';

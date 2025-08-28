@@ -19,7 +19,7 @@ import { Container, Row, Col, Image, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 const LandingPage = () => {
 const navigate = useNavigate();
-const brandName = 'BeforePay';
+const brandName = 'StashPay';
 const handleGetStarted = () => {
 console.log('Get Started clicked, redirecting to Google OAuth');
 window.location.href = `${process.env.REACT_APP_API_URL}/api/auth/google`;
@@ -65,7 +65,7 @@ onClick={() => navigate(
   process.env.REACT_APP_VERCEL_ENV === 'production' ? '/stay-notified' : '/signup'
 )}
 style={{
-backgroundColor: '#ffbd59',
+backgroundColor: '#116530',
 color: 'white',
 padding: '12px 24px',
 borderRadius: '4px',
@@ -77,8 +77,8 @@ transition: 'background-color 0.3s',
 width: '100%',
 maxWidth: '200px',
               }}
-onMouseOver={(e) => (e.target.style.backgroundColor = '#f09f6d')}
-onMouseOut={(e) => (e.target.style.backgroundColor = '#ffbd59')}
+onMouseOver={(e) => (e.target.style.backgroundColor = '#18a558')}
+onMouseOut={(e) => (e.target.style.backgroundColor = '#116530')}
 >
               GET STARTED
 </Button>
@@ -114,7 +114,7 @@ id="learn-more"
 className="d-flex flex-column justify-content-center align-items-center text-center"
 style={{
 height: '100vh',
-backgroundColor: '#ffbd59',
+backgroundColor: '#116530',
 color: 'white',
 padding: '20px',
 position: 'relative',
@@ -209,7 +209,7 @@ fluid
 className="d-flex flex-column justify-content-center align-items-center text-center"
 style={{
 height: '100vh',
-backgroundColor: '#ffbd59',
+backgroundColor: '#116530',
 color: 'white',
 padding: '20px',
 position: 'relative',
@@ -304,7 +304,7 @@ fluid
 className="d-flex flex-column justify-content-center align-items-center text-center"
 style={{
 height: '100vh',
-backgroundColor: '#ffbd59',
+backgroundColor: '#116530',
 color: 'white',
 padding: '20px',
 position: 'relative',
@@ -411,7 +411,7 @@ fluid
 className="d-flex flex-column justify-content-center align-items-center text-center"
 style={{
 height: '100vh',
-backgroundColor: '#ffbd59',
+backgroundColor: '#116530',
 color: 'white',
 padding: '20px',
 position: 'relative',

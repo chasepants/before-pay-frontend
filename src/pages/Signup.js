@@ -23,7 +23,7 @@ const Signup = () => {
               <h5>
                 Have an account with us?{' '}
                 <a href="/login">
-                  <span style={{ color: '#ffbd59' }}>Login</span>
+                  <span style={{ color: '#116530' }}>Login</span>
                 </a>
               </h5>
             </div>

@@ -8,7 +8,7 @@ const LoadingAnimation = () => {
       <div className="dot"></div>
       <div className="dot"></div>
       <div className="dot"></div>
-      <img src={logo} alt="Beforepay Logo" className="logo" />
+      <img src={logo} alt="Stashpay Logo" className="logo" />
     </div>
   );
 };
