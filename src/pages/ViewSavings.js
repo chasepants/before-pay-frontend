@@ -354,11 +354,16 @@ const ViewSavings = () => {
                     <i className="bi bi-pencil-square"></i>
                   </button>
                 </div>
-                {savingsGoal.product && (
+                {savingsGoal.product && (<>
                   <div className="mb-2 d-flex align-items-center gap-2">
-                    <i className="bi bi-shop text-muted"></i>
-                    <span className="text-muted small">{savingsGoal.product.source}</span>
-                    
+                    {
+                      savingsGoal.product.source && (
+                        <>
+                          <i className="bi bi-shop text-muted"></i>
+                          <span className="text-muted small">{savingsGoal.product.source}</span>
+                        </>
+                      )
+                    }
                     {/* Reviews if available */}
                     {savingsGoal.product.rating && (
                       <span className="text-muted small">
@@ -380,6 +385,23 @@ const ViewSavings = () => {
                       </a>
                     )}
                   </div>
+                  <div className="mb-3">
+                    {editing ? (
+                      <textarea
+                        className="form-control border-0 p-0"
+                        rows="2"
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        style={{ 
+                          backgroundColor: 'transparent',
+                          boxShadow: 'none',
+                          resize: 'none'
+                        }}
+                      />
+                    ) : (
+                      <p className="text-muted mb-2">{savingsGoal.description || 'No description provided.'}</p>
+                    )}
+                  </div></>
                 )}
 
                 {/* Description - only show if no product info */}
