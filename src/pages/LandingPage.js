@@ -62,7 +62,7 @@ marginBottom: '30px',
 <Col xs={12} sm={6} md={4} className="mb-3">
 <Button
 onClick={() => navigate(
-  process.env.NODE_ENV === 'production' ? '/stay-notified' : '/signup'
+  process.env.REACT_APP_VERCEL_ENV === 'production' ? '/stay-notified' : '/signup'
 )}
 style={{
 backgroundColor: '#ffbd59',

@@ -101,9 +101,8 @@ const App = () => {
       </div>
     );
   }
-  console.log(process.env.NODE_ENV);
-  console.log(process.env);
-  const isProduction = process.env.NODE_ENV === 'production';
+
+  const isProduction = process.env.REACT_APP_VERCEL_ENV === 'production';
 
   return (
     <Router>
