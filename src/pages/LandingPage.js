@@ -55,9 +55,7 @@ marginBottom: '30px',
 </Row>
 <Row className="w-100 mb-3">
 <Col>
-<h5>
-              SAVE FOR PURCHASES LIKE A GROWNUP
-</h5>
+<h5>SAVE FOR PURCHASES LIKE A GROWNUP</h5>
 </Col>
 </Row>
 <Row className="w-50 justify-content-center">
@@ -178,7 +176,7 @@ fontWeight: 'bold',
 marginBottom: '20px',
               }}
 >
-              Think of a piggy bank for a specific purchase or the savings envelope method but for the modern age
+Think of a piggy bank for a specific purchase or the savings envelope method but for the modern age
 </h3>
 </Col>
 </Row>
