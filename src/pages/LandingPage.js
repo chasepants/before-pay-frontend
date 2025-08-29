@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Button, Card } from 'react-bootstrap';
+import { Container, Row, Col, Button, Card, Navbar, Nav, NavDropdown } from 'react-bootstrap';
 import logo from '../assets/beforepay-logo.png';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -31,30 +31,36 @@ const LandingPage = () => {
       )}
 
       {/* Navigation */}
-      <nav className="navbar navbar-expand-lg navbar-light py-3" style={{ backgroundColor: 'white' }}>
+      <Navbar expand="lg" className="navbar-light py-3" style={{ backgroundColor: 'white' }}>
         <Container>
-          <div className="navbar-brand">
+          <Navbar.Brand>
             <img src={logo} alt="Logo" height="40" />
-          </div>
-          <div className="ms-auto">
-            {!isProduction && (
+          </Navbar.Brand>
+          
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="ms-auto">
+              {!isProduction && (
+                <Button 
+                  variant="outline-primary" 
+                  className="me-2 mb-2 mb-lg-0 w-100 w-lg-auto"
+                  onClick={() => navigate('/login')}
+                >
+                  Sign In
+                </Button>
+              )}
               <Button 
-                variant="outline-primary" 
-                className="me-2"
-                onClick={() => navigate('/login')}
+                variant="primary" 
+                onClick={handleGetStarted}
+                className="w-100 w-lg-auto"
               >
-                Sign In
+                {isProduction ? 'Stay Notified' : 'Get Started'}
               </Button>
-            )}
-            <Button 
-              variant="primary" 
-              onClick={handleGetStarted}
-            >
-              {isProduction ? 'Stay Notified' : 'Get Started'}
-            </Button>
-          </div>
+            </Nav>
+          </Navbar.Collapse>
         </Container>
-      </nav>
+      </Navbar>
 
       {/* Hero Section */}
       <section className="py-5">

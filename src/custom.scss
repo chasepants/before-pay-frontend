@@ -264,31 +264,30 @@ $success: #18a558 !important;
   }
 }
 
-// Fix mobile scrolling bounce issue
-html, body {
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
-  height: 100%;
-  overflow-x: hidden;
-}
+// Remove or modify the problematic CSS that's blocking pull-to-refresh
+// html, body {
+//   overscroll-behavior: none;
+//   -webkit-overflow-scrolling: touch;
+//   height: 100%;
+//   overflow-x: hidden;
+// }
 
-// Prevent bounce on mobile devices
-body {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
+// body {
+//   position: fixed;  // This is blocking pull-to-refresh!
+//   width: 100%;
+//   height: 100%;
+//   overflow-y: auto;
+//   -webkit-overflow-scrolling: touch;
+// }
 
-// Alternative approach - less aggressive
+// Keep only the mobile-specific fixes that don't interfere with pull-to-refresh
 @media (max-width: 768px) {
   html, body {
-    overscroll-behavior: none;
+    overscroll-behavior: auto; // Allow pull-to-refresh
     -webkit-overflow-scrolling: touch;
   }
   
   .container {
-    padding-bottom: 100px; // Add extra padding at bottom for mobile
+    padding-bottom: 100px; // Extra padding at bottom for mobile
   }
 }
