@@ -1,514 +1,200 @@
 import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Button, Card } from 'react-bootstrap';
 import logo from '../assets/beforepay-logo.png';
-import usingPlatformImage from '../assets/using_platform.png';
-import envelopesImage from '../assets/envelope.png';
-import bankImage from '../assets/bank.png';
-import bargraphImage from '../assets/bargraph.png';
-import brightImage from '../assets/bright.png';
-import calculatorImage from '../assets/calculator.png';
-import creditcardImage from '../assets/creditcard.png';
-import dollarImage from '../assets/dollar.png';
-import highfiveImage from '../assets/highfive.png';
-import orangearrowImage from '../assets/orangearrow.png';
-import piechartImage from '../assets/piechart.png';
-import subtractionImage from '../assets/subtraction.png';
-import three_dollarsImage from '../assets/three_dollars.png';
-import thumbsupImage from '../assets/thumbsup.png';
-import whitelineImage from '../assets/whiteline.png';
-import { Container, Row, Col, Image, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
 const LandingPage = () => {
-const navigate = useNavigate();
-const brandName = 'StashPay';
-const handleGetStarted = () => {
-console.log('Get Started clicked, redirecting to Google OAuth');
-window.location.href = `${process.env.REACT_APP_API_URL}/api/auth/google`;
+  const navigate = useNavigate();
+  const isProduction = process.env.REACT_APP_VERCEL_ENV === 'production';
+
+  const handleGetStarted = () => {
+    if (isProduction) {
+      navigate('/stay-notified');
+    } else {
+      navigate('/signup');
+    }
   };
-const handleLearnMore = () => {
-console.log('Learn More clicked, scrolling to learn-more section');
-document.getElementById('learn-more').scrollIntoView({ behavior: 'smooth' });
-  };
-return (
-<div style={{ overflowY: 'auto', height: '100vh' }}>
-{/* Hero Section */}
-<Container
-fluid
-className="d-flex flex-column justify-content-center align-items-center text-center"
-style={{
-height: '100vh',
-backgroundColor: '#ffffff',
-padding: '20px',
-        }}
->
-<Row className="w-100">
-<Col>
-<Image
-src={logo}
-alt={`${brandName} Logo`}
-style={{
-maxWidth: '300px',
-width: '50%',
-marginBottom: '30px',
-              }}
-/>
-</Col>
-</Row>
-<Row className="w-100 mb-3">
-<Col>
-<h5>SAVE FOR PURCHASES LIKE A GROWNUP</h5>
-</Col>
-</Row>
-<Row className="w-50 justify-content-center">
-<Col xs={12} sm={6} md={4} className="mb-3">
-<Button
-onClick={() => navigate(
-  process.env.REACT_APP_VERCEL_ENV === 'production' ? '/stay-notified' : '/signup'
-)}
-style={{
-backgroundColor: '#116530',
-color: 'white',
-padding: '12px 24px',
-borderRadius: '4px',
-border: 'none',
-fontSize: 'clamp(14px, 4vw, 16px)',
-fontWeight: 'bold',
-cursor: 'pointer',
-transition: 'background-color 0.3s',
-width: '100%',
-maxWidth: '200px',
-              }}
-onMouseOver={(e) => (e.target.style.backgroundColor = '#18a558')}
-onMouseOut={(e) => (e.target.style.backgroundColor = '#116530')}
->
-              GET STARTED
-</Button>
-</Col>
-<Col xs={12} sm={6} md={4} className="mb-3">
-<Button
-onClick={handleLearnMore}
-style={{
-backgroundColor: '#e0e0e0',
-color: '#333',
-padding: '12px 24px',
-borderRadius: '4px',
-border: 'none',
-fontSize: 'clamp(14px, 4vw, 16px)',
-fontWeight: 'bold',
-cursor: 'pointer',
-transition: 'background-color 0.3s',
-width: '100%',
-maxWidth: '200px',
-              }}
-onMouseOver={(e) => (e.target.style.backgroundColor = '#c0c0c0')}
-onMouseOut={(e) => (e.target.style.backgroundColor = '#e0e0e0')}
->
-              LEARN MORE
-</Button>
-</Col>
-</Row>
-</Container>
-{/* Learn More Section */}
-<Container
-fluid
-id="learn-more"
-className="d-flex flex-column justify-content-center align-items-center text-center"
-style={{
-height: '100vh',
-backgroundColor: '#116530',
-color: 'white',
-padding: '20px',
-position: 'relative',
-        }}
->
-<Row className="w-100">
-<Col>
-<h3
-style={{
-fontSize: 'clamp(1.2rem, 4vw, 2rem)',
-fontWeight: 'bold',
-marginBottom: '20px',
-              }}
->
-{brandName} is a savings platform that rewards incremental savings for targeted purchases
-</h3>
-</Col>
-</Row>
-<Image
-src={usingPlatformImage}
-alt="Savings Illustration"
-style={{
-position: 'absolute',
-bottom: '20px',
-right: '20px',
-maxWidth: '200px',
-width: '30%',
-          }}
-/>
-</Container>
-{/* Piggy Bank Section */}
-<Container
-fluid
-className="d-flex flex-column justify-content-center align-items-center text-center"
-style={{
-height: '100vh',
-backgroundColor: '#ffffff',
-padding: '20px',
-position: 'relative',
-        }}
->
-<Image
-src={three_dollarsImage}
-alt="Envelopes Illustration"
-style={{
-position: 'absolute',
-top: '10%',
-left: '15%',
-maxWidth: '200px',
-width: '30%',
-          }}
-/>
-<Row className="w-100">
-<Col>
-<h3
-style={{
-fontSize: 'clamp(1.2rem, 4vw, 2rem)',
-fontWeight: 'bold',
-marginBottom: '20px',
-              }}
->
-Think of a piggy bank for a specific purchase or the savings envelope method but for the modern age
-</h3>
-</Col>
-</Row>
-<Image
-src={envelopesImage}
-alt="Envelopes Illustration"
-style={{
-position: 'absolute',
-bottom: '15%',
-right: '15%',
-maxWidth: '200px',
-width: '30%',
-          }}
-/>
-<Image
-src={orangearrowImage}
-alt="Arrow Illustration"
-style={{
-position: 'absolute',
-bottom: '10%',
-left: '15%',
-maxWidth: '25%',
-width: '15%',
-          }}
-/>
-</Container>
-{/* FDIC Insured Section */}
-<Container
-fluid
-className="d-flex flex-column justify-content-center align-items-center text-center"
-style={{
-height: '100vh',
-backgroundColor: '#116530',
-color: 'white',
-padding: '20px',
-position: 'relative',
-        }}
->
-<Row className="w-100">
-<Col>
-<h3
-style={{
-fontSize: 'clamp(1.2rem, 4vw, 2rem)',
-fontWeight: 'bold',
-marginBottom: '20px',
-              }}
->
-              When you open an account with {brandName} you open an FDIC insured savings account
-</h3>
-</Col>
-</Row>
-<Image
-src={highfiveImage}
-alt="Highfive Illustration"
-style={{
-position: 'absolute',
-bottom: '20%',
-left: '20%',
-maxWidth: '200px',
-width: '30%',
-          }}
-/>
-<Image
-src={bankImage}
-alt="FDIC Illustration"
-style={{
-position: 'absolute',
-bottom: '15%',
-right: '15%',
-maxWidth: '150px',
-width: '30%',
-          }}
-/>
-</Container>
-{/* Debit Card Section */}
-<Container
-fluid
-className="d-flex flex-column justify-content-center align-items-center text-center"
-style={{
-height: '100vh',
-backgroundColor: '#ffffff',
-padding: '20px',
-position: 'relative',
-        }}
->
-<Row className="w-100">
-<Col>
-<h3
-style={{
-fontSize: 'clamp(1.2rem, 4vw, 2rem)',
-fontWeight: 'bold',
-marginBottom: '20px',
-              }}
->
-              This account comes with a debit card and a competitive savings rate
-</h3>
-</Col>
-</Row>
-<Image
-src={creditcardImage}
-alt="Debit Card Illustration"
-style={{
-position: 'absolute',
-bottom: '20%',
-left: '20%',
-maxWidth: '200px',
-width: '30%',
-          }}
-/>
-<Image
-src={bargraphImage}
-alt="FDIC Illustration"
-style={{
-position: 'absolute',
-bottom: '15%',
-right: '15%',
-maxWidth: '150px',
-width: '30%',
-          }}
-/>
-</Container>
-{/* Savings Goals Section */}
-<Container
-fluid
-className="d-flex flex-column justify-content-center align-items-center text-center"
-style={{
-height: '100vh',
-backgroundColor: '#116530',
-color: 'white',
-padding: '20px',
-position: 'relative',
-        }}
->
-<Image
-src={piechartImage}
-alt="Piechart Illustration"
-style={{
-position: 'absolute',
-top: '10%',
-left: '15%',
-maxWidth: '15%',
-width: '10%',
-          }}
-/>
-<Row className="w-100">
-<Col>
-<h3
-style={{
-fontSize: 'clamp(1.2rem, 4vw, 2rem)',
-fontWeight: 'bold',
-marginBottom: '20px',
-              }}
->
-              Your account allows you to create saving goals, connect an external funding source and schedule savings transfers
-</h3>
-</Col>
-</Row>
-<Image
-src={whitelineImage}
-alt="FDIC Illustration"
-style={{
-position: 'absolute',
-// zIndex: -1,
-top: '15%',
-right: '30%',
-maxWidth: '15%',
-width: '10%',
-          }}
-/>
-<Image
-src={bankImage}
-alt="FDIC Illustration"
-style={{
-position: 'absolute',
-bottom: '15%',
-right: '15%',
-maxWidth: '15%',
-width: '10%',
-          }}
-/>
-</Container>
-{/* Deduction Section */}
-<Container
-fluid
-className="d-flex flex-column justify-content-center align-items-center text-center"
-style={{
-height: '100vh',
-backgroundColor: '#ffffff',
-padding: '20px',
-position: 'relative',
-        }}
->
-<Image
-src={creditcardImage}
-alt="Credit Card Illustration"
-style={{
-position: 'absolute',
-top: '10%',
-left: '15%',
-maxWidth: '15%',
-width: '10%',
-          }}
-/>
-<Row className="w-100">
-<Col>
-<h3
-style={{
-fontSize: 'clamp(1.2rem, 4vw, 2rem)',
-fontWeight: 'bold',
-marginBottom: '20px',
-              }}
->
-              If you need to use the money from your savings account, we will deduct the amount spent from all your savings goals
-</h3>
-</Col>
-</Row>
-<Image
-src={subtractionImage}
-alt="FDIC Illustration"
-style={{
-position: 'absolute',
-bottom: '15%',
-right: '15%',
-maxWidth: '15%',
-width: '10%',
-          }}
-/>
-</Container>
-{/* Allocation Section */}
-<Container
-fluid
-className="d-flex flex-column justify-content-center align-items-center text-center"
-style={{
-height: '100vh',
-backgroundColor: '#116530',
-color: 'white',
-padding: '20px',
-position: 'relative',
-        }}
->
-<Image
-src={brightImage}
-alt="Credit Card Illustration"
-style={{
-position: 'absolute',
-top: '10%',
-left: '15%',
-maxWidth: '15%',
-width: '10%',
-          }}
-/>
-<Row className="w-100">
-<Col>
-<h3
-style={{
-fontSize: 'clamp(1.2rem, 4vw, 2rem)',
-fontWeight: 'bold',
-marginBottom: '20px',
-              }}
->
-              When you sign in next, we’ll help you adjust the allocations so that you can control what your savings priorities are
-</h3>
-</Col>
-</Row>
-<Image
-src={calculatorImage}
-alt="Calculator Illustration"
-style={{
-position: 'absolute',
-bottom: '20px',
-right: '20px',
-maxWidth: '200px',
-width: '30%',
-          }}
-/>
-</Container>
-{/* Final Section */}
-<Container
-fluid
-className="d-flex flex-column justify-content-center align-items-center text-center"
-style={{
-height: '100vh',
-backgroundColor: '#ffffff',
-padding: '20px',
-position: 'relative',
-        }}
->
-<Row className="w-100">
-<Col>
-<h3
-style={{
-fontSize: 'clamp(1.2rem, 4vw, 2rem)',
-fontWeight: 'bold',
-marginBottom: '20px',
-              }}
->
-              So that’s it! A new savings account that will help you save before buying something instead of paying for it later, which we all know is not helping our financial health
-</h3>
-</Col>
-</Row>
-<Image
-src={thumbsupImage}
-alt="Final Illustration"
-style={{
-position: 'absolute',
-bottom: '15%',
-right: '15%',
-maxWidth: '25%',
-width: '15%',
-          }}
-/>
-</Container>
-{/* Footer Section */}
-<Container
-fluid
-className="d-flex flex-column justify-content-center align-items-center text-center"
-style={{
-backgroundColor: '#000000',
-color: 'white',
-padding: '20px',
-minHeight: '100px',
-        }}
->
-<Row className="w-100">
-<Col>
-<p style={{ fontSize: 'clamp(12px, 3vw, 14px)', margin: '0' }}>
-              &copy; {new Date().getFullYear()} {brandName}. All rights reserved.
-</p>
-</Col>
-</Row>
-</Container>
-</div>
+
+  return (
+    <div className="min-vh-100" style={{ backgroundColor: '#f8f9fa' }}>
+      {/* Coming Soon Banner - Only show in production */}
+      {isProduction && (
+        <div className="text-center py-3" style={{ backgroundColor: '#116530', color: 'white' }}>
+          <Container>
+            <div className="d-flex align-items-center justify-content-center gap-2">
+              <i className="bi bi-clock-history"></i>
+              <span className="fw-bold">Coming Soon - Join the Waitlist for Early Access!</span>
+              <i className="bi bi-clock-history"></i>
+            </div>
+          </Container>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <nav className="navbar navbar-expand-lg navbar-light py-3" style={{ backgroundColor: 'white' }}>
+        <Container>
+          <div className="navbar-brand">
+            <img src={logo} alt="Logo" height="40" />
+          </div>
+          <div className="ms-auto">
+            {!isProduction && (
+              <Button 
+                variant="outline-primary" 
+                className="me-2"
+                onClick={() => navigate('/login')}
+              >
+                Sign In
+              </Button>
+            )}
+            <Button 
+              variant="primary" 
+              onClick={handleGetStarted}
+            >
+              {isProduction ? 'Stay Notified' : 'Get Started'}
+            </Button>
+          </div>
+        </Container>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="py-5">
+        <Container>
+          <Row className="align-items-center">
+            <Col lg={6} className="mb-5 mb-lg-0">
+              <h1 className="display-4 fw-bold mb-4" style={{ color: '#116530' }}>
+                Save Smarter, 
+                <br />
+                <span style={{ color: '#21b6a8' }}>Achieve Faster</span>
+              </h1>
+              <p className="lead mb-4" style={{ color: '#6c757d', fontSize: '1.25rem' }}>
+                Automate your savings with intelligent transfers that help you reach your financial goals. 
+                Whether it's a dream vacation, new gadget, or emergency fund, we make saving effortless.
+              </p>
+              <div className="d-flex gap-3 mb-4">
+                <Button 
+                  size="lg" 
+                  variant="primary"
+                  onClick={handleGetStarted}
+                  className="px-4 py-3"
+                >
+                  {isProduction ? 'Stay Notified' : 'Start Saving Today'}
+                </Button>
+                {!isProduction && (
+                  <Button 
+                    size="lg" 
+                    variant="outline-primary"
+                    className="px-4 py-3"
+                  >
+                    Learn More
+                  </Button>
+                )}
+              </div>
+              {/* Metrics section commented out above */}
+            </Col>
+          </Row>
+        </Container>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-5" style={{ backgroundColor: 'white' }}>
+        <Container>
+          <Row className="text-center mb-5">
+            <Col>
+              <h2 className="display-5 fw-bold mb-3" style={{ color: '#116530' }}>
+                Why Choose Us?
+              </h2>
+              <p className="lead text-muted">
+                We've built the smartest way to save money automatically
+              </p>
+            </Col>
+          </Row>
+          <Row className="g-4">
+            <Col md={4}>
+              <Card className="border-0 shadow-sm h-100">
+                <Card.Body className="p-4 text-center">
+                  <div className="mb-3">
+                    <i className="bi bi-lightning-charge" style={{ fontSize: '2.5rem', color: '#21b6a8' }}></i>
+                  </div>
+                  <h5 className="fw-bold mb-3" style={{ color: '#116530' }}>Automated Transfers</h5>
+                  <p className="text-muted mb-0">
+                    Set it once and watch your savings grow automatically. No more forgetting to transfer money.
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={4}>
+              <Card className="border-0 shadow-sm h-100">
+                <Card.Body className="p-4 text-center">
+                  <div className="mb-3">
+                    <i className="bi bi-piggy-bank" style={{ fontSize: '2.5rem', color: '#a3ebb1' }}></i>
+                  </div>
+                  <h5 className="fw-bold mb-3" style={{ color: '#116530' }}>Smart Savings Dashboard</h5>
+                  <p className="text-muted mb-0">
+                    Track your progress, set goals, and watch your money grow with our intuitive interface.
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={4}>
+              <Card className="border-0 shadow-sm h-100">
+                <Card.Body className="p-4 text-center">
+                  <div className="mb-3">
+                    <i className="bi bi-shield-check" style={{ fontSize: '2.5rem', color: '#18a558' }}></i>
+                  </div>
+                  <h5 className="fw-bold mb-3" style={{ color: '#116530' }}>Bank-Level Security</h5>
+                  <p className="text-muted mb-0">
+                    Your money is protected with the same security standards used by major banks.
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-5">
+        <Container>
+          <Row className="justify-content-center text-center">
+            <Col lg={8}>
+              <h2 className="display-5 fw-bold mb-4" style={{ color: '#116530' }}>
+                {isProduction ? 'Be First to Know When We Launch' : 'Ready to Start Your Savings Journey?'}
+              </h2>
+              <p className="lead mb-4 text-muted">
+                {isProduction 
+                  ? 'Join our waitlist and get early access to the smartest way to save money automatically.'
+                  : 'Join thousands of smart savers who are already achieving their financial goals.'
+                }
+              </p>
+              <Button 
+                size="lg" 
+                variant="primary"
+                onClick={handleGetStarted}
+                className="px-5 py-3"
+              >
+                {isProduction ? 'Stay Notified' : 'Get Started Free'}
+              </Button>
+            </Col>
+          </Row>
+        </Container>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-4" style={{ backgroundColor: '#116530', color: 'white' }}>
+        <Container>
+          <Row className="align-items-center">
+            <Col md={6}>
+              <img src={logo} alt="Logo" height="30" className="mb-2" />
+              <p className="mb-0 small">Making saving simple, smart, and automatic.</p>
+            </Col>
+            <Col md={6} className="text-md-end">
+              <small>&copy; 2024 SaveAhead. All rights reserved.</small>
+            </Col>
+          </Row>
+        </Container>
+      </footer>
+    </div>
   );
 };
+
 export default LandingPage;
