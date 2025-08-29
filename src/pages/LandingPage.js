@@ -19,14 +19,16 @@ const LandingPage = () => {
     <div className="min-vh-100" style={{ backgroundColor: '#f8f9fa' }}>
       {/* Coming Soon Banner - Only show in production */}
       {isProduction && (
-        <div className="text-center py-3" style={{ backgroundColor: '#116530', color: 'white' }}>
-          <Container>
-            <div className="d-flex align-items-center justify-content-center gap-2">
-              <i className="bi bi-clock-history"></i>
+        <div className="text-center d-flex align-items-center py-2 justify-content-center" 
+             style={{ 
+               backgroundColor: '#18a558', 
+               color: 'white',
+               fontSize: '0.875rem'
+             }}>
+            <div className="d-flex align-items-center justify-content-center">
+              <i className="bi bi-clock-history me-2"></i>
               <span className="fw-bold">Coming Soon - Join the Waitlist for Early Access!</span>
-              <i className="bi bi-clock-history"></i>
             </div>
-          </Container>
         </div>
       )}
 
@@ -37,33 +39,35 @@ const LandingPage = () => {
             <img src={logo} alt="Logo" height="40" />
           </Navbar.Brand>
           
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ms-auto">
-              {!isProduction && (
-                <Button 
-                  variant="outline-primary" 
-                  className="me-2 mb-2 mb-lg-0 w-100 w-lg-auto"
-                  onClick={() => navigate('/login')}
-                >
-                  Sign In
-                </Button>
-              )}
-              <Button 
-                variant="primary" 
-                onClick={handleGetStarted}
-                className="w-100 w-lg-auto"
-              >
-                {isProduction ? 'Stay Notified' : 'Get Started'}
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
+          {/* Only show navbar menu in non-production */}
+          {!isProduction && (
+            <>
+              <Navbar.Toggle aria-controls="basic-navbar-nav" />
+              <Navbar.Collapse id="basic-navbar-nav">
+                <Nav className="ms-auto">
+                  <Button 
+                    variant="outline-primary" 
+                    className="me-2 mb-2 mb-lg-0 w-100 w-lg-auto"
+                    onClick={() => navigate('/login')}
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    variant="primary" 
+                    onClick={handleGetStarted}
+                    className="w-100 w-lg-auto"
+                  >
+                    Get Started
+                  </Button>
+                </Nav>
+              </Navbar.Collapse>
+            </>
+          )}
         </Container>
       </Navbar>
 
       {/* Hero Section */}
-      <section className="py-5">
+      <section>
         <Container>
           <Row className="align-items-center">
             <Col lg={6} className="mb-5 mb-lg-0">
