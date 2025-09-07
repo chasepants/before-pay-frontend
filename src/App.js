@@ -5,7 +5,6 @@ import api from './api';
 import LandingPage from './pages/LandingPage';
 import Home from './pages/Home';
 import SetupSavings from './pages/SetupSavings';
-import SetupPayout from './pages/SetupPayout';
 import ViewSavings from './pages/ViewSavings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -118,7 +117,7 @@ const App = () => {
           <>
             <Route path="/" element={<LandingPage />} />
             <Route path="/stay-notified" element={<StayNotified />} />
-            <Route path="/home" element={<Home />} />
+            <Route path="/home" element={user && user.status === 'approved' ? <Home /> : (user && !user.unitCustomerId ? <Navigate to="/application-signup" /> : <Navigate to="/" />)} />
             <Route path="/setup-savings/:savingsGoalId" element={user ? <SetupSavings /> : <Navigate to="/" />} />
             <Route path="/view-savings/:savingsGoalId" element={user ? <ViewSavings /> : <Navigate to="/" />} />
             <Route path="/application-signup" element={user && !user.unitCustomerId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />

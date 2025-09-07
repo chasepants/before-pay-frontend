@@ -96,7 +96,7 @@ const Home = () => {
   }, [customerToken]); // Only depend on customerToken
 
   const handleCreateSavingsGoal = () => {
-    if (user.status !== 'approved') {
+    if (user?.status !== 'approved') {
       alert('You must be approved to create savings goals.');
       return;
     }
@@ -169,23 +169,11 @@ const Home = () => {
     <>
       <Navbar user={user} />
       <div className="container mt-3">
-        {/* Welcome Section */}
-        {/* <div className="row mb-3">
-          <div className="col-12">
-            <h2 className="text-dark fw-bold mb-1">
-              {user.firstName ? `Welcome, ${user.firstName}!` : 'Welcome!'}
-            </h2>
-            {savingsGoals.length === 0 && (
-              <p className="text-muted mb-0">Manage your savings with Stashpay.</p>
-            )}
-          </div>
-        </div> */}
-        {/* Action Buttons - Mobile First */}
         <div className="row mb-3">
           <div className="col-12">
             <div className="d-grid gap-2 d-md-flex justify-content-between">
               <h2 className="text-dark fw-bold mb-1">
-                {user.firstName ? `Welcome, ${user.firstName}!` : 'Welcome!'}
+                {user?.firstName ? `Welcome, ${user.firstName}!` : 'Welcome!'}
               </h2>
               <button 
                 className="btn btn-primary" 
@@ -369,7 +357,7 @@ const Home = () => {
         {/* Unit Elements - Responsive Grid */}
         <div className="row mb-4">
         <div className="col-12 col-md-6 col-lg-4 mb-3">
-            {user.status === "approved" && customerToken ? (
+            {user?.status === "approved" && customerToken ? (
               <div>
                 <h6 className="bg-primary text-white p-2 rounded mb-2">Account Details</h6>
                 {unitComponentsLoaded && (
@@ -394,14 +382,14 @@ const Home = () => {
             )}
           </div>
           <div className="col-12 col-md-6 col-lg-4 mb-3">
-            {user.status === "approved" && customerToken ? (
+            {user?.status === "approved" && customerToken ? (
               <div>
                 <h6 className="bg-info text-white p-2 rounded mb-2">Account Activity</h6>
                 {unitComponentsLoaded && (
                   <div key="activity-wrapper">
                     <unit-elements-activity
                       customer-token={customerToken}
-                      account-id={user.unitAccountId}
+                      account-id={user?.unitAccountId}
                       theme=""
                       hide-actions-menu-button="false"
                       hide-selection-menu-button="false"
@@ -425,7 +413,7 @@ const Home = () => {
           </div>
           
           <div className="col-12 col-md-6 col-lg-4 mb-3">
-            {user.status === "approved" && customerToken ? (
+            {user?.status === "approved" && customerToken ? (
               <div>
                 <h6 className="bg-secondary text-white p-2 rounded mb-2">Transfer Back</h6>
                 <div className="text-center py-4">

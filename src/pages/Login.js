@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { useDispatch } from 'react-redux';
+import { Container, Row, Col, Card, Button, Modal } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import logo from '../assets/beforepay-logo.png';
+import EmailAuth from '../components/EmailAuth';
+import { setUser } from '../store/userSlice';
 
 const Login = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  const [showEmailAuth, setShowEmailAuth] = useState(false);
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
@@ -16,10 +21,28 @@ const Login = () => {
   const handleAuthProvider = (provider) => {
     if (provider === 'google') {
       handleGoogleLogin();
+    } else if (provider === 'email') {
+      setShowEmailAuth(true);
     } else {
       // Show coming soon message for other providers
       alert(`${provider.charAt(0).toUpperCase() + provider.slice(1)} authentication is coming soon!`);
     }
+  };
+
+  const handleEmailAuthSuccess = (result) => {
+    // Store token and user data with correct key
+    localStorage.setItem('authToken', result.token);
+    localStorage.setItem('user', JSON.stringify(result.user));
+    
+    // Update Redux store
+    dispatch(setUser(result.user));
+    
+    // Navigate to home page
+    navigate('/home');
+  };
+
+  const handleEmailAuthError = (error) => {
+    console.error('Email auth error:', error);
   };
 
   return (
@@ -101,19 +124,16 @@ const Login = () => {
                   <span style={{ color: '#116530 !important' }}>or</span>
                 </div>
 
-                {/* Email Login - Disabled */}
+                {/* Email Login - Now Available */}
                 <div className="text-center">
                   <Button
                     variant="link"
                     className="text-decoration-none"
-                    disabled
-                    style={{ 
-                      pointerEvents: 'none',
-                      color: '#116530 !important'
-                    }}
+                    onClick={() => handleAuthProvider('email')}
+                    style={{ color: '#116530 !important' }}
                   >
                     <i className="bi bi-envelope me-2"></i>
-                    Sign in with email (Coming Soon)
+                    Sign in with email
                   </Button>
                 </div>
 
@@ -155,6 +175,38 @@ const Login = () => {
           </Col>
         </Row>
       </Container>
+
+      {/* Email Authentication Modal */}
+      <Modal show={showEmailAuth} onHide={() => setShowEmailAuth(false)} centered size="md">
+        <Modal.Header closeButton>
+          <Modal.Title>Sign In with Email</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <EmailAuth 
+            mode="login"
+            onSuccess={handleEmailAuthSuccess}
+            onError={handleEmailAuthError}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="text-center w-100">
+            <small style={{ color: '#116530' }}>
+              Don't have an account?{' '}
+              <Button
+                variant="link"
+                className="text-decoration-none p-0"
+                onClick={() => {
+                  setShowEmailAuth(false);
+                  navigate('/signup');
+                }}
+                style={{ color: '#116530' }}
+              >
+                Sign up
+              </Button>
+            </small>
+          </div>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

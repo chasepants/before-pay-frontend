@@ -1,13 +1,18 @@
 // frontend/src/pages/Signup.js
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { useDispatch } from 'react-redux';
+import { Container, Row, Col, Card, Button, Modal } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import logo from '../assets/beforepay-logo.png';
+import EmailAuth from '../components/EmailAuth';
+import { setUser } from '../store/userSlice';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  const [showEmailAuth, setShowEmailAuth] = useState(false);
 
   // Fix the Google signup to use the backend API endpoint
   const handleGoogleSignup = () => {
@@ -19,10 +24,33 @@ const Signup = () => {
   const handleAuthProvider = (provider) => {
     if (provider === 'google') {
       handleGoogleSignup();
+    } else if (provider === 'email') {
+      setShowEmailAuth(true);
     } else {
       // Show coming soon message for other providers
       alert(`${provider.charAt(0).toUpperCase() + provider.slice(1)} authentication is coming soon!`);
     }
+  };
+
+  const handleEmailAuthSuccess = (result) => {
+    // Store token and user data with correct key
+    localStorage.setItem('authToken', result.token);
+    localStorage.setItem('user', JSON.stringify(result.user));
+    
+    // Update Redux store
+    dispatch(setUser(result.user));
+    
+    // Show email verification message if needed
+    if (result.emailVerificationSent && !result.emailVerified) {
+      alert('Account created successfully! Please check your email and click the verification link to complete your registration.');
+    }
+    
+    // Navigate to home page
+    navigate('/home');
+  };
+
+  const handleEmailAuthError = (error) => {
+    console.error('Email auth error:', error);
   };
 
   return (
@@ -114,19 +142,16 @@ const Signup = () => {
                   <span style={{ color: '#116530 !important' }}>or</span>
                 </div>
 
-                {/* Email Signup - Disabled */}
+                {/* Email Signup - Now Available */}
                 <div className="text-center">
                   <Button
                     variant="link"
                     className="text-decoration-none"
-                    disabled
-                    style={{ 
-                      pointerEvents: 'none',
-                      color: '#116530 !important'
-                    }}
+                    onClick={() => handleAuthProvider('email')}
+                    style={{ color: '#116530 !important' }}
                   >
                     <i className="bi bi-envelope me-2"></i>
-                    Sign up with email (Coming Soon)
+                    Sign up with email
                   </Button>
                 </div>
 
@@ -157,6 +182,38 @@ const Signup = () => {
           </Col>
         </Row>
       </Container>
+
+      {/* Email Authentication Modal */}
+      <Modal show={showEmailAuth} onHide={() => setShowEmailAuth(false)} centered size="md">
+        <Modal.Header closeButton>
+          <Modal.Title>Create Account with Email</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <EmailAuth 
+            mode="register"
+            onSuccess={handleEmailAuthSuccess}
+            onError={handleEmailAuthError}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="text-center w-100">
+            <small style={{ color: '#116530' }}>
+              Already have an account?{' '}
+              <Button
+                variant="link"
+                className="text-decoration-none p-0"
+                onClick={() => {
+                  setShowEmailAuth(false);
+                  navigate('/login');
+                }}
+                style={{ color: '#116530' }}
+              >
+                Sign in
+              </Button>
+            </small>
+          </div>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
