@@ -1,7 +1,7 @@
 // before-pay-frontend/src/pages/TransferBack.js
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import api from '../api';
 import Navbar from '../components/Navbar';
 
@@ -63,18 +63,18 @@ const TransferBack = () => {
   return (
     <>
       <Navbar user={user} />
-      <div className="container mt-4">
+      <div className="container mt-4" data-testid="transfer-back-container">
         <div className="row mb-3">
           <div className="col-12">
             <div className="card">
               <div className="card-header bg-dark text-white">
-                <h4 className="mb-0">Transfer Back</h4>
+                <h4 className="mb-0" data-testid="transfer-back-title">Transfer Back</h4>
               </div>
               <div className="card-body">
-                {error && <p className="text-danger">{error}</p>}
+                {error && <p className="text-danger" data-testid="error-message">{error}</p>}
 
                 <div className="mb-3">
-                  <label className="form-label">Total amount to transfer back</label>
+                  <label className="form-label" data-testid="total-amount-label">Total amount to transfer back</label>
                   <input
                     type="number"
                     className="form-control"
@@ -82,24 +82,25 @@ const TransferBack = () => {
                     value={totalAmount}
                     onChange={(e) => setTotalAmount(e.target.value)}
                     placeholder="300"
+                    data-testid="total-amount-input"
                   />
-                  <small className="text-muted">Allocate this amount across your savings goals below.</small>
+                  <small className="text-muted" data-testid="allocation-help-text">Allocate this amount across your savings goals below.</small>
                 </div>
 
                 <div className="table-responsive">
-                  <table className="table table-striped">
+                  <table className="table table-striped" data-testid="goals-table">
                     <thead className="bg-light">
                       <tr>
-                        <th>Goal</th>
-                        <th>Current Saved</th>
-                        <th>Allocate</th>
+                        <th data-testid="goal-header">Goal</th>
+                        <th data-testid="current-saved-header">Current Saved</th>
+                        <th data-testid="allocate-header">Allocate</th>
                       </tr>
                     </thead>
                     <tbody>
                       {goals.map(g => (
-                        <tr key={g._id}>
-                          <td className="align-middle">{g.goalName || g.product?.title}</td>
-                          <td className="align-middle">${g.currentAmount || 0}</td>
+                        <tr key={g._id} data-testid={`goal-row-${g._id}`}>
+                          <td className="align-middle" data-testid={`goal-name-${g._id}`}>{g.goalName || g.product?.title}</td>
+                          <td className="align-middle" data-testid={`goal-amount-${g._id}`}>${g.currentAmount || 0}</td>
                           <td className="align-middle" style={{ minWidth: 260 }}>
                             <input
                               type="range"
@@ -107,6 +108,7 @@ const TransferBack = () => {
                               max={g.currentAmount || 0}
                               value={allocs[g._id] || 0}
                               onChange={(e) => onAllocChange(g._id, e.target.value, g.currentAmount || 0)}
+                              data-testid={`goal-slider-${g._id}`}
                             />
                             <div className="d-flex align-items-center mt-1">
                               <input
@@ -116,25 +118,27 @@ const TransferBack = () => {
                                 max={g.currentAmount || 0}
                                 value={allocs[g._id] || 0}
                                 onChange={(e) => onAllocChange(g._id, e.target.value, g.currentAmount || 0)}
+                                data-testid={`goal-input-${g._id}`}
                               />
-                              <span className="text-muted">/ ${g.currentAmount || 0}</span>
+                              <span className="text-muted" data-testid={`goal-max-${g._id}`}>/ ${g.currentAmount || 0}</span>
                             </div>
                           </td>
                         </tr>
                       ))}
                       {goals.length === 0 && (
-                        <tr><td colSpan="3" className="text-center">No goals</td></tr>
+                        <tr data-testid="no-goals-row"><td colSpan="3" className="text-center">No goals</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
 
                 <div className="d-flex justify-content-between mt-3">
-                  <div><b>Allocated:</b> ${sumAlloc} / ${Number(totalAmount || 0)}</div>
+                  <div data-testid="allocation-summary"><b>Allocated:</b> ${sumAlloc} / ${Number(totalAmount || 0)}</div>
                   <button
                     className="btn btn-primary"
                     onClick={submit}
                     disabled={sumAlloc !== Number(totalAmount || 0) || sumAlloc <= 0}
+                    data-testid="transfer-button"
                   >
                     Transfer
                   </button>

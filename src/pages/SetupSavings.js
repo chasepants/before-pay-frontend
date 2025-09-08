@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import { useSelector } from 'react-redux';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import LoadingAnimation from '../components/LoadingAnimation';
@@ -210,6 +210,7 @@ const SetupSavings = () => {
                   className='mt-2 mx-3'
                   onMouseEnter={() => handleInfoHover(true)}
                   onMouseLeave={() => handleInfoHover(false)}
+                  data-testid="info-icon"
                 >
                   <i className="bi bi-info-circle"></i>
                   {showTooltip && (
@@ -229,6 +230,7 @@ const SetupSavings = () => {
                         marginTop: '10px',
                         whiteSpace: 'normal',
                       }}
+                      data-testid="tooltip-content"
                     >
                       <p>
                         Stashpay utilizes Plaid, a third-party service, to securely facilitate bank account linking. We do not store, access, or process your bank account details. Plaid provides a tokenized representation of your account, which is securely transmitted to our payment processor, Dwolla, for transaction processing. For more information on how your data is handled, please review Plaid's <a href="https://plaid.com/legal/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.

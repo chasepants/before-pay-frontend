@@ -1,4 +1,3 @@
-// Email Authentication Component
 import { useState } from 'react';
 import { Button, Form, Alert, Modal } from 'react-bootstrap';
 import { registerWithEmailAndPassword, signInWithEmail, resetPassword } from '../firebase/authService';
@@ -22,7 +21,7 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
       ...prev,
       [name]: value
     }));
-    setError(''); // Clear error when user starts typing
+    setError('');
   };
 
   const validateForm = () => {
@@ -129,9 +128,9 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
 
   return (
     <>
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} data-testid="email-auth-form">
         {error && (
-          <Alert variant="danger" className="mb-3">
+          <Alert variant="danger" className="mb-3" data-testid="error-alert">
             {error}
           </Alert>
         )}
@@ -147,6 +146,7 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
                 onChange={handleInputChange}
                 placeholder="Enter your first name"
                 required
+                data-testid="first-name-input"
               />
             </Form.Group>
 
@@ -159,6 +159,7 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
                 onChange={handleInputChange}
                 placeholder="Enter your last name"
                 required
+                data-testid="last-name-input"
               />
             </Form.Group>
           </>
@@ -173,6 +174,7 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
             onChange={handleInputChange}
             placeholder="Enter your email"
             required
+            data-testid="email-input"
           />
         </Form.Group>
 
@@ -185,6 +187,7 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
             onChange={handleInputChange}
             placeholder="Enter your password"
             required
+            data-testid="password-input"
           />
         </Form.Group>
 
@@ -198,6 +201,7 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
               onChange={handleInputChange}
               placeholder="Confirm your password"
               required
+              data-testid="confirm-password-input"
             />
           </Form.Group>
         )}
@@ -213,6 +217,7 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
             borderColor: '#116530',
             fontWeight: '500'
           }}
+          data-testid="submit-button"
         >
           {isLoading ? (
             <div className="d-flex align-items-center justify-content-center">
@@ -234,6 +239,7 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
             className="text-decoration-none p-0"
             onClick={() => setShowForgotPassword(true)}
             style={{ color: '#116530' }}
+            data-testid="forgot-password-link"
           >
             <small>Forgot your password?</small>
           </Button>
@@ -241,9 +247,9 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
       )}
 
       {/* Forgot Password Modal */}
-      <Modal show={showForgotPassword} onHide={() => setShowForgotPassword(false)} centered>
+      <Modal show={showForgotPassword} onHide={() => setShowForgotPassword(false)} centered data-testid="forgot-password-modal">
         <Modal.Header closeButton>
-          <Modal.Title>Reset Password</Modal.Title>
+          <Modal.Title data-testid="modal-title">Reset Password</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -254,12 +260,13 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
                 value={resetEmail}
                 onChange={(e) => setResetEmail(e.target.value)}
                 placeholder="Enter your email address"
+                data-testid="reset-email-input"
               />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowForgotPassword(false)}>
+          <Button variant="secondary" onClick={() => setShowForgotPassword(false)} data-testid="cancel-button">
             Cancel
           </Button>
           <Button 
@@ -267,6 +274,7 @@ const EmailAuth = ({ mode = 'login', onSuccess, onError }) => {
             onClick={handleForgotPassword}
             disabled={isLoading}
             style={{ backgroundColor: '#116530', borderColor: '#116530' }}
+            data-testid="send-reset-button"
           >
             {isLoading ? 'Sending...' : 'Send Reset Email'}
           </Button>

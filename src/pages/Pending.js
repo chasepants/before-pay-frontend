@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Pending = () => {

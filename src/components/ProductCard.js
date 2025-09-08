@@ -1,4 +1,3 @@
-// frontend/src/components/ProductCard.js
 import './ProductCard.css';
 
 const ProductCard = ({

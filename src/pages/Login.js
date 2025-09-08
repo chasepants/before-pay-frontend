@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
 import { Container, Row, Col, Card, Button, Modal } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -166,6 +166,7 @@ const Login = () => {
                     className="text-decoration-none p-0"
                     onClick={() => navigate('/signup')}
                     style={{ color: '#116530 !important' }}
+                    data-testid="main-signup-link"
                   >
                     Sign up
                   </Button>
@@ -177,9 +178,9 @@ const Login = () => {
       </Container>
 
       {/* Email Authentication Modal */}
-      <Modal show={showEmailAuth} onHide={() => setShowEmailAuth(false)} centered size="md">
+      <Modal show={showEmailAuth} onHide={() => setShowEmailAuth(false)} centered size="md" data-testid="email-auth-modal">
         <Modal.Header closeButton>
-          <Modal.Title>Sign In with Email</Modal.Title>
+          <Modal.Title data-testid="email-auth-modal-title">Sign In with Email</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <EmailAuth 
@@ -200,6 +201,7 @@ const Login = () => {
                   navigate('/signup');
                 }}
                 style={{ color: '#116530' }}
+                data-testid="modal-signup-link"
               >
                 Sign up
               </Button>

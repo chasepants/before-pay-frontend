@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
-import { ProgressBar } from 'react-bootstrap'; // Add this import
+import { ProgressBar } from 'react-bootstrap';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import LoadingAnimation from '../components/LoadingAnimation';
 
 const ViewSavings = () => {
-  const { savingsGoalId } = useParams(); // Renamed from wishlistItemId
+  const { savingsGoalId } = useParams();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
-  const { goals: savingsGoals } = useSelector((state) => state.savings); // Renamed from wishlist
+  const { goals: savingsGoals } = useSelector((state) => state.savings);
   const [savingsGoal, setSavingsGoal] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [error, setError] = useState('');

@@ -1,11 +1,11 @@
 import api from '../api';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import Navbar from '../components/Navbar';
 import Placeholder from 'react-bootstrap/Placeholder';
 import { setSavingsGoals } from '../store/savingsSlice';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -194,11 +194,11 @@ const Home = () => {
               <div className="d-none d-md-block">
                 <div className="border-0 shadow-sm">
                   <div className="card-header bg-dark text-white">
-                    <h4 className="mb-0 p-2">Savings Goals</h4>
+                    <h4 className="mb-0 p-2" data-testid="savings-goals-header">Savings Goals</h4>
                   </div>
                   <div className="card-body p-0">
                     <div className="table-responsive">
-                      <table className="table table-striped">
+                      <table className="table table-striped" data-testid="savings-goals-table">
                         <thead className="bg-light">
                           <tr>
                             <th>Goal Name</th>
@@ -209,13 +209,13 @@ const Home = () => {
                             <th>Actions</th>
                           </tr>
                         </thead>
-                        <tbody>
+                        <tbody data-testid="savings-goals-tbody">
                           {savingsGoals.map((goal) => (
-                            <tr key={goal._id}>
+                            <tr key={goal._id} data-testid={`goal-row-${goal._id}`}>
                               <td className="align-middle">{goal.goalName || goal.product?.title}</td>
                               <td className="align-middle">${goal.currentAmount || 0}</td>
                               <td className="align-middle">${goal.targetAmount || 0}</td>
-                              <td className="align-middle">
+                              <td className="align-middle" data-testid={`next-run-${goal._id}`}>
                                 {goal.isPaused ? (
                                   <span className="text-muted fw-bold">PAUSED</span>
                                 ) : (
@@ -234,6 +234,7 @@ const Home = () => {
                                   <button
                                     className="btn btn-outline-secondary btn-sm"
                                     onClick={() => handleViewSavings(goal._id)}
+                                    data-testid={`view-goal-${goal._id}`}
                                   >
                                     View
                                   </button>
@@ -241,6 +242,7 @@ const Home = () => {
                                     className={`btn btn-sm ${goal.isPaused ? 'btn-success' : 'btn-warning'}`}
                                     onClick={() => togglePause(goal)}
                                     title={goal.isPaused ? 'Resume goal' : 'Pause goal'}
+                                    data-testid={`toggle-pause-${goal._id}`}
                                   >
                                     {goal.isPaused ? (
                                       <i className="bi bi-play-circle-fill"></i>
@@ -260,10 +262,10 @@ const Home = () => {
               </div>
 
               {/* Mobile Cards Only */}
-              <div className="d-md-none">
+              <div className="d-md-none" data-testid="mobile-goals-container">
                 {savingsGoals.length > 0 ? (
                   savingsGoals.map((goal, index) => (
-                    <div key={goal._id} className="border rounded p-3 mb-3 bg-white">
+                    <div key={goal._id} className="border rounded p-3 mb-3 bg-white" data-testid={`mobile-goal-card-${goal._id}`}>
                       {/* Goal Header */}
                       <div className="d-flex justify-content-between align-items-start mb-2">
                         <h6 className="mb-0 fw-bold text-truncate" style={{ maxWidth: '60%' }}>
@@ -273,6 +275,7 @@ const Home = () => {
                           <button
                             className="btn btn-outline-secondary btn-sm"
                             onClick={() => handleViewSavings(goal._id)}
+                            data-testid={`mobile-view-goal-${goal._id}`}
                           >
                             View
                           </button>
@@ -280,6 +283,7 @@ const Home = () => {
                             className={`btn btn-sm ${goal.isPaused ? 'btn-success' : 'btn-warning'}`}
                             onClick={() => togglePause(goal)}
                             title={goal.isPaused ? 'Resume goal' : 'Pause goal'}
+                            data-testid={`mobile-toggle-pause-${goal._id}`}
                           >
                             {goal.isPaused ? (
                               <i className="bi bi-play-circle-fill"></i>
@@ -294,7 +298,7 @@ const Home = () => {
                       <div className="mb-2">
                         <div className="d-flex justify-content-between align-items-center mb-1">
                           <small className="text-muted">Progress</small>
-                          <small className="text-muted">
+                          <small className="text-muted" data-testid={`mobile-progress-${goal._id}`}>
                             ${goal.currentAmount || 0} / ${goal.targetAmount || 0}
                           </small>
                         </div>
@@ -320,7 +324,7 @@ const Home = () => {
                         </div>
                         <div className="col-4">
                           <small className="text-muted d-block">Next Run</small>
-                          <strong className={goal.isPaused ? 'text-muted' : 'text-primary'}>
+                          <strong className={goal.isPaused ? 'text-muted' : 'text-primary'} data-testid={`mobile-next-run-${goal._id}`}>
                             {goal.isPaused ? (
                               <span className="fw-bold">PAUSED</span>
                             ) : (
@@ -332,12 +336,12 @@ const Home = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-5">
+                  <div className="text-center py-5" data-testid="empty-goals-state">
                     <div className="mb-3">
                       <i className="bi bi-piggy-bank text-muted" style={{ fontSize: '3rem' }}></i>
                     </div>
                     <p className="text-muted mb-3">No savings goals yet. Start saving today!</p>
-                    <button className="btn btn-primary btn-lg" onClick={handleCreateSavingsGoal}>
+                    <button className="btn btn-primary btn-lg" onClick={handleCreateSavingsGoal} data-testid="create-first-goal-btn">
                       <i className="bi bi-plus-circle me-2"></i>
                       Create Your First Goal
                     </button>
@@ -347,7 +351,7 @@ const Home = () => {
             </div>
           </div>
         ) : (
-          <div className="text-center py-4">
+          <div className="text-center py-4" data-testid="savings-goals-loading">
             <Placeholder animation="glow">
               <Placeholder xs={12} style={{ height: '200px' }} />
             </Placeholder>
@@ -358,7 +362,7 @@ const Home = () => {
         <div className="row mb-4">
         <div className="col-12 col-md-6 col-lg-4 mb-3">
             {user?.status === "approved" && customerToken ? (
-              <div>
+              <div data-testid="account-details-section">
                 <h6 className="bg-primary text-white p-2 rounded mb-2">Account Details</h6>
                 {unitComponentsLoaded && (
                   <div key="account-wrapper">
@@ -374,7 +378,7 @@ const Home = () => {
                 )}
               </div>
             ) : (
-              <div className="text-center py-4">
+              <div className="text-center py-4" data-testid="account-details-placeholder">
                 <Placeholder animation="glow">
                   <Placeholder xs={12} style={{ height: '200px' }} />
                 </Placeholder>
@@ -383,7 +387,7 @@ const Home = () => {
           </div>
           <div className="col-12 col-md-6 col-lg-4 mb-3">
             {user?.status === "approved" && customerToken ? (
-              <div>
+              <div data-testid="account-activity-section">
                 <h6 className="bg-info text-white p-2 rounded mb-2">Account Activity</h6>
                 {unitComponentsLoaded && (
                   <div key="activity-wrapper">
@@ -404,7 +408,7 @@ const Home = () => {
                 )}
               </div>
             ) : (
-              <div className="text-center py-4">
+              <div className="text-center py-4" data-testid="account-activity-placeholder">
                 <Placeholder animation="glow">
                   <Placeholder xs={12} style={{ height: '200px' }} />
                 </Placeholder>
@@ -414,18 +418,18 @@ const Home = () => {
           
           <div className="col-12 col-md-6 col-lg-4 mb-3">
             {user?.status === "approved" && customerToken ? (
-              <div>
+              <div data-testid="transfer-back-section">
                 <h6 className="bg-secondary text-white p-2 rounded mb-2">Transfer Back</h6>
                 <div className="text-center py-4">
                   <p className="text-muted mb-3">Need to withdraw funds from your savings?</p>
-                  <Link to="/transfer-back" className="btn btn-outline-primary">
+                  <Link to="/transfer-back" className="btn btn-outline-primary" data-testid="transfer-back-link">
                     <i className="bi bi-arrow-left-circle me-2"></i>
                     Transfer Back
                   </Link>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-4">
+              <div className="text-center py-4" data-testid="transfer-back-placeholder">
                 <Placeholder animation="glow">
                   <Placeholder xs={12} style={{ height: '200px' }} />
                 </Placeholder>

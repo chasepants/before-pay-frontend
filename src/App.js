@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
 import api from './api';
 import LandingPage from './pages/LandingPage';
@@ -11,10 +11,10 @@ import Signup from './pages/Signup';
 import ApplicationSignup from './pages/ApplicationSignup';
 import Pending from './pages/Pending';
 import CreateSavingsGoal from './pages/CreateSavingsGoal';
+import Denied from './pages/Denied';
 import { setUser, setUserLoading, setUserError } from './store/userSlice';
 import { setSavingsGoals, setSavingsGoalsLoading, setSavingsGoalsError } from './store/savingsSlice';
 import LoadingAnimation from './components/LoadingAnimation';
-import Denied from './pages/Denied';
 import TransferBack from './pages/TransferBack';
 import StayNotified from './pages/StayNotified';
 
@@ -25,13 +25,11 @@ const App = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Extract token from URL query parameter
     const query = new URLSearchParams(window.location.search);
     const token = query.get('token');
     if (token) {
       console.log('Storing token from URL:', token);
       localStorage.setItem('authToken', token);
-      // Clear query parameters from URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
@@ -58,11 +56,10 @@ const App = () => {
     fetchUser();
   }, [dispatch]);
 
-  // Fix the broken useEffect and add proper dependencies
   useEffect(() => {
     if (user) {
       const fetchSavingsGoals = async () => {
-        dispatch(setSavingsGoalsLoading(true)); // Pass true as argument
+        dispatch(setSavingsGoalsLoading(true));
         try {
           const savingsGoalsRes = await api.get('/api/savings-goal');
           dispatch(setSavingsGoals(savingsGoalsRes.data));
@@ -74,7 +71,7 @@ const App = () => {
       };
       fetchSavingsGoals();
     }
-  }, [user, dispatch]); // Add missing dependencies
+  }, [user, dispatch]);
 
   if (userLoading || (user && savingsGoalsLoading)) {
     console.log("Loading user and savings goals");
@@ -122,8 +119,8 @@ const App = () => {
             <Route path="/view-savings/:savingsGoalId" element={user ? <ViewSavings /> : <Navigate to="/" />} />
             <Route path="/application-signup" element={user && !user.unitCustomerId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
             <Route path="/pending" element={user && user.status === 'pending' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
+            <Route path="/denied" element={user && user.status === 'denied' ? <Denied /> : <Navigate to={user ? '/home' : '/'} />} />
             <Route path="/create-savings-goal" element={user ? <CreateSavingsGoal /> : <Navigate to="/" />} />
-            <Route path="/denied" element={<Denied />} />
             <Route path="/transfer-back" element={user ? <TransferBack /> : <Navigate to="/" />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
