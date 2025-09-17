@@ -27,7 +27,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "eject": "react-scripts eject",
+    "prepare": "husky"
   },
   "eslintConfig": {
     "extends": [
@@ -50,6 +52,18 @@
   "jest": {
     "transformIgnorePatterns": [
       "/node_modules/(?!axios)/"
-    ]
+    ],
+    "coverageReporters": ["text", "lcov", "html"],
+    "coverageThreshold": {
+      "global": {
+        "branches": 60,
+        "functions": 65,
+        "lines": 70,
+        "statements": 70
+      }
+    }
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }

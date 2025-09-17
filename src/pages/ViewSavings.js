@@ -149,38 +149,6 @@ const ViewSavings = () => {
     }
   };
 
-  // Calculate progress with different states
-  const calculateProgress = () => {
-    // Add safety check for null savingsGoal
-    if (!savingsGoal || !savingsGoal.transfers) {
-      return {
-        completedAmount: 0,
-        pendingAmount: 0,
-        totalAmount: savingsGoal?.targetAmount || 0,
-        completedPercentage: 0,
-        pendingPercentage: 0
-      };
-    }
-
-    const completedDebitTransfers = savingsGoal.transfers.filter(t => t.status === 'completed' && t.type === 'debit');
-    const completedCreditTransfers = savingsGoal.transfers.filter(t => t.status === 'completed' && t.type === 'credit');
-    const pendingTransfers = savingsGoal.transfers.filter(t => t.status === 'pending' && t.type === 'debit');
-    
-    const completedAmount = completedDebitTransfers.reduce((sum, t) => sum + t.amount, 0) - completedCreditTransfers.reduce((sum, t) => sum + t.amount, 0);
-    const pendingAmount = pendingTransfers.reduce((sum, t) => sum + t.amount, 0);
-    
-    const completedPercentage = (completedAmount / savingsGoal.targetAmount) * 100;
-    const pendingPercentage = (pendingAmount / savingsGoal.targetAmount) * 100;
-    
-    return {
-      completedAmount,
-      pendingAmount,
-      totalAmount: savingsGoal.targetAmount,
-      completedPercentage: Math.min(completedPercentage, 100),
-      pendingPercentage: Math.min(pendingPercentage, 100 - completedPercentage)
-    };
-  };
-
   const generateAiImage = async () => {
     setIsGeneratingImage(true);
     try {
@@ -193,20 +161,6 @@ const ViewSavings = () => {
       setError('Failed to generate AI image');
     } finally {
       setIsGeneratingImage(false);
-    }
-  };
-
-  const getAiInsight = async (insightType) => {
-    try {
-      const response = await api.post(`/api/savings-goal/${savingsGoalId}/ai-insights`, { insightType });
-      const newInsight = {
-        type: insightType,
-        content: response.data.insight,
-        createdAt: new Date()
-      };
-      setAiInsights(prev => [...prev, newInsight]);
-    } catch (error) {
-      setError('Failed to get AI insight');
     }
   };
 

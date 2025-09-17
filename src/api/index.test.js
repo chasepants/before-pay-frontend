@@ -1,4 +1,4 @@
-import { addAuthHeader, handleRequestError } from './index';
+import api, { addAuthHeader, handleRequestError } from './index';
 
 // Mock localStorage
 const mockLocalStorage = {
@@ -184,6 +184,104 @@ describe('API Service', () => {
       expect(result.data).toEqual({ test: 'data' });
       expect(result.headers['Custom-Header']).toBe('value');
       expect(result.headers.Authorization).toBe('Bearer test-token');
+    });
+  });
+
+  describe('API Instance Configuration', () => {
+    test('creates axios instance with correct base URL', () => {
+      expect(api.defaults.baseURL).toBe(process.env.REACT_APP_API_URL);
+    });
+
+    test('sets correct default headers', () => {
+      expect(api.defaults.headers['Content-Type']).toBe('application/json');
+    });
+
+    test('has request interceptor configured', () => {
+      expect(api.interceptors.request.handlers).toHaveLength(1);
+    });
+
+    test('request interceptor uses addAuthHeader function', () => {
+      const interceptor = api.interceptors.request.handlers[0];
+      expect(interceptor.fulfilled).toBe(addAuthHeader);
+      expect(interceptor.rejected).toBe(handleRequestError);
+    });
+  });
+
+  describe('Environment Variable Handling', () => {
+    test('uses REACT_APP_API_URL from environment', () => {
+      const originalEnv = process.env.REACT_APP_API_URL;
+      
+      // Test with different environment values
+      process.env.REACT_APP_API_URL = 'https://test-api.example.com';
+      
+      // Re-import the module to get fresh instance
+      jest.resetModules();
+      const freshApi = require('./index').default;
+      
+      expect(freshApi.defaults.baseURL).toBe('https://test-api.example.com');
+      
+      // Restore original value
+      process.env.REACT_APP_API_URL = originalEnv;
+    });
+
+    test('handles undefined REACT_APP_API_URL', () => {
+      const originalEnv = process.env.REACT_APP_API_URL;
+      
+      delete process.env.REACT_APP_API_URL;
+      
+      // Re-import the module to get fresh instance
+      jest.resetModules();
+      const freshApi = require('./index').default;
+      
+      expect(freshApi.defaults.baseURL).toBeUndefined();
+      
+      // Restore original value
+      process.env.REACT_APP_API_URL = originalEnv;
+    });
+  });
+
+  describe('Request Interceptor Integration', () => {
+    test('interceptor adds auth header when token exists', () => {
+      mockLocalStorage.getItem.mockReturnValue('integration-token');
+      
+      const config = {
+        url: '/api/integration-test',
+        headers: {}
+      };
+      
+      // Call the interceptor function directly
+      const result = api.interceptors.request.handlers[0].fulfilled(config);
+      
+      expect(result.headers.Authorization).toBe('Bearer integration-token');
+      expect(result).toBe(config);
+    });
+
+    test('interceptor handles errors correctly', async () => {
+      const error = new Error('Interceptor error');
+      
+      // Call the interceptor error handler directly
+      await expect(api.interceptors.request.handlers[0].rejected(error))
+        .rejects.toThrow('Interceptor error');
+      
+      expect(console.error).toHaveBeenCalledWith('Request interceptor error:', error);
+    });
+  });
+
+  describe('Module Exports', () => {
+    test('exports default api instance', () => {
+      expect(api).toBeDefined();
+      expect(api.defaults).toBeDefined();
+      expect(api.interceptors).toBeDefined();
+    });
+
+    test('exports addAuthHeader function', () => {
+      expect(addAuthHeader).toBeDefined();
+      expect(typeof addAuthHeader).toBe('function');
+    });
+
+    test('exports handleRequestError function', () => {
+      expect(handleRequestError).toBeDefined();
+      expect(typeof handleRequestError).toBe('function');
     });
   });
 });

@@ -453,4 +453,205 @@ describe('Home', () => {
       expect(screen.getByTestId('mobile-next-run-1')).toBeInTheDocument();
     });
   });
+
+  describe('Error Handling', () => {
+    test('displays error message when customer token fetch fails', async () => {
+      const mockApi = require('../api');
+      mockApi.get.mockRejectedValue({ response: { status: 401 } });
+
+      renderWithProviders(<Home />, {
+        initialState: {
+          user: { user: { firstName: 'John', status: 'approved' } },
+          savings: { savingsGoalsLoading: false, goals: [] }
+        }
+      });
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/');
+      });
+    });
+
+    test('handles customer token fetch error with 401 status', async () => {
+      const mockApi = require('../api');
+      mockApi.get.mockRejectedValue({ response: { status: 401 } });
+      
+      // Mock localStorage
+      const mockRemoveItem = jest.fn();
+      Object.defineProperty(window, 'localStorage', {
+        value: { removeItem: mockRemoveItem }
+      });
+
+      renderWithProviders(<Home />, {
+        initialState: {
+          user: { user: { firstName: 'John', status: 'approved' } },
+          savings: { savingsGoalsLoading: false, goals: [] }
+        }
+      });
+
+      await waitFor(() => {
+        expect(mockRemoveItem).toHaveBeenCalledWith('authToken');
+        expect(mockNavigate).toHaveBeenCalledWith('/');
+      });
+    });
+
+    test('handles customer token fetch error with other status', async () => {
+      const mockApi = require('../api');
+      mockApi.get.mockRejectedValue({ response: { status: 500, data: { message: 'Server error' } } });
+
+      renderWithProviders(<Home />, {
+        initialState: {
+          user: { user: { firstName: 'John', status: 'approved' } },
+          savings: { savingsGoalsLoading: false, goals: [] }
+        }
+      });
+
+      await waitFor(() => {
+        expect(mockNavigate).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Unit Component Integration', () => {
+    test('loads Unit components when user is approved and customer token is available', async () => {
+      const mockApi = require('../api');
+      mockApi.get.mockResolvedValue({ data: { token: 'test-token' } });
+
+      renderWithProviders(<Home />, {
+        initialState: {
+          user: { user: { firstName: 'John', status: 'approved' } },
+          savings: { savingsGoalsLoading: false, goals: [] }
+        }
+      });
+
+      await waitFor(() => {
+        expect(mockApi.get).toHaveBeenCalledWith('/api/auth/customer-token');
+      });
+
+      // Check that the component renders without errors
+      expect(screen.getByText('Welcome, John!')).toBeInTheDocument();
+    });
+  });
+
+  describe('Toggle Pause Functionality', () => {
+    test('toggles pause status for a goal', async () => {
+      const mockApi = require('../api');
+      const mockDispatch = jest.fn();
+      
+      mockApi.patch.mockResolvedValue({ data: {} });
+      mockApi.get.mockResolvedValue({ data: [{ _id: '1', goalName: 'Test Goal' }] });
+
+      const testGoal = { _id: '1', goalName: 'Test Goal', isPaused: false };
+
+      renderWithProviders(<Home />, {
+        initialState: {
+          user: { user: { firstName: 'John', status: 'approved' } },
+          savings: { savingsGoalsLoading: false, goals: [testGoal] }
+        }
+      });
+
+      // Find and click the pause button using test ID
+      const pauseButton = screen.getByTestId('toggle-pause-1');
+      fireEvent.click(pauseButton);
+
+      await waitFor(() => {
+        expect(mockApi.patch).toHaveBeenCalledWith('/api/savings-goal/1/pause', { isPaused: true });
+        expect(mockApi.get).toHaveBeenCalledWith('/api/savings-goal');
+      });
+    });
+
+    test('handles toggle pause error', async () => {
+      const mockApi = require('../api');
+      mockApi.patch.mockRejectedValue(new Error('Toggle pause failed'));
+
+      const testGoal = { _id: '1', goalName: 'Test Goal', isPaused: false };
+
+      renderWithProviders(<Home />, {
+        initialState: {
+          user: { user: { firstName: 'John', status: 'approved' } },
+          savings: { savingsGoalsLoading: false, goals: [testGoal] }
+        }
+      });
+
+      const pauseButton = screen.getByTestId('toggle-pause-1');
+      fireEvent.click(pauseButton);
+
+      await waitFor(() => {
+        expect(mockApi.patch).toHaveBeenCalledWith('/api/savings-goal/1/pause', { isPaused: true });
+      });
+    });
+  });
+
+  describe('Next Run Date Calculation', () => {
+    test('displays next run date for goals with schedule', () => {
+      const mockApi = require('../api');
+      mockApi.get.mockResolvedValue({ data: { token: 'test-token' } });
+
+      const testGoal = {
+        _id: '1',
+        goalName: 'Test Goal',
+        schedule: { interval: 'Weekly', dayOfWeek: 'Wednesday' }
+      };
+
+      renderWithProviders(<Home />, {
+        initialState: {
+          user: { user: { firstName: 'John', status: 'approved' } },
+          savings: { savingsGoalsLoading: false, goals: [testGoal] }
+        }
+      });
+
+      expect(screen.getByTestId('next-run-1')).toBeInTheDocument();
+    });
+  });
+
+  describe('Edge Cases', () => {
+    test('handles user without status', () => {
+      renderWithProviders(<Home />, {
+        initialState: {
+          user: { user: { firstName: 'John' } },
+          savings: { savingsGoalsLoading: false, goals: [] }
+        }
+      });
+
+      expect(screen.getByText('Welcome, John!')).toBeInTheDocument();
+    });
+
+    test('handles user with pending status', () => {
+      renderWithProviders(<Home />, {
+        initialState: {
+          user: { user: { firstName: 'John', status: 'pending' } },
+          savings: { savingsGoalsLoading: false, goals: [] }
+        }
+      });
+
+      expect(screen.getByText('Welcome, John!')).toBeInTheDocument();
+    });
+
+    test('handles empty goals array', () => {
+      renderWithProviders(<Home />, {
+        initialState: {
+          user: { user: { firstName: 'John', status: 'approved' } },
+          savings: { savingsGoalsLoading: false, goals: [] }
+        }
+      });
+
+      expect(screen.getByText('No savings goals yet. Start saving today!')).toBeInTheDocument();
+    });
+
+    test('handles goals without schedule', () => {
+      const testGoal = {
+        _id: '1',
+        goalName: 'Test Goal',
+        isPaused: false
+      };
+
+      renderWithProviders(<Home />, {
+        initialState: {
+          user: { user: { firstName: 'John', status: 'approved' } },
+          savings: { savingsGoalsLoading: false, goals: [testGoal] }
+        }
+      });
+
+      expect(screen.getByTestId('goal-row-1')).toHaveTextContent('Test Goal');
+    });
+  });
 });
