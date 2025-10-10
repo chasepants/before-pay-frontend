@@ -11,6 +11,7 @@ import Signup from './pages/Signup';
 import ApplicationSignup from './pages/ApplicationSignup';
 import Pending from './pages/Pending';
 import CreateSavingsGoal from './pages/CreateSavingsGoal';
+import StartSavingsPlan from './pages/StartSavingsPlan';
 import Denied from './pages/Denied';
 import { setUser, setUserLoading, setUserError } from './store/userSlice';
 import { setSavingsGoals, setSavingsGoalsLoading, setSavingsGoalsError } from './store/savingsSlice';
@@ -121,6 +122,7 @@ const App = () => {
             <Route path="/pending" element={user && user.status === 'pending' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
             <Route path="/denied" element={user && user.status === 'denied' ? <Denied /> : <Navigate to={user ? '/home' : '/'} />} />
             <Route path="/create-savings-goal" element={user ? <CreateSavingsGoal /> : <Navigate to="/" />} />
+            <Route path="/start-savings-plan" element={<StartSavingsPlan />} />
             <Route path="/transfer-back" element={user ? <TransferBack /> : <Navigate to="/" />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
