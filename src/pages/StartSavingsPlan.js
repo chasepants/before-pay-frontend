@@ -58,6 +58,7 @@ const StartSavingsPlan = () => {
           console.log('Exchange response:', exchangeResponse.data);
           
           if (exchangeResponse.data.success) {
+            console.log('Plaid exchange successful, setting access token:', exchangeResponse.data.accessToken);
             setPlaidPublicToken(exchangeResponse.data.accessToken);
             setPlaidAccountId(account.id);
             setLinkedAccount({
@@ -67,6 +68,7 @@ const StartSavingsPlan = () => {
             });
             setStep(4); // Move to completion step
           } else {
+            console.log('Plaid exchange failed:', exchangeResponse.data);
             setError(exchangeResponse.data.error || 'Failed to exchange Plaid token');
           }
         } catch (err) {
@@ -143,6 +145,9 @@ const StartSavingsPlan = () => {
   };
 
   const handleCreateSavingsPlan = async () => {
+    console.log('Creating savings plan - linkedAccount:', linkedAccount);
+    console.log('Creating savings plan - plaidPublicToken:', plaidPublicToken);
+    
     if (!linkedAccount || !plaidPublicToken) {
       setError('Please link a bank account first');
       return;
