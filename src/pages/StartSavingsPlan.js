@@ -54,6 +54,8 @@ const StartSavingsPlan = () => {
             guestToken: localStorage.getItem('guestToken'),
             plaidToken: public_token
           });
+
+          console.log('Exchange response:', exchangeResponse.data);
           
           if (exchangeResponse.data.success) {
             setPlaidPublicToken(exchangeResponse.data.accessToken);
@@ -128,8 +130,7 @@ const StartSavingsPlan = () => {
       
       setIsEmailVerified(true);
       setStep(3);
-      
-      // Initialize Plaid Link
+
       const plaidResponse = await api.post('/api/savings-goal/plaid/create-link-token', {
         guestToken: response.data.guestToken
       });
