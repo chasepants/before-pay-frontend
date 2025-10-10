@@ -44,17 +44,32 @@ const StartSavingsPlan = () => {
 
   const { open, ready } = usePlaidLink({
     token: plaidToken,
-    onSuccess: (public_token, metadata) => {
+    onSuccess: async (public_token, metadata) => {
       if (metadata.accounts && metadata.accounts.length > 0) {
         const account = metadata.accounts[0];
-        setPlaidPublicToken(public_token);
-        setPlaidAccountId(account.id);
-        setLinkedAccount({
-          id: account.id,
-          name: account.name || 'Linked Account',
-          mask: account.mask || '****'
-        });
-        setStep(4); // Move to completion step
+        
+        try {
+          // Exchange public token for access token
+          const exchangeResponse = await api.post('/api/savings-goal/connect-plaid', {
+            guestToken: localStorage.getItem('guestToken'),
+            plaidToken: public_token
+          });
+          
+          if (exchangeResponse.data.success) {
+            setPlaidPublicToken(exchangeResponse.data.accessToken);
+            setPlaidAccountId(account.id);
+            setLinkedAccount({
+              id: account.id,
+              name: account.name || 'Linked Account',
+              mask: account.mask || '****'
+            });
+            setStep(4); // Move to completion step
+          } else {
+            setError(exchangeResponse.data.error || 'Failed to exchange Plaid token');
+          }
+        } catch (err) {
+          setError('Failed to exchange Plaid token: ' + (err.response?.data?.error || err.message));
+        }
       } else {
         setError('No account selected. Please try linking your bank account again.');
       }
@@ -115,9 +130,8 @@ const StartSavingsPlan = () => {
       setStep(3);
       
       // Initialize Plaid Link
-      const plaidResponse = await api.post('/api/savings-goal/connect-plaid', {
-        email: guestEmail,
-        verificationCode: verificationCode
+      const plaidResponse = await api.post('/api/savings-goal/plaid/create-link-token', {
+        guestToken: response.data.guestToken
       });
       setPlaidToken(plaidResponse.data.linkToken);
     } catch (err) {
@@ -141,17 +155,17 @@ const StartSavingsPlan = () => {
         guestToken: localStorage.getItem('guestToken'), // This should be set during verification
         goalName: `Save for ${checkoutData?.lineItems?.[0]?.title || 'this purchase'}`,
         description: `Automatic savings for your purchase`,
-        targetAmount: checkoutData?.totalPrice || 0,
+        targetAmount: calculateTotal(),
         product: {
           title: checkoutData?.lineItems?.[0]?.title || 'Purchase',
-          price: checkoutData?.totalPrice?.toString() || '0',
+          price: calculateTotal().toString(),
           quantity: checkoutData?.lineItems?.reduce((total, item) => total + item.quantity, 0) || 1,
           productType: 'product',
           shopifyProductId: checkoutData?.lineItems?.[0]?.productId,
           shopifyVariantId: checkoutData?.lineItems?.[0]?.variantId,
           shopDomain: checkoutData?.shopDomain
         },
-        plaidToken: plaidPublicToken
+        plaidToken: plaidPublicToken // This is now the access token, not the public token
       });
 
       if (response.data.success) {
