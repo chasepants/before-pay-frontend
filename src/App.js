@@ -31,7 +31,6 @@ const App = () => {
     if (token) {
       console.log('Storing token from URL:', token);
       localStorage.setItem('authToken', token);
-      window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     const fetchUser = async () => {

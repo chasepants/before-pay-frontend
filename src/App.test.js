@@ -192,7 +192,7 @@ describe('App', () => {
       renderWithProviders(<App />);
 
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith('authToken', 'test-token-123');
-      expect(mockHistory.replaceState).toHaveBeenCalledWith({}, document.title, '/');
+      // Note: We no longer call replaceState to preserve query parameters for abandoned cart flow
     });
 
     test('does not store token when not in URL', async () => {

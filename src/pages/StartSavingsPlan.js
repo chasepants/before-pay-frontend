@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import LoadingAnimation from '../components/LoadingAnimation';
@@ -8,39 +8,51 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 const StartSavingsPlan = () => {
   const navigate = useNavigate();
-  const checkoutId = new URLSearchParams(window.location.search).get('checkout');
+  const location = useLocation();
   
+  // Parse query parameters from location.search
+  const urlParams = new URLSearchParams(location.search);
+  const token = urlParams.get('token');
+  const checkoutId = urlParams.get('checkout');
+  console.log('Location:', location);
+  console.log('Search:', location.search);
+  console.log('Token:', token, 'CheckoutId:', checkoutId);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [plaidToken, setPlaidToken] = useState(null);
   const [plaidPublicToken, setPlaidPublicToken] = useState(null);
-  const [plaidAccountId, setPlaidAccountId] = useState(null);
   const [linkedAccount, setLinkedAccount] = useState(null);
   const [checkoutData, setCheckoutData] = useState(null);
-  const [guestEmail, setGuestEmail] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
-  const [showVerification, setShowVerification] = useState(false);
-  const [step, setStep] = useState(1); // 1: Email, 2: Verify, 3: Plaid, 4: Complete
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isValidating, setIsValidating] = useState(true);
 
   useEffect(() => {
-    if (!checkoutId) {
-      setError('No checkout ID provided');
+    if (!token) {
+      setError('Invalid link. Please use the link from your email.');
+      setIsValidating(false);
       return;
     }
 
-    // Fetch checkout data from backend
-    const fetchCheckoutData = async () => {
+    // Validate token and get checkout data
+    const validateToken = async () => {
       try {
-        const response = await api.get(`/api/checkout-cart/${checkoutId}`);
-        setCheckoutData(response.data);
+        const response = await api.get(`/api/validate-email-token/${token}`);
+        if (response.data.success) {
+          setEmail(response.data.email);
+          setCheckoutData(response.data.checkout);
+        } else {
+          setError('Invalid or expired link. Please request a new one.');
+        }
       } catch (err) {
-        setError('Failed to load checkout data');
+        setError('Invalid or expired link. Please request a new one.');
+      } finally {
+        setIsValidating(false);
       }
     };
 
-    fetchCheckoutData();
-  }, [checkoutId]);
+    validateToken();
+  }, [token]);
 
   const { open, ready } = usePlaidLink({
     token: plaidToken,
@@ -51,24 +63,19 @@ const StartSavingsPlan = () => {
         try {
           // Exchange public token for access token
           const exchangeResponse = await api.post('/api/savings-goal/connect-plaid', {
-            guestToken: localStorage.getItem('guestToken'),
-            plaidToken: public_token
+            emailToken: token, // Use token as emailToken for abandoned cart flow
+            publicToken: public_token,
+            accountId: account.id
           });
-
-          console.log('Exchange response:', exchangeResponse.data);
           
           if (exchangeResponse.data.success) {
-            console.log('Plaid exchange successful, setting access token:', exchangeResponse.data.accessToken);
             setPlaidPublicToken(exchangeResponse.data.accessToken);
-            setPlaidAccountId(account.id);
             setLinkedAccount({
               id: account.id,
               name: account.name || 'Linked Account',
               mask: account.mask || '****'
             });
-            setStep(4); // Move to completion step
           } else {
-            console.log('Plaid exchange failed:', exchangeResponse.data);
             setError(exchangeResponse.data.error || 'Failed to exchange Plaid token');
           }
         } catch (err) {
@@ -85,105 +92,12 @@ const StartSavingsPlan = () => {
     }
   });
 
-  const handleEmailSubmit = async (e) => {
-    e.preventDefault();
-    if (!guestEmail) {
-      setError('Please enter your email address');
-      return;
+  // Auto-open Plaid Link when token is ready
+  useEffect(() => {
+    if (plaidToken && ready) {
+      open();
     }
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      await api.post('/api/savings-goal/send-verification', {
-        email: guestEmail,
-        checkoutId: checkoutId
-      });
-      setShowVerification(true);
-      setStep(2);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to send verification code');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerificationSubmit = async (e) => {
-    e.preventDefault();
-    if (!verificationCode) {
-      setError('Please enter the verification code');
-      return;
-    }
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const response = await api.post('/api/savings-goal/verify-code', {
-        email: guestEmail,
-        verificationCode: verificationCode
-      });
-      
-      // Store the guest token for later use
-      if (response.data.guestToken) {
-        localStorage.setItem('guestToken', response.data.guestToken);
-      }
-      
-      setIsEmailVerified(true);
-      setStep(3);
-
-      const plaidResponse = await api.post('/api/savings-goal/plaid/create-link-token', {
-        guestToken: response.data.guestToken
-      });
-      setPlaidToken(plaidResponse.data.linkToken);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to verify code');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCreateSavingsPlan = async () => {
-    console.log('Creating savings plan - linkedAccount:', linkedAccount);
-    console.log('Creating savings plan - plaidPublicToken:', plaidPublicToken);
-    
-    if (!linkedAccount || !plaidPublicToken) {
-      setError('Please link a bank account first');
-      return;
-    }
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const response = await api.post('/api/savings-goal/create-guest-goal', {
-        guestToken: localStorage.getItem('guestToken'), // This should be set during verification
-        goalName: `Save for ${checkoutData?.lineItems?.[0]?.title || 'this purchase'}`,
-        description: `Automatic savings for your purchase`,
-        targetAmount: calculateTotal(),
-        product: {
-          title: checkoutData?.lineItems?.[0]?.title || 'Purchase',
-          price: calculateTotal().toString(),
-          quantity: checkoutData?.lineItems?.reduce((total, item) => total + item.quantity, 0) || 1,
-          productType: 'product',
-          shopifyProductId: checkoutData?.lineItems?.[0]?.productId,
-          shopifyVariantId: checkoutData?.lineItems?.[0]?.variantId,
-          shopDomain: checkoutData?.shopDomain
-        },
-        plaidToken: plaidPublicToken // This is now the access token, not the public token
-      });
-
-      if (response.data.success) {
-        alert('Savings plan created successfully! You can manage it by logging in with your email.');
-        navigate('/');
-      }
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create savings plan');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [plaidToken, ready, open]);
 
   const calculateTotal = () => {
     if (!checkoutData?.lineItems) return 0;
@@ -192,7 +106,79 @@ const StartSavingsPlan = () => {
     }, 0);
   };
 
-  if (error && step === 1) {
+  const handleCreateSavingsPlan = async () => {
+    if (!linkedAccount || !plaidPublicToken) {
+      setError('Please link a bank account first');
+      return;
+    }
+
+    if (!password) {
+      setError('Please enter a password to secure your account');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const firebaseResponse = await api.post('/api/auth/register', {
+        email: email,
+        password: password,
+        firstName: 'Guest',
+        lastName: 'User'
+      });
+      console.log('Firebase response:', firebaseResponse.data);
+      // if (!firebaseResponse.data.success) {
+      //   throw new Error(firebaseResponse.data.error || 'Failed to create account');
+      // }
+      console.log('Creating savings goal...');
+        const response = await api.post('/api/savings-goal/create-guest-goal', {
+          emailToken: token, 
+          goalName: `Save for ${checkoutData?.lineItems?.[0]?.title || 'this purchase'}`,
+          description: `Automatic savings for your purchase`,
+          targetAmount: calculateTotal(),
+          product: {
+            title: checkoutData?.lineItems?.[0]?.title || 'Purchase',
+            price: calculateTotal().toString(),
+            quantity: checkoutData?.lineItems?.reduce((total, item) => total + item.quantity, 0) || 1,
+            productType: 'product',
+            shopifyProductId: checkoutData?.lineItems?.[0]?.productId,
+            shopifyVariantId: checkoutData?.lineItems?.[0]?.variantId,
+            shopDomain: checkoutData?.shopDomain
+          }
+        });
+
+      console.log(response);
+
+      if (response.data.success) {
+        alert('Savings plan created successfully! You can now log in with your email and password to manage your savings.');
+        navigate('/login');
+      }
+    } catch (err) {
+      console.log(err);
+      setError(err.response?.data?.error || 'Failed to create savings plan');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLinkBankAccount = async () => {
+    try {
+      // Create Plaid link token using emailToken
+      const plaidResponse = await api.post('/api/savings-goal/plaid/create-link-token', {
+        emailToken: token // Use token as emailToken for abandoned cart flow
+      });
+      setPlaidToken(plaidResponse.data.linkToken);
+    } catch (err) {
+      setError('Failed to initialize bank account linking: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  if (isValidating) {
+    return <LoadingAnimation />;
+  }
+
+  if (error && !checkoutData) {
     return (
       <div style={{ padding: '16px' }}>
         <p style={{ color: 'red' }}>{error}</p>
@@ -231,134 +217,109 @@ const StartSavingsPlan = () => {
               </div>
               <div className="card-body">
                 
-                {/* Step 1: Email Input */}
-                {step === 1 && (
-                  <div>
-                    <h5>Step 1: Create Your Account</h5>
-                    <p>Enter your email to create a guest account for managing your savings plan.</p>
-                    <form onSubmit={handleEmailSubmit}>
-                      <div className="mb-3">
-                        <label htmlFor="email" className="form-label">Email Address</label>
-                        <input
-                          type="email"
-                          className="form-control"
-                          id="email"
-                          value={guestEmail}
-                          onChange={(e) => setGuestEmail(e.target.value)}
-                          placeholder="your@email.com"
-                          required
-                        />
-                      </div>
-                      <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                        {isLoading ? 'Sending...' : 'Send Verification Code'}
-                      </button>
-                    </form>
-                  </div>
-                )}
+                {/* Savings Plan Explanation */}
+                <div className="alert alert-info mb-4">
+                  <h5><i className="bi bi-info-circle"></i> How StashPay Works</h5>
+                  <p className="mb-2">Instead of paying for your purchase all at once, StashPay helps you save up over time with automatic monthly payments.</p>
+                  <ul className="mb-0">
+                    <li><strong>Flexible Schedule:</strong> Pay over 4 months with automatic monthly payments</li>
+                    <li><strong>Secure:</strong> Your money is held safely until you're ready to purchase</li>
+                    <li><strong>Manageable:</strong> Break large purchases into smaller, budget-friendly payments</li>
+                  </ul>
+                </div>
 
-                {/* Step 2: Email Verification */}
-                {step === 2 && (
-                  <div>
-                    <h5>Step 2: Verify Your Email</h5>
-                    <p>We sent a verification code to <strong>{guestEmail}</strong></p>
-                    <form onSubmit={handleVerificationSubmit}>
-                      <div className="mb-3">
-                        <label htmlFor="verificationCode" className="form-label">Verification Code</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="verificationCode"
-                          value={verificationCode}
-                          onChange={(e) => setVerificationCode(e.target.value)}
-                          placeholder="Enter 6-digit code"
-                          required
-                        />
+                {/* Checkout Items Display */}
+                <div className="mb-4">
+                  <h5>Items in Your Cart:</h5>
+                  <div className="list-group">
+                    {checkoutData.lineItems.map((item, index) => (
+                      <div key={index} className="list-group-item">
+                        <div className="d-flex justify-content-between">
+                          <div>
+                            <h6 className="mb-1">{item.title}</h6>
+                            <small className="text-muted">Quantity: {item.quantity}</small>
+                          </div>
+                          <div className="text-end">
+                            <strong>${(parseFloat(item.price) * item.quantity).toFixed(2)}</strong>
+                          </div>
+                        </div>
                       </div>
-                      <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                        {isLoading ? 'Verifying...' : 'Verify Code'}
-                      </button>
-                    </form>
+                    ))}
                   </div>
-                )}
+                  <div className="mt-3 p-3 bg-light rounded">
+                    <div className="d-flex justify-content-between">
+                      <strong>Total Amount:</strong>
+                      <strong>${calculateTotal().toFixed(2)}</strong>
+                    </div>
+                  </div>
+                </div>
 
-                {/* Step 3: Plaid Link */}
-                {step === 3 && (
-                  <div>
-                    <h5>Step 3: Link Your Bank Account</h5>
-                    <p>Connect your bank account to set up automatic savings.</p>
-                    {!plaidToken && <LoadingAnimation />}
-                    {plaidToken && (
+                {/* Link Bank Account Section */}
+                <div className="mb-4">
+                  <h5>Link Your Bank Account</h5>
+                  {!linkedAccount ? (
+                    <div>
+                      <p>Connect your bank account to set up automatic savings.</p>
                       <button
-                        onClick={() => open()}
-                        disabled={!ready || isLoading}
+                        onClick={handleLinkBankAccount}
+                        disabled={isLoading}
                         className="btn btn-primary"
                       >
                         <i className="bi bi-lock"></i> Link Bank Account
                       </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Step 4: Review and Complete */}
-                {step === 4 && (
-                  <div>
-                    <h5>Step 4: Review Your Savings Plan</h5>
-                    
-                    {/* Checkout Items Display */}
-                    <div className="mb-4">
-                      <h6>Items in Your Cart:</h6>
-                      <div className="list-group">
-                        {checkoutData.lineItems.map((item, index) => (
-                          <div key={index} className="list-group-item">
-                            <div className="d-flex justify-content-between">
-                              <div>
-                                <h6 className="mb-1">{item.title}</h6>
-                                <small className="text-muted">Quantity: {item.quantity}</small>
-                              </div>
-                              <div className="text-end">
-                                <strong>${(parseFloat(item.price) * item.quantity).toFixed(2)}</strong>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-3 p-3 bg-light rounded">
-                        <div className="d-flex justify-content-between">
-                          <strong>Total Amount:</strong>
-                          <strong>${calculateTotal().toFixed(2)}</strong>
-                        </div>
-                      </div>
                     </div>
-
-                    {/* Linked Account Display */}
-                    {linkedAccount && (
-                      <div className="mb-4">
-                        <h6>Linked Bank Account:</h6>
-                        <div className="alert alert-info">
-                          <i className="bi bi-check-circle"></i> {linkedAccount.name} (****{linkedAccount.mask})
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Savings Plan Details */}
-                    <div className="mb-4">
-                      <h6>Savings Plan Details:</h6>
-                      <div className="alert alert-success">
-                        <p><strong>Payment Schedule:</strong> Monthly payments over 4 months</p>
-                        <p><strong>Amount per Payment:</strong> ${(calculateTotal() / 4).toFixed(2)}</p>
-                        <p><strong>First Payment:</strong> Tomorrow</p>
-                      </div>
+                  ) : (
+                    <div className="alert alert-success">
+                      <i className="bi bi-check-circle"></i> {linkedAccount.name} (****{linkedAccount.mask})
                     </div>
+                  )}
+                </div>
 
-                    <button 
-                      onClick={handleCreateSavingsPlan} 
-                      className="btn btn-success btn-lg w-100" 
-                      disabled={isLoading}
-                    >
-                      {isLoading ? 'Creating Savings Plan...' : 'Create Savings Plan'}
-                    </button>
+                {/* Password Section */}
+                <div className="mb-4">
+                  <h5>Create Your Account</h5>
+                  <p className="text-muted">This is how you will log back in to track your progress</p>
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">Email Address</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="email"
+                      value={email}
+                      disabled
+                    />
                   </div>
-                )}
+                  <div className="mb-3">
+                    <label htmlFor="password" className="form-label">Password</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter a secure password"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Savings Plan Details */}
+                <div className="mb-4">
+                  <h5>Your Savings Plan</h5>
+                  <div className="alert alert-success">
+                    <p><strong>Payment Schedule:</strong> Monthly payments over 4 months</p>
+                    <p><strong>Amount per Payment:</strong> ${(calculateTotal() / 4).toFixed(2)}</p>
+                    <p><strong>First Payment:</strong> Tomorrow</p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={handleCreateSavingsPlan} 
+                  className="btn btn-success btn-lg w-100" 
+                  disabled={isLoading || !linkedAccount || !password}
+                >
+                  {isLoading ? 'Creating Savings Plan...' : 'Create Savings Plan'}
+                </button>
 
                 {error && (
                   <div className="alert alert-danger mt-3">
