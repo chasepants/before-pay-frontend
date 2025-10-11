@@ -96,6 +96,10 @@ const Home = () => {
   }, [customerToken]); // Only depend on customerToken
 
   const handleCreateSavingsGoal = () => {
+    if (user?.userType === 'guest') {
+      alert('Guest users cannot create new savings goals. You can only manage goals created from abandoned carts.');
+      return;
+    }
     if (user?.status !== 'approved') {
       alert('You must be approved to create savings goals.');
       return;
@@ -178,6 +182,7 @@ const Home = () => {
               <button 
                 className="btn btn-primary" 
                 onClick={handleCreateSavingsGoal}
+                style={{ display: user?.userType === 'guest' ? 'none' : 'block' }}
               >
                 <i className="bi bi-plus-circle me-1"></i>
                 Add New Goal
@@ -341,7 +346,12 @@ const Home = () => {
                       <i className="bi bi-piggy-bank text-muted" style={{ fontSize: '3rem' }}></i>
                     </div>
                     <p className="text-muted mb-3">No savings goals yet. Start saving today!</p>
-                    <button className="btn btn-primary btn-lg" onClick={handleCreateSavingsGoal} data-testid="create-first-goal-btn">
+                    <button 
+                      className="btn btn-primary btn-lg" 
+                      onClick={handleCreateSavingsGoal} 
+                      data-testid="create-first-goal-btn"
+                      style={{ display: user?.userType === 'guest' ? 'none' : 'block' }}
+                    >
                       <i className="bi bi-plus-circle me-2"></i>
                       Create Your First Goal
                     </button>
@@ -358,85 +368,87 @@ const Home = () => {
           </div>
         )}
 
-        {/* Unit Elements - Responsive Grid */}
-        <div className="row mb-4">
-        <div className="col-12 col-md-6 col-lg-4 mb-3">
-            {user?.status === "approved" && customerToken ? (
-              <div data-testid="account-details-section">
-                <h6 className="bg-primary text-white p-2 rounded mb-2">Account Details</h6>
-                {unitComponentsLoaded && (
-                  <div key="account-wrapper">
-                    <unit-elements-account
-                      customer-token={customerToken}
-                      theme=""
-                      hide-actions-menu-button="false"
-                      hide-selection-menu-button="false"
-                      menu-items="details,statements,bankVerification"
-                      hide-account-cta-banner="true"
-                    ></unit-elements-account>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-4" data-testid="account-details-placeholder">
-                <Placeholder animation="glow">
-                  <Placeholder xs={12} style={{ height: '200px' }} />
-                </Placeholder>
-              </div>
-            )}
-          </div>
-          <div className="col-12 col-md-6 col-lg-4 mb-3">
-            {user?.status === "approved" && customerToken ? (
-              <div data-testid="account-activity-section">
-                <h6 className="bg-info text-white p-2 rounded mb-2">Account Activity</h6>
-                {unitComponentsLoaded && (
-                  <div key="activity-wrapper">
-                    <unit-elements-activity
-                      customer-token={customerToken}
-                      account-id={user?.unitAccountId}
-                      theme=""
-                      hide-actions-menu-button="false"
-                      hide-selection-menu-button="false"
-                      hide-title="true"
-                      hide-filter-button="true"
-                      transactions-per-page="5"
-                      pagination-type="pagination"
-                      menu-items="details,statements,bankVerification"
-                      hide-account-cta-banner="true"
-                    ></unit-elements-activity>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-4" data-testid="account-activity-placeholder">
-                <Placeholder animation="glow">
-                  <Placeholder xs={12} style={{ height: '200px' }} />
-                </Placeholder>
-              </div>
-            )}
-          </div>
-          
-          <div className="col-12 col-md-6 col-lg-4 mb-3">
-            {user?.status === "approved" && customerToken ? (
-              <div data-testid="transfer-back-section">
-                <h6 className="bg-secondary text-white p-2 rounded mb-2">Transfer Back</h6>
-                <div className="text-center py-4">
-                  <p className="text-muted mb-3">Need to withdraw funds from your savings?</p>
-                  <Link to="/transfer-back" className="btn btn-outline-primary" data-testid="transfer-back-link">
-                    <i className="bi bi-arrow-left-circle me-2"></i>
-                    Transfer Back
-                  </Link>
+        {/* Unit Elements - Only show for savings account users */}
+        {user?.userType === 'savings-account' && (
+          <div className="row mb-4">
+            <div className="col-12 col-md-6 col-lg-4 mb-3">
+              {user?.status === "approved" && customerToken ? (
+                <div data-testid="account-details-section">
+                  <h6 className="bg-primary text-white p-2 rounded mb-2">Account Details</h6>
+                  {unitComponentsLoaded && (
+                    <div key="account-wrapper">
+                      <unit-elements-account
+                        customer-token={customerToken}
+                        theme=""
+                        hide-actions-menu-button="false"
+                        hide-selection-menu-button="false"
+                        menu-items="details,statements,bankVerification"
+                        hide-account-cta-banner="true"
+                      ></unit-elements-account>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-4" data-testid="transfer-back-placeholder">
-                <Placeholder animation="glow">
-                  <Placeholder xs={12} style={{ height: '200px' }} />
-                </Placeholder>
-              </div>
-            )}
+              ) : (
+                <div className="text-center py-4" data-testid="account-details-placeholder">
+                  <Placeholder animation="glow">
+                    <Placeholder xs={12} style={{ height: '200px' }} />
+                  </Placeholder>
+                </div>
+              )}
+            </div>
+            <div className="col-12 col-md-6 col-lg-4 mb-3">
+              {user?.status === "approved" && customerToken ? (
+                <div data-testid="account-activity-section">
+                  <h6 className="bg-info text-white p-2 rounded mb-2">Account Activity</h6>
+                  {unitComponentsLoaded && (
+                    <div key="activity-wrapper">
+                      <unit-elements-activity
+                        customer-token={customerToken}
+                        account-id={user?.unitAccountId}
+                        theme=""
+                        hide-actions-menu-button="false"
+                        hide-selection-menu-button="false"
+                        hide-title="true"
+                        hide-filter-button="true"
+                        transactions-per-page="5"
+                        pagination-type="pagination"
+                        menu-items="details,statements,bankVerification"
+                        hide-account-cta-banner="true"
+                      ></unit-elements-activity>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-4" data-testid="account-activity-placeholder">
+                  <Placeholder animation="glow">
+                    <Placeholder xs={12} style={{ height: '200px' }} />
+                  </Placeholder>
+                </div>
+              )}
+            </div>
+            
+            <div className="col-12 col-md-6 col-lg-4 mb-3">
+              {user?.status === "approved" && customerToken ? (
+                <div data-testid="transfer-back-section">
+                  <h6 className="bg-secondary text-white p-2 rounded mb-2">Transfer Back</h6>
+                  <div className="text-center py-4">
+                    <p className="text-muted mb-3">Need to withdraw funds from your savings?</p>
+                    <Link to="/transfer-back" className="btn btn-outline-primary" data-testid="transfer-back-link">
+                      <i className="bi bi-arrow-left-circle me-2"></i>
+                      Transfer Back
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4" data-testid="transfer-back-placeholder">
+                  <Placeholder animation="glow">
+                    <Placeholder xs={12} style={{ height: '200px' }} />
+                  </Placeholder>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );

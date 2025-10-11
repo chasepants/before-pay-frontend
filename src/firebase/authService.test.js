@@ -117,7 +117,8 @@ describe('Firebase AuthService', () => {
             idToken: 'mock-id-token',
             firstName: 'John',
             lastName: 'Doe',
-            emailVerified: false
+            emailVerified: false,
+            userType: 'savings-account'
           }),
         }
       );

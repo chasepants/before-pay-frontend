@@ -77,7 +77,7 @@ describe('NavbarComponent', () => {
   });
 
   it('should render application link when user has no unitCustomerId and status is not approved', () => {
-    const user = { id: '1', name: 'Test User', status: 'pending' };
+    const user = { id: '1', name: 'Test User', status: 'pending', userType: 'savings-account' };
     renderWithRouter(<NavbarComponent user={user} />);
     
     expect(screen.getByText('Application')).toBeInTheDocument();
@@ -110,7 +110,7 @@ describe('NavbarComponent', () => {
   });
 
   it('should handle application click and navigate to application-signup', () => {
-    const user = { id: '1', name: 'Test User', status: 'pending' };
+    const user = { id: '1', name: 'Test User', status: 'pending', userType: 'savings-account' };
     renderWithRouter(<NavbarComponent user={user} />);
     
     const applicationLink = screen.getByText('Application');
@@ -176,7 +176,7 @@ describe('NavbarComponent', () => {
   });
 
   it('should handle navigation error in application click', () => {
-    const user = { id: '1', name: 'Test User', status: 'pending' };
+    const user = { id: '1', name: 'Test User', status: 'pending', userType: 'savings-account' };
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     mockNavigate.mockImplementation(() => {
       throw new Error('Navigation failed');

@@ -97,8 +97,7 @@ describe('Home', () => {
       expect(screen.getByText('Welcome, John!')).toBeInTheDocument();
       expect(screen.getByTestId('navbar')).toBeInTheDocument();
       // Check for loading placeholders
-      const placeholders = screen.getAllByTestId(/placeholder/i);
-      expect(placeholders.length).toBeGreaterThan(0);
+      expect(screen.getByTestId('savings-goals-loading')).toBeInTheDocument();
     });
   });
 
@@ -312,27 +311,27 @@ describe('Home', () => {
     test('shows placeholders when user is not approved', () => {
       renderWithProviders(<Home />, {
         initialState: {
-          user: { user: { firstName: 'John', status: 'pending' } },
+          user: { user: { firstName: 'John', status: 'pending', userType: 'savings-account' } },
           savings: { savingsGoalsLoading: false, goals: [] }
         }
       });
 
       // Should show placeholders for Unit components
-      const placeholders = screen.getAllByTestId(/placeholder/i);
-      expect(placeholders.length).toBeGreaterThan(0);
+      expect(screen.getByTestId('account-details-placeholder')).toBeInTheDocument();
+      expect(screen.getByTestId('account-activity-placeholder')).toBeInTheDocument();
     });
 
     test('shows placeholders when customer token is not available', () => {
       renderWithProviders(<Home />, {
         initialState: {
-          user: { user: { firstName: 'John', status: 'approved' } },
+          user: { user: { firstName: 'John', status: 'approved', userType: 'savings-account' } },
           savings: { savingsGoalsLoading: false, goals: [] }
         }
       });
 
       // Should show placeholders for Unit components
-      const placeholders = screen.getAllByTestId(/placeholder/i);
-      expect(placeholders.length).toBeGreaterThan(0);
+      expect(screen.getByTestId('account-details-placeholder')).toBeInTheDocument();
+      expect(screen.getByTestId('account-activity-placeholder')).toBeInTheDocument();
     });
   });
 
@@ -340,7 +339,7 @@ describe('Home', () => {
     test('shows placeholders when user is not approved', () => {
       renderWithProviders(<Home />, {
         initialState: {
-          user: { user: { firstName: 'John', status: 'pending' } },
+          user: { user: { firstName: 'John', status: 'pending', userType: 'savings-account' } },
           savings: { savingsGoalsLoading: false, goals: [] }
         }
       });
@@ -355,11 +354,12 @@ describe('Home', () => {
 
       renderWithProviders(<Home />, {
         initialState: {
-          user: { user: { firstName: 'John', status: 'approved' } },
+          user: { user: { firstName: 'John', status: 'approved', userType: 'savings-account' } },
           savings: { savingsGoalsLoading: false, goals: [] }
         }
       });
 
+      // Wait for the customer token API call to complete and the transfer back section to appear
       await waitFor(() => {
         expect(screen.getByTestId('transfer-back-section')).toBeInTheDocument();
       });

@@ -126,6 +126,11 @@ const ViewSavings = () => {
   }, [savingsGoal, savingsGoalId]);
 
   const handleSave = async () => {
+    if (user?.userType === 'guest') {
+      setError('Guest users cannot modify savings goals');
+      return;
+    }
+    
     try {
       const response = await api.put(`/api/savings-goal/${savingsGoalId}`, {
         goalName: editGoalName,
@@ -278,6 +283,7 @@ const ViewSavings = () => {
                     className="btn btn-outline-primary btn-sm"
                     onClick={openEditModal}
                     title="Edit goal details"
+                    style={{ display: user?.userType === 'guest' ? 'none' : 'block' }}
                   >
                     <i className="bi bi-pencil-square"></i>
                   </button>
@@ -352,6 +358,7 @@ const ViewSavings = () => {
                   <button 
                     className="btn btn-outline-primary btn-sm"
                     onClick={() => navigate(`/setup-savings/${savingsGoalId}`)}
+                    style={{ display: user?.userType === 'guest' ? 'none' : 'block' }}
                   >
                     <i className="bi bi-pencil-square"></i>
                   </button>
@@ -363,7 +370,11 @@ const ViewSavings = () => {
           !savingsGoal.bank && (
             <div className='row my-3'>
               <div className='col-sm-4 offset-sm-1'>
-                <button className='btn btn-primary' onClick={() => navigate(`/setup-savings/${savingsGoalId}`)}>
+                <button 
+                  className='btn btn-primary' 
+                  onClick={() => navigate(`/setup-savings/${savingsGoalId}`)}
+                  style={{ display: user?.userType === 'guest' ? 'none' : 'block' }}
+                >
                   Setup Transfers
                 </button>
               </div> 
@@ -535,8 +546,7 @@ const ViewSavings = () => {
           </div>
         </div>
 
-        {/* Product Search Section - NEW, for product-type goals */}
-        {savingsGoal.category === 'product' && (
+        {savingsGoal.category === 'product' && user?.userType === 'savings-account' && (
           <div className="row my-4">
             <div className="col-sm-10 offset-sm-1">
               <div className="card">
@@ -729,6 +739,7 @@ const ViewSavings = () => {
                     onClick={generateAiImage}
                     disabled={isGeneratingImage}
                     title="Generate AI Image"
+                    style={{ display: user?.userType === 'guest' ? 'none' : 'block' }}
                   >
                     <i className="bi bi-magic"></i> Generate AI Image
                   </button>
@@ -763,6 +774,8 @@ const ViewSavings = () => {
                     className="form-control"
                     value={editTargetAmount}
                     onChange={(e) => setEditTargetAmount(e.target.value)}
+                    disabled={user?.userType === 'guest'}
+                    style={{ display: user?.userType === 'guest' ? 'none' : 'block' }}
                   />
                 </div>
 

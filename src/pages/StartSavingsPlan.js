@@ -125,12 +125,11 @@ const StartSavingsPlan = () => {
         email: email,
         password: password,
         firstName: 'Guest',
-        lastName: 'User'
+        lastName: 'User',
+        userType: 'guest' 
       });
-      console.log('Firebase response:', firebaseResponse.data);
-      // if (!firebaseResponse.data.success) {
-      //   throw new Error(firebaseResponse.data.error || 'Failed to create account');
-      // }
+      console.log('Firebase response:', firebaseResponse);
+
       console.log('Creating savings goal...');
         const response = await api.post('/api/savings-goal/create-guest-goal', {
           emailToken: token, 

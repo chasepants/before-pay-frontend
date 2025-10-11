@@ -62,7 +62,7 @@ const NavbarComponent = ({ user }) => {
         {user ? (
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto">
-              {!user.unitCustomerId && user.status !== 'approved' ? (
+              {user.userType === 'savings-account' && !user.unitCustomerId && user.status !== 'approved' ? (
                 <Nav.Link onClick={handleApplicationClick}>
                   Application
                 </Nav.Link>

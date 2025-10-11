@@ -33,7 +33,8 @@ export const registerWithEmailAndPassword = async (email, password, firstName, l
         idToken,
         firstName,
         lastName,
-        emailVerified: user.emailVerified
+        emailVerified: user.emailVerified,
+        userType: 'savings-account'
       }),
     });
 

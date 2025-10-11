@@ -114,13 +114,13 @@ const App = () => {
           <>
             <Route path="/" element={<LandingPage />} />
             <Route path="/stay-notified" element={<StayNotified />} />
-            <Route path="/home" element={user && user.status === 'approved' ? <Home /> : (user && !user.unitCustomerId ? <Navigate to="/application-signup" /> : <Navigate to="/" />)} />
+            <Route path="/home" element={user && user.status === 'approved' ? <Home /> : (user && user.userType === 'guest' ? <Home /> : (user && !user.unitCustomerId ? <Navigate to="/application-signup" /> : <Navigate to="/" />))} />
             <Route path="/setup-savings/:savingsGoalId" element={user ? <SetupSavings /> : <Navigate to="/" />} />
             <Route path="/view-savings/:savingsGoalId" element={user ? <ViewSavings /> : <Navigate to="/" />} />
-            <Route path="/application-signup" element={user && !user.unitCustomerId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
+            <Route path="/application-signup" element={user && user.userType === 'savings-account' && !user.unitCustomerId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
             <Route path="/pending" element={user && user.status === 'pending' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
             <Route path="/denied" element={user && user.status === 'denied' ? <Denied /> : <Navigate to={user ? '/home' : '/'} />} />
-            <Route path="/create-savings-goal" element={user ? <CreateSavingsGoal /> : <Navigate to="/" />} />
+            <Route path="/create-savings-goal" element={user && user.userType === 'savings-account' ? <CreateSavingsGoal /> : <Navigate to="/" />} />
             <Route path="/start-savings-plan" element={<StartSavingsPlan />} />
             <Route path="/transfer-back" element={user ? <TransferBack /> : <Navigate to="/" />} />
             <Route path="/signup" element={<Signup />} />

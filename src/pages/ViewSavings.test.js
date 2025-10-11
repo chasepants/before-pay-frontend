@@ -616,7 +616,7 @@ describe('ViewSavings', () => {
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
-          user: { user: { _id: '1', firstName: 'John' } },
+          user: { user: { _id: '1', firstName: 'John', userType: 'savings-account' } },
           savings: { goals: [productGoal] }
         }
       });
@@ -646,7 +646,7 @@ describe('ViewSavings', () => {
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
-          user: { user: { _id: '1', firstName: 'John' } },
+          user: { user: { _id: '1', firstName: 'John', userType: 'savings-account' } },
           savings: { goals: [productGoal] }
         }
       });
@@ -706,7 +706,7 @@ describe('ViewSavings', () => {
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
-          user: { user: { _id: '1', firstName: 'John' } },
+          user: { user: { _id: '1', firstName: 'John', userType: 'savings-account' } },
           savings: { goals: [productGoal] }
         }
       });
@@ -791,7 +791,7 @@ describe('ViewSavings', () => {
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
-          user: { user: { _id: '1', firstName: 'John' } },
+          user: { user: { _id: '1', firstName: 'John', userType: 'savings-account' } },
           savings: { goals: [productGoal] }
         }
       });
@@ -844,7 +844,7 @@ describe('ViewSavings', () => {
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
-          user: { user: { _id: '1', firstName: 'John' } },
+          user: { user: { _id: '1', firstName: 'John', userType: 'savings-account' } },
           savings: { goals: [productGoal] }
         }
       });
@@ -911,7 +911,7 @@ describe('ViewSavings', () => {
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
-          user: { user: { _id: '1', firstName: 'John' } },
+          user: { user: { _id: '1', firstName: 'John', userType: 'savings-account' } },
           savings: { goals: [productGoal] }
         }
       });
