@@ -319,21 +319,31 @@ const Home = () => {
 
                       {/* Goal Details */}
                       <div className="row text-center">
-                        <div className="col-4">
+                        <div className="col-3">
                           <small className="text-muted d-block">Saved</small>
                           <strong className="text-success">${goal.currentAmount || 0}</strong>
                         </div>
-                        <div className="col-4">
+                        <div className="col-3">
                           <small className="text-muted d-block">Goal</small>
                           <strong>${goal.targetAmount || 0}</strong>
                         </div>
-                        <div className="col-4">
+                        <div className="col-3">
                           <small className="text-muted d-block">Next Run</small>
                           <strong className={goal.isPaused ? 'text-muted' : 'text-primary'} data-testid={`mobile-next-run-${goal._id}`}>
                             {goal.isPaused ? (
                               <span className="fw-bold">PAUSED</span>
                             ) : (
                               goal.schedule ? getNextRunDate(goal.schedule) : 'Not set'
+                            )}
+                          </strong>
+                        </div>
+                        <div className="col-3">
+                          <small className="text-muted d-block">Bank</small>
+                          <strong className="text-info" data-testid={`mobile-bank-${goal._id}`}>
+                            {goal.bank ? (
+                              `${goal.bank.bankName || 'Unit'} (****${goal.bank.bankLastFour})`
+                            ) : (
+                              <span className="text-muted">Not set</span>
                             )}
                           </strong>
                         </div>
@@ -368,7 +378,6 @@ const Home = () => {
           </div>
         )}
 
-        {/* Unit Elements - Only show for savings account users */}
         {user?.userType === 'savings-account' && (
           <div className="row mb-4">
             <div className="col-12 col-md-6 col-lg-4 mb-3">

@@ -22,6 +22,7 @@ const StartSavingsPlan = () => {
   const [plaidToken, setPlaidToken] = useState(null);
   const [plaidPublicToken, setPlaidPublicToken] = useState(null);
   const [linkedAccount, setLinkedAccount] = useState(null);
+  const [bankDetails, setBankDetails] = useState(null);
   const [checkoutData, setCheckoutData] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -74,6 +75,14 @@ const StartSavingsPlan = () => {
               id: account.id,
               name: account.name || 'Linked Account',
               mask: account.mask || '****'
+            });
+            
+            // Capture bank details from Plaid metadata
+            setBankDetails({
+              bankName: metadata.institution?.name || 'Unknown Bank',
+              bankAccountName: account.name || 'Linked Account',
+              bankLastFour: account.mask || '****',
+              bankAccountType: account.type || 'checking'
             });
           } else {
             setError(exchangeResponse.data.error || 'Failed to exchange Plaid token');
@@ -136,6 +145,7 @@ const StartSavingsPlan = () => {
           goalName: `Save for ${checkoutData?.lineItems?.[0]?.title || 'this purchase'}`,
           description: `Automatic savings for your purchase`,
           targetAmount: calculateTotal(),
+          bankDetails: bankDetails,
           product: {
             title: checkoutData?.lineItems?.[0]?.title || 'Purchase',
             price: calculateTotal().toString(),

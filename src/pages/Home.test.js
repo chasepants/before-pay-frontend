@@ -222,6 +222,12 @@ describe('Home', () => {
       expect(screen.getByTestId('mobile-goals-container')).toBeInTheDocument();
       expect(screen.getByTestId('mobile-goal-card-1')).toBeInTheDocument();
       expect(screen.getByTestId('mobile-goal-card-2')).toBeInTheDocument();
+      
+      // Verify bank details are displayed in mobile cards
+      expect(screen.getByTestId('mobile-bank-1')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-bank-2')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-bank-1')).toHaveTextContent('Chase (****1234)');
+      expect(screen.getByTestId('mobile-bank-2')).toHaveTextContent('Bank of America (****5678)');
     });
 
     test('shows empty state when no goals exist', () => {
