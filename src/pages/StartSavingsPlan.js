@@ -10,13 +10,9 @@ const StartSavingsPlan = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Parse query parameters from location.search
   const urlParams = new URLSearchParams(location.search);
   const token = urlParams.get('token');
   const checkoutId = urlParams.get('checkout');
-  console.log('Location:', location);
-  console.log('Search:', location.search);
-  console.log('Token:', token, 'CheckoutId:', checkoutId);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [plaidToken, setPlaidToken] = useState(null);
@@ -35,7 +31,6 @@ const StartSavingsPlan = () => {
       return;
     }
 
-    // Validate token and get checkout data
     const validateToken = async () => {
       try {
         const response = await api.get(`/api/validate-email-token/${token}`);
@@ -133,8 +128,8 @@ const StartSavingsPlan = () => {
       const firebaseResponse = await api.post('/api/auth/register', {
         email: email,
         password: password,
-        firstName: 'Guest',
-        lastName: 'User',
+        firstName: checkoutData?.customerFirstName || 'Guest',
+        lastName: checkoutData?.customerLastName || 'User',
         userType: 'guest' 
       });
       console.log('Firebase response:', firebaseResponse);
