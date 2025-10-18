@@ -57,9 +57,8 @@ const StartSavingsPlan = () => {
         const account = metadata.accounts[0];
         
         try {
-          // Exchange public token for access token
           const exchangeResponse = await api.post('/api/savings-goal/connect-plaid', {
-            emailToken: token, // Use token as emailToken for abandoned cart flow
+            emailToken: token,
             publicToken: public_token,
             accountId: account.id
           });
