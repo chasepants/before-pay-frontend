@@ -278,6 +278,8 @@ const StartSavingsPlan = () => {
                   )}
                 </div>
 
+                {/* Shipping Address Section */}
+                {/* TODO: Add shipping address section */}
                 {/* Password Section */}
                 <div className="mb-4">
                   <h5>Create Your Account</h5>

@@ -367,6 +367,7 @@ const ViewSavings = () => {
                        <div className="card-body p-3">
                          <div className="row align-items-center">
                            {/* Product Image Placeholder */}
+                           {/** TODO: Grab product image from the Shopify API. See process-installments -> createOrder() for example for hitting the Shopify API*/}
                            <div className="col-2 col-md-1">
                              <div className="bg-light rounded d-flex align-items-center justify-content-center" style={{ height: '60px', width: '60px' }}>
                                <i className="bi bi-image text-muted fs-4"></i>
@@ -475,7 +476,7 @@ const ViewSavings = () => {
                            paymentDate.setMonth(paymentDate.getMonth() + (installment - 1));
                            const isCompleted = (savingsGoal.currentAmount || 0) >= (savingsGoal.savingsAmount * installment);
                            const isPending = installment === 1 && (savingsGoal.currentAmount || 0) < savingsGoal.savingsAmount;
-                           
+                           {/** TODO: Use transfers to show installment amount and possibly a payment id */}
                            return (
                              <div key={installment} className="d-flex justify-content-between align-items-center mb-2">
                                <span className="small">

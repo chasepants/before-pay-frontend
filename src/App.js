@@ -13,6 +13,7 @@ import Pending from './pages/Pending';
 import CreateSavingsGoal from './pages/CreateSavingsGoal';
 import StartSavingsPlan from './pages/StartSavingsPlan';
 import Denied from './pages/Denied';
+import MerchantDashboard from './pages/MerchantDashboard';
 import { setUser, setUserLoading, setUserError } from './store/userSlice';
 import { setSavingsGoals, setSavingsGoalsLoading, setSavingsGoalsError } from './store/savingsSlice';
 import LoadingAnimation from './components/LoadingAnimation';
@@ -123,6 +124,7 @@ const App = () => {
             <Route path="/create-savings-goal" element={user && user.userType === 'savings-account' ? <CreateSavingsGoal /> : <Navigate to="/" />} />
             <Route path="/start-savings-plan" element={<StartSavingsPlan />} />
             <Route path="/transfer-back" element={user ? <TransferBack /> : <Navigate to="/" />} />
+            <Route path="/dashboard" element={user && user.userType === 'merchant' ? <MerchantDashboard /> : <Navigate to="/" />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
           </>
