@@ -15,13 +15,10 @@ const Home = () => {
   const [error, setError] = useState(null);
   const dispatch = useDispatch();
 
-  // Add loading state for Unit components
   const [unitComponentsLoaded, setUnitComponentsLoaded] = useState(false);
 
-  // Add a ref to track if Unit components have been rendered
   const unitComponentsRendered = useRef(false);
 
-  // Single useEffect to handle Unit component loading
   useEffect(() => {
     if (user?.status === "approved" && customerToken && !unitComponentsRendered.current) {
       setUnitComponentsLoaded(true);
@@ -29,7 +26,6 @@ const Home = () => {
     }
   }, [user?.status, customerToken]);
 
-  // Move fetchCustomerToken outside useEffect so it can be called from event listeners
   const fetchCustomerToken = async () => {
     try {
       const response = await api.get('/api/auth/customer-token');
@@ -83,8 +79,7 @@ const Home = () => {
     if (activityElement) {
       activityElement.addEventListener('unitOnLoad', handleActivityLoad);
     }
-    
-    // Cleanup function to remove event listeners
+
     return () => {
       if (accountElement) {
         accountElement.removeEventListener('unitOnLoad', handleAccountLoad);
@@ -93,7 +88,7 @@ const Home = () => {
         activityElement.removeEventListener('unitOnLoad', handleActivityLoad);
       }
     };
-  }, [customerToken]); // Only depend on customerToken
+  }, [customerToken]);
 
   const handleCreateSavingsGoal = () => {
     if (user?.userType === 'guest') {
@@ -145,7 +140,6 @@ const Home = () => {
     return `On ${schedule.dayOfWeek}`;
   }
 
-  // Add event listeners to Unit components to prevent re-rendering
   const handleUnitComponentLoad = useCallback((event) => {
     console.log(`${event.target.tagName} component loaded:`, event.detail);
   }, []);
@@ -191,11 +185,9 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Savings Goals Section */}
         {!savingsGoalsLoading ? (
           <div className="row mb-4">
             <div className="col-12">
-              {/* Desktop Header and Table */}
               <div className="d-none d-md-block">
                 <div className="border-0 shadow-sm">
                   <div className="card-header bg-dark text-white">
@@ -266,12 +258,10 @@ const Home = () => {
                 </div>
               </div>
 
-              {/* Mobile Cards Only */}
               <div className="d-md-none" data-testid="mobile-goals-container">
                 {savingsGoals.length > 0 ? (
                   savingsGoals.map((goal, index) => (
                     <div key={goal._id} className="border rounded p-3 mb-3 bg-white" data-testid={`mobile-goal-card-${goal._id}`}>
-                      {/* Goal Header */}
                       <div className="d-flex justify-content-between align-items-start mb-2">
                         <h6 className="mb-0 fw-bold text-truncate" style={{ maxWidth: '60%' }}>
                           {goal.goalName || goal.product?.title}
@@ -299,7 +289,6 @@ const Home = () => {
                         </div>
                       </div>
 
-                      {/* Progress Bar */}
                       <div className="mb-2">
                         <div className="d-flex justify-content-between align-items-center mb-1">
                           <small className="text-muted">Progress</small>
@@ -317,7 +306,6 @@ const Home = () => {
                         </div>
                       </div>
 
-                      {/* Goal Details */}
                       <div className="row text-center">
                         <div className="col-3">
                           <small className="text-muted d-block">Saved</small>

@@ -44,7 +44,7 @@ const App = () => {
       }
       try {
         console.log('Fetching user from:', `${process.env.REACT_APP_API_URL}/api/auth/current_user`);
-        const userRes = await api.get('/api/auth/current_user'); // Use api instance
+        const userRes = await api.get('/api/auth/current_user');
         console.log('Current user response:', userRes.data);
         dispatch(setUser(userRes.data));
       } catch (err) {
@@ -115,11 +115,11 @@ const App = () => {
           <>
             <Route path="/" element={<LandingPage />} />
             <Route path="/stay-notified" element={<StayNotified />} />
-            <Route path="/home" element={user && user.status === 'approved' ? <Home /> : (user && user.userType === 'guest' ? <Home /> : (user && !user.unitCustomerId ? <Navigate to="/application-signup" /> : <Navigate to="/" />))} />
+            <Route path="/home" element={user && user.status === 'approved' && user.userType !== 'merchant' ? <Home /> : (user && user.userType === 'guest' ? <Home /> : (user && user.userType === 'merchant' ? <Navigate to="/dashboard" /> : (user && !user.unitCustomerId ? <Navigate to="/application-signup" /> : <Navigate to="/" />)))} />
             <Route path="/setup-savings/:savingsGoalId" element={user ? <SetupSavings /> : <Navigate to="/" />} />
             <Route path="/view-savings/:savingsGoalId" element={user ? <ViewSavings /> : <Navigate to="/" />} />
             <Route path="/application-signup" element={user && user.userType === 'savings-account' && !user.unitCustomerId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
-            <Route path="/pending" element={user && user.status === 'pending' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
+            <Route path="/pending" element={user && user.status === 'pending' && user.userType !== 'merchant' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
             <Route path="/denied" element={user && user.status === 'denied' ? <Denied /> : <Navigate to={user ? '/home' : '/'} />} />
             <Route path="/create-savings-goal" element={user && user.userType === 'savings-account' ? <CreateSavingsGoal /> : <Navigate to="/" />} />
             <Route path="/start-savings-plan" element={<StartSavingsPlan />} />
