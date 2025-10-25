@@ -15,6 +15,7 @@ function MerchantDashboard() {
     const unitComponentsRendered = useRef(false);
     const [savingsGoals, setSavingsGoals] = useState([]);
     const [savingsGoalsLoading, setSavingsGoalsLoading] = useState(false);
+    const [expandedTransfers, setExpandedTransfers] = useState({});
 
     useEffect(() => {
         if (!user) {
@@ -32,6 +33,7 @@ function MerchantDashboard() {
         const fetchMerchantData = async () => {
             try {
                 const response = await api.get('/api/shopify-merchant/');
+                console.log('Merchant data response:', response.data);
                 setMerchant(response.data.merchant);
             } catch (error) {
                 console.error('Error fetching merchant data:', error);
@@ -44,14 +46,20 @@ function MerchantDashboard() {
     }, []);
 
     const fetchSavingsGoals = async (shopDomain) => {
-        if (!shopDomain) return;
+        if (!shopDomain) {
+            console.log('No shopDomain provided, skipping savings goals fetch');
+            return;
+        }
         
+        console.log('Fetching savings goals for shopDomain:', shopDomain);
         setSavingsGoalsLoading(true);
         try {
             const response = await api.get(`/api/savings-goal/merchant/${shopDomain}`);
+            console.log('Savings goals response:', response.data);
             setSavingsGoals(response.data);
         } catch (error) {
             console.error('Error fetching savings goals:', error);
+            console.error('Error response:', error.response?.data);
         } finally {
             setSavingsGoalsLoading(false);
         }
@@ -62,6 +70,13 @@ function MerchantDashboard() {
             fetchSavingsGoals(merchant.shopDomain);
         }
     }, [merchant?.shopDomain]);
+
+    const toggleTransfers = (goalId) => {
+        setExpandedTransfers(prev => ({
+            ...prev,
+            [goalId]: !prev[goalId]
+        }));
+    };
 
     const fetchCustomerToken = async () => {
         try {
@@ -229,8 +244,8 @@ function MerchantDashboard() {
                             ) : (
                                 <div className="row">
                                     {savingsGoals.map((goal) => (
-                                        <div key={goal._id} className="col-md-6 col-lg-4 mb-3">
-                                            <div className="card h-100">
+                                        <div key={goal._id} className="col-12 mb-3">
+                                            <div className="card">
                                                 <div className="card-body">
                                                     <div className="d-flex justify-content-between align-items-start mb-2">
                                                         <h6 className="card-title mb-0">{goal.goalName}</h6>
@@ -301,6 +316,66 @@ function MerchantDashboard() {
                                                     <div className="small text-muted mt-2">
                                                         Created: {new Date(goal.createdAt).toLocaleDateString()}
                                                     </div>
+                                                    
+                                                    {/* Transfers Dropdown */}
+                                                    {goal.transfers && goal.transfers.length > 0 && (
+                                                        <div className="mt-3">
+                                                            <button
+                                                                className="btn btn-outline-secondary btn-sm w-100"
+                                                                type="button"
+                                                                onClick={() => toggleTransfers(goal._id)}
+                                                                aria-expanded={expandedTransfers[goal._id]}
+                                                            >
+                                                                <i className={`fas fa-chevron-${expandedTransfers[goal._id] ? 'up' : 'down'} me-2`}></i>
+                                                                View Transfers ({goal.transfers.length})
+                                                            </button>
+                                                            
+                                                            {expandedTransfers[goal._id] && (
+                                                                <div className="mt-2">
+                                                                    <div className="card">
+                                                                        <div className="card-body p-2">
+                                                                            <h6 className="card-title small mb-2">Transfer Details</h6>
+                                                                            <div className="table-responsive">
+                                                                                <table className="table table-sm table-striped">
+                                                                                    <thead>
+                                                                                        <tr>
+                                                                                            <th>Date</th>
+                                                                                            <th>Amount</th>
+                                                                                            <th>Status</th>
+                                                                                            <th>Type</th>
+                                                                                            <th>Payment ID</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        {goal.transfers.map((transfer, index) => (
+                                                                                            <tr key={index}>
+                                                                                                <td>{new Date(transfer.date).toLocaleDateString()}</td>
+                                                                                                <td>${transfer.amount.toFixed(2)}</td>
+                                                                                                <td>
+                                                                                                    <span className={`badge ${
+                                                                                                        transfer.status === 'completed' ? 'bg-success' :
+                                                                                                        transfer.status === 'pending' ? 'bg-warning' :
+                                                                                                        transfer.status === 'failed' ? 'bg-danger' :
+                                                                                                        'bg-secondary'
+                                                                                                    }`}>
+                                                                                                        {transfer.status}
+                                                                                                    </span>
+                                                                                                </td>
+                                                                                                <td>{transfer.type}</td>
+                                                                                                <td>
+                                                                                                    <code className="small">{transfer.transferId || 'N/A'}</code>
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        ))}
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
