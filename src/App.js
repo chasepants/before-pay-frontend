@@ -34,6 +34,26 @@ const App = () => {
       localStorage.setItem('authToken', token);
     }
 
+    // Check for SSO login from Shopify
+    const stashpayToken = localStorage.getItem('stashpay_id_token');
+    const stashpayUser = localStorage.getItem('stashpay_user');
+    if (stashpayToken && stashpayUser) {
+      console.log('SSO login detected, processing...');
+      try {
+        const userData = JSON.parse(stashpayUser);
+        // Store the JWT token as the auth token
+        localStorage.setItem('authToken', stashpayToken);
+        // Clear the SSO data
+        localStorage.removeItem('stashpay_id_token');
+        localStorage.removeItem('stashpay_user');
+        console.log('SSO login processed, user data:', userData);
+      } catch (err) {
+        console.error('Error processing SSO login:', err);
+        localStorage.removeItem('stashpay_id_token');
+        localStorage.removeItem('stashpay_user');
+      }
+    }
+
     const fetchUser = async () => {
       dispatch(setUserLoading());
       const token = localStorage.getItem('authToken');
