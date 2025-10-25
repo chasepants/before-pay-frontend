@@ -27,6 +27,13 @@ const App = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Skip authentication for start-savings-plan route since it uses email token validation
+    if (window.location.pathname === '/start-savings-plan') {
+      console.log('Skipping authentication for start-savings-plan route');
+      dispatch(setUser(null));
+      return;
+    }
+
     const query = new URLSearchParams(window.location.search);
     const token = query.get('token');
     const user = query.get('user');
