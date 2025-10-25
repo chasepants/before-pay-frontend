@@ -48,10 +48,10 @@ const App = () => {
       }
       
       // Clean up URL parameters after processing
-      const url = new URL(window.location);
+      const url = new URL(window.location.href);
       url.searchParams.delete('token');
       url.searchParams.delete('user');
-      window.history.replaceState({}, '', url);
+      window.history.replaceState({}, '', url.toString());
     }
 
     const fetchUser = async () => {
