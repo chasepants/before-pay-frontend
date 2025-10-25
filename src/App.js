@@ -29,29 +29,29 @@ const App = () => {
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const token = query.get('token');
+    const user = query.get('user');
+    
     if (token) {
       console.log('Storing token from URL:', token);
       localStorage.setItem('authToken', token);
-    }
-
-    // Check for SSO login from Shopify
-    const stashpayToken = localStorage.getItem('stashpay_id_token');
-    const stashpayUser = localStorage.getItem('stashpay_user');
-    if (stashpayToken && stashpayUser) {
-      console.log('SSO login detected, processing...');
-      try {
-        const userData = JSON.parse(stashpayUser);
-        // Store the JWT token as the auth token
-        localStorage.setItem('authToken', stashpayToken);
-        // Clear the SSO data
-        localStorage.removeItem('stashpay_id_token');
-        localStorage.removeItem('stashpay_user');
-        console.log('SSO login processed, user data:', userData);
-      } catch (err) {
-        console.error('Error processing SSO login:', err);
-        localStorage.removeItem('stashpay_id_token');
-        localStorage.removeItem('stashpay_user');
+      
+      // If user data is also provided (SSO from Shopify), process it
+      if (user) {
+        try {
+          const userData = JSON.parse(decodeURIComponent(user));
+          console.log('SSO login detected, processing user data:', userData);
+          // Store user data in localStorage for potential future use
+          localStorage.setItem('ssoUserData', JSON.stringify(userData));
+        } catch (err) {
+          console.error('Error processing SSO user data:', err);
+        }
       }
+      
+      // Clean up URL parameters after processing
+      const url = new URL(window.location);
+      url.searchParams.delete('token');
+      url.searchParams.delete('user');
+      window.history.replaceState({}, '', url);
     }
 
     const fetchUser = async () => {
