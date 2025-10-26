@@ -212,7 +212,7 @@ const StartSavingsPlan = () => {
       <Navbar />
       <div className="container mt-5">
         <div className="row justify-content-center">
-          <div className="col-md-8">
+          <div className="col-md-8 mb-3">
             <div className="card">
               <div className="card-header">
                 <h3 className="mb-0">Start Your Savings Plan</h3>
