@@ -857,10 +857,10 @@ const ViewSavings = () => {
                     
                     {/* Price */}
                     <div className="col-2 col-md-3 text-end">
-                      <div className="fw-bold text-success fs-6">${item.price}</div>
+                      <div className="fw-bold text-success fs-6">${item.price * item.quantity}</div>
                       {item.quantity > 1 && (
                         <div className="small text-muted">
-                          ${(parseFloat(item.price) / item.quantity).toFixed(2)} each
+                          ${(parseFloat(item.price))} each
                         </div>
                       )}
                     </div>
