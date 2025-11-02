@@ -103,7 +103,8 @@ const Home = () => {
   };
 
   const handleViewSavings = (goalId) => {
-    navigate(`/view-savings/${goalId}`);
+    console.log(user);
+    "guest" === user.userType ? navigate(`/view-order/${goalId}`) : navigate(`/view-savings/${goalId}`);
   };
 
   const togglePause = async (goal) => {

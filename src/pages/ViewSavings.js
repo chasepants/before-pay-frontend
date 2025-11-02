@@ -68,6 +68,11 @@ const ViewSavings = () => {
     const fetchSavingsGoal = async () => {
       try {
         const res = await api.get(`/api/savings-goal/${savingsGoalId}`);
+        console.log(res);
+        if (res.data && res.data.product && "Shopify" === res.data.product.type) {
+          console.log('Navigating to order')
+          navigate(`/view-order/${savingsGoalId}`);
+        }
         setSavingsGoal(res.data);
       } catch (err) {
         setError('Savings goal not found');
@@ -84,7 +89,6 @@ const ViewSavings = () => {
     }
   }, [savingsGoalId, savingsGoals, user, navigate]);
 
-  // Fix 1: Add back the useEffect to initialize aiImage from saved data
   useEffect(() => {
     if (savingsGoal) {
       // Initialize aiImage from the saved goal data
@@ -897,54 +901,6 @@ const ViewSavings = () => {
                       <span className="fw-bold text-success fs-5">${savingsGoal.product.totalPrice}</span>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Installment Plan Details */}
-          <div className="card border-0 shadow-sm">
-            <div className="card-body p-4">
-              <div className="row">
-                <div className="col-md-8">
-                  <div className="small text-muted mb-2">
-                    <i className="bi bi-info-circle me-1"></i>
-                    This is your savings plan for the items above
-                  </div>
-                  <div className="small text-muted mb-3">
-                    <i className="bi bi-calendar me-1"></i>
-                    Payment schedule: Monthly over 4 months
-                  </div>
-                  {savingsGoal.bank && (
-                    <div className="small text-muted mb-3">
-                      <i className="bi bi-bank me-1"></i>
-                      Bank: {savingsGoal.bank.bankName} ••••{savingsGoal.bank.lastFour}
-                    </div>
-                  )}
-                </div>
-                <div className="col-md-4">
-                  <h6 className="mb-3">Payment Schedule</h6>
-                  {savingsGoal.transfers.map((transfer) => {
-                    console.log(transfer)
-                    const paymentDate = new Date(transfer.date);
-                    const isCompleted = 'completed' === transfer.status;
-                    const isPending = 'pending' === transfer.status;
-                    return (
-                      <div key={transfer.transferId} className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="small">
-                          #{transfer.transferId}. {paymentDate.toDateString()}
-                        </span>
-                        <div className="d-flex align-items-center">
-                          <span className="me-2">${transfer.amount}</span>
-                          <i className={`bi ${
-                            isCompleted ? 'bi-check-circle-fill text-success' : 
-                            isPending ? 'bi-clock-fill text-warning' : 
-                            'bi-x-circle-fill text-danger'
-                          }`}></i>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
             </div>

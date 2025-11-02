@@ -19,6 +19,8 @@ import { setSavingsGoals, setSavingsGoalsLoading, setSavingsGoalsError } from '.
 import LoadingAnimation from './components/LoadingAnimation';
 import TransferBack from './pages/TransferBack';
 import StayNotified from './pages/StayNotified';
+import ViewOrder from './pages/ViewOrder';
+import EditOrder from './pages/EditOrder';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -145,6 +147,8 @@ const App = () => {
             <Route path="/home" element={user && user.status === 'approved' && user.userType !== 'merchant' ? <Home /> : (user && user.userType === 'guest' ? <Home /> : (user && user.userType === 'merchant' ? <Navigate to="/dashboard" /> : (user && !user.unitCustomerId ? <Navigate to="/application-signup" /> : <Navigate to="/" />)))} />
             <Route path="/setup-savings/:savingsGoalId" element={user ? <SetupSavings /> : <Navigate to="/" />} />
             <Route path="/view-savings/:savingsGoalId" element={user ? <ViewSavings /> : <Navigate to="/" />} />
+            <Route path="/view-order/:savingsGoalId" element={user ? <ViewOrder /> : <Navigate to="/" />} />
+            <Route path="/edit-order/:savingsGoalId" element={user ? <EditOrder /> : <Navigate to="/" />} />
             <Route path="/application-signup" element={user && user.userType === 'savings-account' && !user.unitCustomerId ? <ApplicationSignup /> : <Navigate to={user ? '/home' : '/'} />} />
             <Route path="/pending" element={user && user.status === 'pending' && user.userType !== 'merchant' ? <Pending /> : <Navigate to={user ? '/home' : '/'} />} />
             <Route path="/denied" element={user && user.status === 'denied' ? <Denied /> : <Navigate to={user ? '/home' : '/'} />} />
