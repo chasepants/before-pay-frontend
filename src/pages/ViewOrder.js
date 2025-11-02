@@ -13,6 +13,9 @@ const ViewOrder = () => {
   const [savingsGoal, setSavingsGoal] = useState(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [isProcessingRefund, setIsProcessingRefund] = useState(false);
+  const [refundError, setRefundError] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -68,6 +71,42 @@ const ViewOrder = () => {
       </div>
     );
   }
+
+  // Check if refund is available
+  const canRefund = () => {
+    if (!savingsGoal || savingsGoal.product?.type !== 'Shopify') return false;
+    if (!savingsGoal.currentAmount || savingsGoal.currentAmount <= 0) return false;
+    if (savingsGoal.isPaused) return false;
+    
+    // Check if there are any pending transfers
+    const hasPending = savingsGoal.transfers && savingsGoal.transfers.some(
+      transfer => transfer.status === 'pending'
+    );
+    
+    return !hasPending && savingsGoal.currentAmount > 0;
+  };
+
+  const handleRefund = async () => {
+    setIsProcessingRefund(true);
+    setRefundError('');
+    
+    try {
+      const response = await api.post(`/api/savings-goal/${savingsGoalId}/refund`);
+      
+      if (response.data.success) {
+        // Refresh the savings goal
+        const res = await api.get(`/api/savings-goal/${savingsGoalId}`);
+        setSavingsGoal(res.data);
+        setShowRefundModal(false);
+        alert(response.data.message || 'Refund initiated successfully! The savings plan has been paused.');
+      }
+    } catch (err) {
+      setRefundError(err.response?.data?.error || 'Failed to process refund. Please try again.');
+      console.error('Refund error:', err);
+    } finally {
+      setIsProcessingRefund(false);
+    }
+  };
 
   if (isLoading || !savingsGoal) {
     return <LoadingAnimation />;
@@ -204,6 +243,23 @@ const ViewOrder = () => {
                       Bank: {savingsGoal.bank.bankName} ••••{savingsGoal.bank.lastFour}
                     </div>
                   )}
+                  {canRefund() && (
+                    <div className="mt-3">
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => setShowRefundModal(true)}
+                      >
+                        <i className="bi bi-arrow-counterclockwise me-2"></i>
+                        Refund All Savings (${savingsGoal.currentAmount?.toFixed(2) || '0.00'})
+                      </button>
+                    </div>
+                  )}
+                  {savingsGoal.isPaused && (
+                    <div className="alert alert-warning mt-3 mb-0 py-2">
+                      <i className="bi bi-pause-circle me-2"></i>
+                      <small>This savings plan is paused.</small>
+                    </div>
+                  )}
                 </div>
                 <div className="col-md-4">
                   <h6 className="mb-3">Payment Schedule</h6>
@@ -212,13 +268,22 @@ const ViewOrder = () => {
                     const paymentDate = new Date(transfer.date);
                     const isCompleted = 'completed' === transfer.status;
                     const isPending = 'pending' === transfer.status;
+                    const isRefund = transfer.type === 'credit';
                     return (
-                      <div key={transfer.transferId} className="d-flex justify-content-between align-items-center mb-2">
+                      <div key={transfer.transferId} className={`d-flex justify-content-between align-items-center mb-2 ${isRefund ? 'border-start border-danger border-3 ps-2' : ''}`}>
                         <span className="small">
-                          #{transfer.transferId}. {paymentDate.toDateString()}
+                          {isRefund ? (
+                            <i className="bi bi-arrow-counterclockwise me-1 text-danger"></i>
+                          ) : (
+                            <span>#{transfer.transferId.slice(-8)}. </span>
+                          )}
+                          {paymentDate.toDateString()}
+                          {isRefund && <span className="text-danger ms-1">(Refund)</span>}
                         </span>
                         <div className="d-flex align-items-center">
-                          <span className="me-2">${transfer.amount}</span>
+                          <span className={`me-2 ${isRefund ? 'text-danger fw-bold' : ''}`}>
+                            {isRefund ? `($${transfer.amount.toFixed(2)})` : `$${transfer.amount.toFixed(2)}`}
+                          </span>
                           <i className={`bi ${
                             isCompleted ? 'bi-check-circle-fill text-success' : 
                             isPending ? 'bi-clock-fill text-warning' : 
@@ -229,6 +294,78 @@ const ViewOrder = () => {
                     );
                   })}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Refund Confirmation Modal */}
+      {showRefundModal && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Refund</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => {
+                    setShowRefundModal(false);
+                    setRefundError('');
+                  }}
+                  disabled={isProcessingRefund}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="alert alert-warning">
+                  <i className="bi bi-exclamation-triangle me-2"></i>
+                  <strong>Important:</strong> This will refund all your savings and pause the installment plan.
+                </div>
+                <p>You are about to refund:</p>
+                <h4 className="text-center mb-3">${savingsGoal.currentAmount?.toFixed(2) || '0.00'}</h4>
+                <p className="text-muted small">
+                  The refund will be sent to your linked bank account: {savingsGoal.bank?.bankName} ••••{savingsGoal.bank?.bankLastFour || '****'}
+                </p>
+                <p className="text-muted small mb-0">
+                  Your savings plan will be paused and no future installments will be processed.
+                </p>
+                {refundError && (
+                  <div className="alert alert-danger mt-3">
+                    {refundError}
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => {
+                    setShowRefundModal(false);
+                    setRefundError('');
+                  }}
+                  disabled={isProcessingRefund}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-danger" 
+                  onClick={handleRefund}
+                  disabled={isProcessingRefund}
+                >
+                  {isProcessingRefund ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-arrow-counterclockwise me-2"></i>
+                      Confirm Refund
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
