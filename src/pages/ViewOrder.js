@@ -27,7 +27,8 @@ const ViewOrder = () => {
       try {
         const res = await api.get(`/api/savings-goal/${savingsGoalId}`);
 
-        if (res.data && res.data.product && "Shopify" !== res.data.product.type) {
+        // Check if it's a Shopify goal using discriminator
+        if (res.data && res.data.__t !== 'ShopifySavingsGoal') {
           navigate(`/home`);
         }
 
@@ -39,15 +40,8 @@ const ViewOrder = () => {
       setIsLoading(false);
     };
 
-    let goal = savingsGoals.find((goal) => goal._id === savingsGoalId);
-    console.log(goal);
-
-    if (!goal) {
-      fetchSavingsGoal();
-    } else {
-      setSavingsGoal(goal);
-      setIsLoading(false);
-    }
+    // Always fetch fresh data to ensure checkoutCartId is populated
+    fetchSavingsGoal();
   }, [savingsGoalId, savingsGoals, user, navigate]);
 
   if (error) {
@@ -74,7 +68,7 @@ const ViewOrder = () => {
 
   // Check if refund is available
   const canRefund = () => {
-    if (!savingsGoal || savingsGoal.product?.type !== 'Shopify') return false;
+    if (!savingsGoal || savingsGoal.__t !== 'ShopifySavingsGoal') return false;
     if (!savingsGoal.currentAmount || savingsGoal.currentAmount <= 0) return false;
     if (savingsGoal.isPaused) return false;
     
@@ -116,7 +110,7 @@ const ViewOrder = () => {
     <>
       <Navbar user={user} />
       {/* shopify installment display */}
-      {savingsGoal.product?.type === 'Shopify' && savingsGoal.product?.lineItems && (
+      {savingsGoal.__t === 'ShopifySavingsGoal' && savingsGoal.checkoutCartId && typeof savingsGoal.checkoutCartId === 'object' && savingsGoal.checkoutCartId.lineItems && (
         <div className="mb-4 col-sm-8 offset-sm-2">
           {/* Installment Plan Header */}
           <div className="text-center mb-4 p-4 bg-light rounded-3 border">
@@ -125,13 +119,13 @@ const ViewOrder = () => {
               <h5 className="mb-0 text-dark">Installment Plan</h5>
             </div>
             <div className="small text-muted">
-              Plan #{savingsGoal._id} • {savingsGoal.product.shopDomain}
+              Plan #{savingsGoal._id} • {savingsGoal.shopDomain || savingsGoal.checkoutCartId.shopDomain}
             </div>
           </div>
 
           {/* Line Items - Receipt Style */}
           <div className="mb-4">
-            {savingsGoal.product.lineItems.map((item, index) => (
+            {savingsGoal.checkoutCartId.lineItems.map((item, index) => (
               <div key={index} className="card mb-3 border-0 shadow-sm">
                 <div className="card-body p-3">
                   <div className="row align-items-center">
@@ -198,7 +192,7 @@ const ViewOrder = () => {
                 <div className="col-md-4 text-md-end">
                   <div className="d-flex justify-content-between mb-1">
                     <span className="text-muted">Subtotal:</span>
-                    <span>${savingsGoal.product.totalPrice}</span>
+                    <span>${savingsGoal.checkoutCartId.totalPrice}</span>
                   </div>
                   <div className="d-flex justify-content-between mb-1">
                     <span className="text-muted">Tax:</span>
@@ -211,7 +205,7 @@ const ViewOrder = () => {
                   <div className="border-top pt-2 mt-2">
                     <div className="d-flex justify-content-between">
                       <span className="fw-bold">Total:</span>
-                      <span className="fw-bold text-success fs-5">${savingsGoal.product.totalPrice}</span>
+                      <span className="fw-bold text-success fs-5">${savingsGoal.checkoutCartId.totalPrice}</span>
                     </div>
                   </div>
                 </div>

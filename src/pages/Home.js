@@ -33,15 +33,20 @@ const Home = () => {
       setCustomerToken(response.data.token);
     } catch (err) {
       console.error('Customer token fetch failed:', err.response?.data || err.message);
+      // Only redirect on 401 (unauthorized), not on 400 (no Unit application)
+      // Guest users don't have Unit applications, so 400 is expected
       if (err.response?.status === 401) {
         localStorage.removeItem('authToken');
         navigate('/');
       }
+      // Silently handle 400 errors for guest users or users without Unit applications
     }
   };
 
   useEffect(() => {
-    if (user) {
+    // Only fetch customer token for approved StashPay users (not guest users)
+    // Guest users don't have Unit applications and don't need customer tokens
+    if (user && user.status === 'approved' && user.userType !== 'guest') {
       fetchCustomerToken();
     }
   }, [user]);

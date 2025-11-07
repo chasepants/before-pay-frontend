@@ -290,26 +290,41 @@ function MerchantDashboard() {
                                                         </div>
                                                     </div>
                                                     
-                                                    {goal.product && (
-                                                        <div className="mb-2">
-                                                            <strong>Product:</strong>
-                                                            <div className="small text-muted">
-                                                                {goal.product.title || goal.product.presentmentTitle || 'Unknown Product'}
-                                                            </div>
-                                                            {goal.product.price && (
+                                                    {(() => {
+                                                        // Get product info based on goal type
+                                                        let productInfo = null;
+                                                        if (goal.__t === 'ManualSavingsGoal') {
+                                                            const firstItem = goal.googleShoppingData?.[0];
+                                                            productInfo = {
+                                                                title: firstItem?.title || goal.manualTitle || goal.goalName,
+                                                                price: firstItem?.price || goal.manualPrice
+                                                            };
+                                                        } else if (goal.__t === 'ShopifySavingsGoal') {
+                                                            const firstItem = goal.checkoutCartId?.lineItems?.[0];
+                                                            productInfo = {
+                                                                title: firstItem?.presentmentTitle || 'Unknown Product',
+                                                                price: goal.checkoutCartId?.totalPrice || goal.targetAmount
+                                                            };
+                                                        }
+                                                        
+                                                        return productInfo && (
+                                                            <div className="mb-2">
+                                                                <strong>Product:</strong>
                                                                 <div className="small text-muted">
-                                                                    Price: ${parseFloat(goal.product.price).toFixed(2)}
+                                                                    {productInfo.title}
                                                                 </div>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                                {productInfo.price && (
+                                                                    <div className="small text-muted">
+                                                                        Price: ${parseFloat(productInfo.price).toFixed(2)}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                     
                                                     {goal.schedule && goal.schedule.installments && (
                                                         <div className="small text-muted">
                                                             <strong>Payment Plan:</strong> {goal.schedule.installments} installments
-                                                            {goal.schedule.amountPerInstallment && (
-                                                                <span> of ${goal.schedule.amountPerInstallment.toFixed(2)} each</span>
-                                                            )}
                                                         </div>
                                                     )}
                                                     

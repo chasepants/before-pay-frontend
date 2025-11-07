@@ -76,12 +76,13 @@ const renderWithProviders = (component, { initialState = {} } = {}) => {
 describe('ViewSavings', () => {
   const mockSavingsGoal = {
     _id: 'test-goal-id',
+    __t: 'ManualSavingsGoal',
     goalName: 'Test Goal',
     description: 'Test Description',
     targetAmount: 1000,
     currentAmount: 500,
     category: 'custom',
-    product: null,
+    googleShoppingData: [],
     transfers: []
   };
 
@@ -115,12 +116,15 @@ describe('ViewSavings', () => {
 
     test('renders navbar', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ data: { transactions: [] } });
+      // Mock the goal fetch (component always fetches fresh data)
+      mockApi.get.mockResolvedValueOnce({ data: mockSavingsGoal });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockSavingsGoal] }
+          savings: { goals: [] }
         }
       });
 
@@ -236,17 +240,18 @@ describe('ViewSavings', () => {
       });
     });
 
-    test('displays product information when savingsGoal.product is populated', async () => {
+    test('displays product information when savingsGoal.googleShoppingData is populated', async () => {
       const mockSavingsGoalWithProduct = {
         ...mockSavingsGoal,
-        product: {
+        __t: 'ManualSavingsGoal',
+        googleShoppingData: [{
           title: 'Test Product',
           price: '$99.99',
           source: 'Test Store',
           rating: 4.5,
           reviews: 123,
           productLink: 'https://example.com/product'
-        }
+        }]
       };
 
       renderWithProviders(<ViewSavings />, {
@@ -672,15 +677,19 @@ describe('ViewSavings', () => {
     });
 
     test('displays search results when products are found', async () => {
+      const mockApi = require('../api');
       const productGoal = {
         ...mockSavingsGoal,
         category: 'product'
       };
-
-      const mockApi = require('../api');
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: productGoal });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
+      // Mock the search API call
       mockApi.post.mockResolvedValue({ 
         data: { 
-          products: [
+          results: [
             {
               title: 'Test Product 1',
               price: '99.99',
@@ -707,7 +716,7 @@ describe('ViewSavings', () => {
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John', userType: 'savings-account' } },
-          savings: { goals: [productGoal] }
+          savings: { goals: [] }
         }
       });
 
@@ -814,16 +823,20 @@ describe('ViewSavings', () => {
     });
 
     test('saves product when save button is clicked', async () => {
+      const mockApi = require('../api');
       const productGoal = {
         ...mockSavingsGoal,
         category: 'product'
       };
-
-      const mockApi = require('../api');
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: productGoal });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
+      // Mock the search API call
       mockApi.post
         .mockResolvedValueOnce({ 
           data: { 
-            products: [
+            results: [
               {
                 title: 'Test Product',
                 price: '99.99',
@@ -838,14 +851,14 @@ describe('ViewSavings', () => {
         })
         .mockResolvedValueOnce({ 
           data: { 
-            goal: { ...productGoal, product: { title: 'Test Product' } }
+            goal: productGoal
           } 
         });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John', userType: 'savings-account' } },
-          savings: { goals: [productGoal] }
+          savings: { goals: [] }
         }
       });
 
@@ -889,16 +902,20 @@ describe('ViewSavings', () => {
     });
 
     test('handles save product error', async () => {
+      const mockApi = require('../api');
       const productGoal = {
         ...mockSavingsGoal,
         category: 'product'
       };
-
-      const mockApi = require('../api');
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: productGoal });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
+      // Mock the search API call
       mockApi.post
         .mockResolvedValueOnce({ 
           data: { 
-            products: [
+            results: [
               {
                 title: 'Test Product',
                 price: '99.99',
@@ -912,7 +929,7 @@ describe('ViewSavings', () => {
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John', userType: 'savings-account' } },
-          savings: { goals: [productGoal] }
+          savings: { goals: [] }
         }
       });
 
@@ -1392,6 +1409,7 @@ describe('ViewSavings', () => {
     });
 
     test('handles transfer modal state changes', async () => {
+      const mockApi = require('../api');
       const goalWithTransfers = {
         ...mockSavingsGoal,
         transfers: [
@@ -1404,11 +1422,15 @@ describe('ViewSavings', () => {
           }
         ]
       };
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: goalWithTransfers });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithTransfers] }
+          savings: { goals: [] }
         }
       });
 
@@ -1424,10 +1446,11 @@ describe('ViewSavings', () => {
   describe('Navigation Functions', () => {
     beforeEach(() => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ data: { transactions: [] } });
+      mockApi.get.mockClear();
     });
 
     test('navigates to setup-savings when bank edit button is clicked', async () => {
+      const mockApi = require('../api');
       const goalWithBank = {
         ...mockSavingsGoal,
         bank: {
@@ -1438,11 +1461,15 @@ describe('ViewSavings', () => {
           interval: 'weekly'
         }
       };
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: goalWithBank });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithBank] }
+          savings: { goals: [] }
         }
       });
 
@@ -1463,10 +1490,16 @@ describe('ViewSavings', () => {
     });
 
     test('navigates to setup-savings when setup transfers button is clicked', async () => {
+      const mockApi = require('../api');
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: mockSavingsGoal });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
+
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockSavingsGoal] }
+          savings: { goals: [] }
         }
       });
 
@@ -1484,10 +1517,11 @@ describe('ViewSavings', () => {
   describe('Transfer Data Formatting', () => {
     beforeEach(() => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ data: { transactions: [] } });
+      mockApi.get.mockClear();
     });
 
     test('displays transfer with transactionId when available', async () => {
+      const mockApi = require('../api');
       const goalWithTransfers = {
         ...mockSavingsGoal,
         transfers: [
@@ -1500,11 +1534,15 @@ describe('ViewSavings', () => {
           }
         ]
       };
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: goalWithTransfers });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithTransfers] }
+          savings: { goals: [] }
         }
       });
 
@@ -1514,6 +1552,7 @@ describe('ViewSavings', () => {
     });
 
     test('displays transfer with transferId when transactionId is not available', async () => {
+      const mockApi = require('../api');
       const goalWithTransfers = {
         ...mockSavingsGoal,
         transfers: [
@@ -1526,11 +1565,15 @@ describe('ViewSavings', () => {
           }
         ]
       };
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: goalWithTransfers });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithTransfers] }
+          savings: { goals: [] }
         }
       });
 
@@ -1540,6 +1583,7 @@ describe('ViewSavings', () => {
     });
 
     test('displays N/A when neither transactionId nor transferId is available', async () => {
+      const mockApi = require('../api');
       const goalWithTransfers = {
         ...mockSavingsGoal,
         transfers: [
@@ -1551,11 +1595,15 @@ describe('ViewSavings', () => {
           }
         ]
       };
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: goalWithTransfers });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithTransfers] }
+          savings: { goals: [] }
         }
       });
 
@@ -1565,6 +1613,7 @@ describe('ViewSavings', () => {
     });
 
     test('applies correct styling for credit transfers', async () => {
+      const mockApi = require('../api');
       const goalWithTransfers = {
         ...mockSavingsGoal,
         transfers: [
@@ -1577,11 +1626,15 @@ describe('ViewSavings', () => {
           }
         ]
       };
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: goalWithTransfers });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithTransfers] }
+          savings: { goals: [] }
         }
       });
 
@@ -1596,6 +1649,7 @@ describe('ViewSavings', () => {
     });
 
     test('applies correct badge styling for different statuses', async () => {
+      const mockApi = require('../api');
       const goalWithTransfers = {
         ...mockSavingsGoal,
         transfers: [
@@ -1622,11 +1676,15 @@ describe('ViewSavings', () => {
           }
         ]
       };
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: goalWithTransfers });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithTransfers] }
+          savings: { goals: [] }
         }
       });
 
@@ -1649,22 +1707,26 @@ describe('ViewSavings', () => {
   describe('Edge Cases and Error Handling', () => {
     beforeEach(() => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ data: { transactions: [] } });
+      mockApi.get.mockClear();
     });
 
     test('handles savingsGoal with null values gracefully', async () => {
+      const mockApi = require('../api');
       const goalWithNulls = {
         ...mockSavingsGoal,
         currentAmount: null,
         targetAmount: null,
-        description: null,
-        product: null
+        description: null
       };
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: goalWithNulls });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithNulls] }
+          savings: { goals: [] }
         }
       });
 
@@ -1678,17 +1740,22 @@ describe('ViewSavings', () => {
     });
 
     test('handles savingsGoal with undefined values gracefully', async () => {
+      const mockApi = require('../api');
       const goalWithUndefined = {
         ...mockSavingsGoal,
         currentAmount: undefined,
         targetAmount: undefined,
         description: undefined
       };
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: goalWithUndefined });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithUndefined] }
+          savings: { goals: [] }
         }
       });
 
@@ -1702,19 +1769,24 @@ describe('ViewSavings', () => {
     });
 
     test('handles product with missing optional fields', async () => {
+      const mockApi = require('../api');
       const goalWithPartialProduct = {
         ...mockSavingsGoal,
-        product: {
+        googleShoppingData: [{
           title: 'Test Product',
           price: '$99.99'
           // Missing source, rating, reviews, productLink
-        }
+        }]
       };
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: goalWithPartialProduct });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithPartialProduct] }
+          savings: { goals: [] }
         }
       });
 
@@ -1731,6 +1803,7 @@ describe('ViewSavings', () => {
     });
 
     test('handles transfers with missing optional fields', async () => {
+      const mockApi = require('../api');
       const goalWithPartialTransfers = {
         ...mockSavingsGoal,
         transfers: [
@@ -1743,11 +1816,15 @@ describe('ViewSavings', () => {
           }
         ]
       };
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: goalWithPartialTransfers });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
 
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithPartialTransfers] }
+          savings: { goals: [] }
         }
       });
 
@@ -1762,14 +1839,20 @@ describe('ViewSavings', () => {
   describe('Progress Display', () => {
     beforeEach(() => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ data: { transactions: [] } });
+      mockApi.get.mockClear();
     });
 
     test('shows correct progress bar', async () => {
+      const mockApi = require('../api');
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: mockSavingsGoal });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
+
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockSavingsGoal] }
+          savings: { goals: [] }
         }
       });
 
@@ -1781,10 +1864,16 @@ describe('ViewSavings', () => {
     });
 
     test('shows progress text', async () => {
+      const mockApi = require('../api');
+      // Mock the goal fetch
+      mockApi.get.mockResolvedValueOnce({ data: mockSavingsGoal });
+      // Mock the transaction history fetch
+      mockApi.get.mockResolvedValueOnce({ data: { transactions: [] } });
+
       renderWithProviders(<ViewSavings />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockSavingsGoal] }
+          savings: { goals: [] }
         }
       });
 

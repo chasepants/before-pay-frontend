@@ -34,7 +34,7 @@ const EditOrder = () => {
     const fetchSavingsGoal = async () => {
       try {
         const res = await api.get(`/api/savings-goal/${savingsGoalId}`);
-        if (res.data && res.data.product && res.data.product.type !== 'Shopify') {
+        if (res.data && res.data.__t !== 'ShopifySavingsGoal') {
           setError('This page is only for Shopify installment orders');
           setIsLoadingGoal(false);
           return;
@@ -121,9 +121,9 @@ const EditOrder = () => {
       // Determine amount - required field
       if (savingsGoal.savingsAmount) {
         updateData.amount = savingsGoal.savingsAmount.toString();
-      } else if (savingsGoal.product && savingsGoal.product.totalPrice) {
-        // Fallback to product total price if savingsAmount not set (for Shopify installments)
-        updateData.amount = savingsGoal.product.totalPrice.toString();
+      } else if (savingsGoal.checkoutCartId && savingsGoal.checkoutCartId.totalPrice) {
+        // Fallback to checkout cart total price if savingsAmount not set (for Shopify installments)
+        updateData.amount = savingsGoal.checkoutCartId.totalPrice.toString();
       } else {
         setError('Unable to determine savings amount. Please contact support.');
         setIsLoading(false);

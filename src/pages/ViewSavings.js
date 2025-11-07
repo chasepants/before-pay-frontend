@@ -21,7 +21,6 @@ const ViewSavings = () => {
   const [editTargetAmount, setEditTargetAmount] = useState('');
   const [aiImage, setAiImage] = useState(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [aiInsights, setAiInsights] = useState([]);
   const [showInsights, setShowInsights] = useState(false);
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
@@ -42,7 +41,9 @@ const ViewSavings = () => {
   const openEditModal = () => {
     console.log('Opening edit modal with savingsGoal:', savingsGoal); // Debug log
     setEditGoalName(savingsGoal.goalName || '');
-    setEditDescription(savingsGoal.description || savingsGoal.product?.description || '');
+    // Get description from goal or first Google Shopping data item
+    const productDescription = savingsGoal.googleShoppingData?.[0]?.description;
+    setEditDescription(savingsGoal.description || productDescription || '');
     setEditTargetAmount(savingsGoal.targetAmount || '');
     setShowEditModal(true);
   };
@@ -68,10 +69,10 @@ const ViewSavings = () => {
     const fetchSavingsGoal = async () => {
       try {
         const res = await api.get(`/api/savings-goal/${savingsGoalId}`);
-        console.log(res);
-        if (res.data && res.data.product && "Shopify" === res.data.product.type) {
-          console.log('Navigating to order')
-          navigate(`/view-order/${savingsGoalId}`);
+        // If not a ManualSavingsGoal, redirect to home
+        if (res.data && res.data.__t !== 'ManualSavingsGoal') {
+          navigate('/home');
+          return;
         }
         setSavingsGoal(res.data);
       } catch (err) {
@@ -80,11 +81,15 @@ const ViewSavings = () => {
     };
 
     let goal = savingsGoals.find((goal) => goal._id === savingsGoalId);
-    console.log(goal);
 
     if (!goal) {
       fetchSavingsGoal();
     } else {
+      // If goal from Redux is not a ManualSavingsGoal, redirect to home
+      if (goal.__t !== 'ManualSavingsGoal') {
+        navigate('/home');
+        return;
+      }
       setSavingsGoal(goal);
     }
   }, [savingsGoalId, savingsGoals, user, navigate]);
@@ -98,7 +103,9 @@ const ViewSavings = () => {
       
       // Initialize other fields
       setEditGoalName(savingsGoal.goalName || '');
-      setEditDescription(savingsGoal.product?.description || savingsGoal.description || '');
+      // Get description from goal or first Google Shopping data item
+      const productDescription = savingsGoal.googleShoppingData?.[0]?.description;
+      setEditDescription(savingsGoal.description || productDescription || '');
       setEditTargetAmount(savingsGoal.targetAmount ?? '');
       
       // Prepopulate search query with goal name for product-type goals
@@ -181,8 +188,8 @@ const ViewSavings = () => {
       const response = await api.post(`/api/savings-goal/${savingsGoalId}/web-search`, { 
         searchQuery: searchQuery.trim() 
       });
-      console.log(response.data.products);
-      setSearchResults(response.data.products);
+      console.log(response.data.results);
+      setSearchResults(response.data.results);
     } catch (error) {
       setError('Failed to search for products');
     } finally {
@@ -230,7 +237,25 @@ const ViewSavings = () => {
     return <LoadingAnimation />;
   }
 
-  const headerClasses = savingsGoal.product?.thumbnail ? 'col-sm-7 mt-3 offset-sm-1' : 'col-sm-7 mt-3 offset-sm-1';
+  // Helper to get product data for ManualSavingsGoal
+  const getProductData = () => {
+    const firstItem = savingsGoal.googleShoppingData?.[0];
+    return {
+      thumbnail: firstItem?.thumbnail || firstItem?.image,
+      title: firstItem?.title || savingsGoal.manualTitle,
+      price: firstItem?.price || savingsGoal.manualPrice,
+      source: firstItem?.source,
+      rating: firstItem?.rating,
+      reviews: firstItem?.reviews,
+      productLink: firstItem?.productLink || savingsGoal.manualProductLink,
+      description: firstItem?.description
+    };
+  };
+
+  const productData = getProductData();
+  const hasProductData = productData && (productData.thumbnail || productData.title);
+
+  const headerClasses = hasProductData ? 'col-sm-7 mt-3 offset-sm-1' : 'col-sm-7 mt-3 offset-sm-1';
 
   return (
     <>
@@ -239,11 +264,11 @@ const ViewSavings = () => {
         {/* Savings User Savings Goal info */}
         <div className='row'>
         <div className={headerClasses}>
-          { savingsGoal.product?.type !== 'Shopify' && (<div className="d-flex align-items-start">
-              {(savingsGoal.product?.thumbnail || aiImage) ? (
+          <div className="d-flex align-items-start">
+              {(productData?.thumbnail || aiImage) ? (
                 <img 
-                  src={savingsGoal.product?.thumbnail || aiImage} 
-                  alt={savingsGoal.product?.thumbnail ? "Product Image" : "AI Generated Goal Icon"} 
+                  src={productData?.thumbnail || aiImage} 
+                  alt={productData?.thumbnail ? "Product Image" : "AI Generated Goal Icon"} 
                   className="rounded-circle mb-3" 
                   style={{ 
                     width: '120px', 
@@ -282,7 +307,7 @@ const ViewSavings = () => {
                       }}
                     />
                   ) : (
-                    <h3 className="mb-2">{savingsGoal.goalName || savingsGoal.product?.title}</h3>
+                    <h3 className="mb-2">{savingsGoal.goalName || productData?.title}</h3>
                   )}
                   <button 
                     className="btn btn-outline-primary btn-sm"
@@ -293,25 +318,25 @@ const ViewSavings = () => {
                     <i className="bi bi-pencil-square"></i>
                   </button>
                 </div>
-                {savingsGoal.product && (<>
+                {hasProductData && (<>
                   <div className="mb-2 d-flex align-items-center gap-2">
                     {
-                      savingsGoal.product.source && (
+                      productData.source && (
                         <>
                           <i className="bi bi-shop text-muted"></i>
-                          <span className="text-muted small">{savingsGoal.product.source}</span>
+                          <span className="text-muted small">{productData.source}</span>
                         </>
                       )
                     }
-                    {savingsGoal.product.rating && (
+                    {productData.rating && (
                       <span className="text-muted small">
                         <i className="bi bi-star-fill text-warning me-1"></i>
-                        {savingsGoal.product.rating} ({savingsGoal.product.reviews} reviews)
+                        {productData.rating} ({productData.reviews} reviews)
                       </span>
                     )}
-                    {savingsGoal.product?.productLink && (
+                    {productData.productLink && (
                       <a 
-                        href={savingsGoal.product.productLink}
+                        href={productData.productLink}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary"
@@ -322,11 +347,11 @@ const ViewSavings = () => {
                     )}
                   </div>
                   <div className="mb-3">
-                      <p className="text-muted mb-2">{savingsGoal.description || savingsGoal.product.description || 'No description provided.'}</p>
+                      <p className="text-muted mb-2">{savingsGoal.description || productData.description || 'No description provided.'}</p>
                   </div></>
                 )}
 
-                {!savingsGoal.product && (
+                {!hasProductData && (
                   <div className="mb-3">
                       <p className="text-muted mb-2">{savingsGoal.description || 'No description provided.'}</p>
                   </div>
@@ -349,7 +374,7 @@ const ViewSavings = () => {
                 </div>
               </div>
             </div>
-            </div>)}
+            </div>
           </div>
         </div>
         {/* Savings User Bank info */}
@@ -389,8 +414,7 @@ const ViewSavings = () => {
           )
         }
         {/* savings user transfer history */}
-        {savingsGoal.product?.type !== 'Shopify' && (
-          <div className='row'>
+        <div className='row'>
             <div className='col-sm-10 offset-sm-1'>
               <div className="card-header bg-dark text-white">
                 <h4 className="mb-0 p-2">Transfers</h4>
@@ -547,7 +571,6 @@ const ViewSavings = () => {
             )}
             </div>
           </div>
-        )}
         {/* savings user product search option */}
         {savingsGoal.category === 'product' && user?.userType === 'savings-account' && (
           <div className="row my-4">
@@ -600,7 +623,7 @@ const ViewSavings = () => {
                     </div>
 
                     {/* Search Results */}
-                    {searchResults.length > 0 && (
+                    {searchResults && searchResults.length > 0 && (
                       <div className="mt-3">
                         <h6>Search Results:</h6>
                         <div className="d-flex overflow-auto" style={{ gap: '1rem', paddingBottom: '0.5rem' }}>
@@ -715,9 +738,9 @@ const ViewSavings = () => {
                 {/* Image and Magic Wand Row */}
                 <div className="d-flex align-items-center mb-3">
                   <div className="me-3">
-                    {(savingsGoal.product?.thumbnail || aiImage) ? (
+                    {(productData?.thumbnail || aiImage) ? (
                       <img 
-                        src={savingsGoal.product?.thumbnail || aiImage} 
+                        src={productData?.thumbnail || aiImage} 
                         alt="Goal Image" 
                         className="rounded" 
                         style={{ width: '80px', height: '80px', objectFit: 'cover' }}
@@ -797,111 +820,6 @@ const ViewSavings = () => {
                 >
                   Save
                 </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* shopify installment display */}
-      {savingsGoal.product?.type === 'Shopify' && savingsGoal.product?.lineItems && (
-        <div className="mb-4 col-sm-8 offset-sm-2">
-          {/* Installment Plan Header */}
-          <div className="text-center mb-4 p-4 bg-light rounded-3 border">
-            <div className="d-flex align-items-center justify-content-center mb-2">
-              <i className="bi bi-calendar-check me-2 text-primary fs-4"></i>
-              <h5 className="mb-0 text-dark">Installment Plan</h5>
-            </div>
-            <div className="small text-muted">
-              Plan #{savingsGoal._id} • {savingsGoal.product.shopDomain}
-            </div>
-          </div>
-
-          {/* Line Items - Receipt Style */}
-          <div className="mb-4">
-            {savingsGoal.product.lineItems.map((item, index) => (
-              <div key={index} className="card mb-3 border-0 shadow-sm">
-                <div className="card-body p-3">
-                  <div className="row align-items-center">
-                    {/* Product Image Placeholder */}
-                    {/** TODO: Grab product image from the Shopify API. See process-installments -> createOrder() for example for hitting the Shopify API*/}
-                    <div className="col-2 col-md-1">
-                      <div className="bg-light rounded d-flex align-items-center justify-content-center" style={{ height: '60px', width: '60px' }}>
-                        <i className="bi bi-image text-muted fs-4"></i>
-                      </div>
-                    </div>
-                    
-                    {/* Product Details */}
-                    <div className="col-6 col-md-7">
-                      <h6 className="card-title mb-1 text-dark">{item.presentmentTitle}</h6>
-                      <div className="small text-muted mb-1">
-                        {item.vendor && (
-                          <span className="me-3">
-                            <i className="bi bi-shop me-1"></i>
-                            {item.vendor}
-                          </span>
-                        )}
-                        {item.variantId && (
-                          <span>
-                            <i className="bi bi-tag me-1"></i>
-                            SKU: {item.variantId.slice(-6)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="small text-muted">
-                        Premium quality product with excellent customer satisfaction.
-                        {/* TODO: Add product description from checkout payload */}
-                      </div>
-                    </div>
-                    
-                    {/* Quantity */}
-                    <div className="col-2 col-md-1 text-center">
-                      <div className="fw-bold text-primary fs-6">{item.quantity}</div>
-                      <div className="small text-muted">Qty</div>
-                    </div>
-                    
-                    {/* Price */}
-                    <div className="col-2 col-md-3 text-end">
-                      <div className="fw-bold text-success fs-6">${item.price * item.quantity}</div>
-                      {item.quantity > 1 && (
-                        <div className="small text-muted">
-                          ${(parseFloat(item.price))} each
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          
-          </div>
-
-          {/* Order Totals */}
-          <div className="card border-0 shadow-sm mb-4">
-            <div className="card-body p-4">
-              <div className="row">
-                <div className="col-md-8">
-                  <h6 className="mb-3">Order Summary</h6>
-                </div>
-                <div className="col-md-4 text-md-end">
-                  <div className="d-flex justify-content-between mb-1">
-                    <span className="text-muted">Subtotal:</span>
-                    <span>${savingsGoal.product.totalPrice}</span>
-                  </div>
-                  <div className="d-flex justify-content-between mb-1">
-                    <span className="text-muted">Tax:</span>
-                    <span>$0.00</span>
-                  </div>
-                  <div className="d-flex justify-content-between mb-1">
-                    <span className="text-muted">Shipping:</span>
-                    <span>$0.00</span>
-                  </div>
-                  <div className="border-top pt-2 mt-2">
-                    <div className="d-flex justify-content-between">
-                      <span className="fw-bold">Total:</span>
-                      <span className="fw-bold text-success fs-5">${savingsGoal.product.totalPrice}</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

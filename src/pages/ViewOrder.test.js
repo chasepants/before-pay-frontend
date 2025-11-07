@@ -83,16 +83,17 @@ const renderWithProviders = (component, { initialState = {} } = {}) => {
 describe('ViewOrder', () => {
   const mockShopifyGoal = {
     _id: 'test-goal-id',
+    __t: 'ShopifySavingsGoal',
     goalName: 'Shopify Order',
     targetAmount: 400,
     currentAmount: 200,
     savingsAmount: 100,
     isPaused: false,
-    plaidToken: 'plaid-token-123',
-    product: {
-      type: 'Shopify',
-      shopDomain: 'test-shop.myshopify.com',
+    shopDomain: 'test-shop.myshopify.com',
+    checkoutCartId: {
+      _id: 'cart-id-123',
       checkoutId: 'checkout-123',
+      shopDomain: 'test-shop.myshopify.com',
       totalPrice: '400.00',
       lineItems: [
         {
@@ -107,7 +108,8 @@ describe('ViewOrder', () => {
     },
     bank: {
       bankName: 'Test Bank',
-      bankLastFour: '1234'
+      bankLastFour: '1234',
+      plaidToken: 'plaid-token-123'
     },
     transfers: [
       {
@@ -160,7 +162,7 @@ describe('ViewOrder', () => {
     test('navigates to home when goal is not Shopify type', async () => {
       const nonShopifyGoal = {
         ...mockShopifyGoal,
-        product: { type: 'Google' }
+        __t: 'ManualSavingsGoal'
       };
 
       mockApiGet.mockResolvedValue({ data: nonShopifyGoal });
@@ -177,16 +179,21 @@ describe('ViewOrder', () => {
       });
     });
 
-    test('renders Shopify order when goal is found in Redux store', () => {
+    test('renders Shopify order when goal is found in Redux store', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
+
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
       });
 
+      await waitFor(() => {
+        expect(screen.getByText('Installment Plan')).toBeInTheDocument();
+      });
+
       expect(screen.getByTestId('navbar')).toBeInTheDocument();
-      expect(screen.getByText('Installment Plan')).toBeInTheDocument();
       expect(screen.getByText('Test Product')).toBeInTheDocument();
       // $400.00 appears multiple times (subtotal and total), so check that at least one exists
       const amounts = screen.getAllByText('$400.00');
@@ -231,12 +238,18 @@ describe('ViewOrder', () => {
   });
 
   describe('Refund Functionality', () => {
-    test('shows refund button when refund is available', () => {
+    test('shows refund button when refund is available', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
+
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Refund All Savings/)).toBeInTheDocument();
       });
 
       const refundButton = screen.getByText(/Refund All Savings/);
@@ -245,34 +258,43 @@ describe('ViewOrder', () => {
       expect(refundButton.textContent).toContain('200.00');
     });
 
-    test('does not show refund button when goal is paused', () => {
+    test('does not show refund button when goal is paused', async () => {
       const pausedGoal = { ...mockShopifyGoal, isPaused: true };
+      mockApiGet.mockResolvedValue({ data: pausedGoal });
       
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [pausedGoal] }
+          savings: { goals: [] }
         }
       });
 
+      await waitFor(() => {
+        expect(screen.getByText('This savings plan is paused.')).toBeInTheDocument();
+      });
+
       expect(screen.queryByText(/Refund All Savings/)).not.toBeInTheDocument();
-      expect(screen.getByText('This savings plan is paused.')).toBeInTheDocument();
     });
 
-    test('does not show refund button when currentAmount is 0', () => {
+    test('does not show refund button when currentAmount is 0', async () => {
       const zeroAmountGoal = { ...mockShopifyGoal, currentAmount: 0 };
+      mockApiGet.mockResolvedValue({ data: zeroAmountGoal });
       
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [zeroAmountGoal] }
+          savings: { goals: [] }
         }
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Installment Plan')).toBeInTheDocument();
       });
 
       expect(screen.queryByText(/Refund All Savings/)).not.toBeInTheDocument();
     });
 
-    test('does not show refund button when there are pending transfers', () => {
+    test('does not show refund button when there are pending transfers', async () => {
       const pendingGoal = {
         ...mockShopifyGoal,
         transfers: [
@@ -286,23 +308,34 @@ describe('ViewOrder', () => {
           }
         ]
       };
+      mockApiGet.mockResolvedValue({ data: pendingGoal });
       
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [pendingGoal] }
+          savings: { goals: [] }
         }
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Installment Plan')).toBeInTheDocument();
       });
 
       expect(screen.queryByText(/Refund All Savings/)).not.toBeInTheDocument();
     });
 
-    test('opens refund modal when refund button is clicked', () => {
+    test('opens refund modal when refund button is clicked', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
+
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Refund All Savings/)).toBeInTheDocument();
       });
 
       const refundButton = screen.getByText(/Refund All Savings/);
@@ -322,12 +355,18 @@ describe('ViewOrder', () => {
       expect(modalContent.textContent).toContain('1234');
     });
 
-    test('closes refund modal when cancel button is clicked', () => {
+    test('closes refund modal when cancel button is clicked', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
+
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Refund All Savings/)).toBeInTheDocument();
       });
 
       const refundButton = screen.getByText(/Refund All Savings/);
@@ -340,11 +379,17 @@ describe('ViewOrder', () => {
     });
 
     test('closes refund modal when close button is clicked', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
+
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Refund All Savings/)).toBeInTheDocument();
       });
 
       const refundButton = screen.getByText(/Refund All Savings/);
@@ -374,13 +419,20 @@ describe('ViewOrder', () => {
       mockApiPost.mockResolvedValue({ 
         data: { success: true, message: 'Refund initiated successfully! The savings plan has been paused.' } 
       });
-      mockApiGet.mockResolvedValue({ data: updatedGoal });
+      // First call returns the initial goal, second call returns the updated goal
+      mockApiGet
+        .mockResolvedValueOnce({ data: mockShopifyGoal })
+        .mockResolvedValueOnce({ data: updatedGoal });
 
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Refund All Savings/)).toBeInTheDocument();
       });
 
       const refundButton = screen.getByText(/Refund All Savings/);
@@ -423,6 +475,7 @@ describe('ViewOrder', () => {
     });
 
     test('shows error message when refund fails', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
       mockApiPost.mockRejectedValue({ 
         response: { data: { error: 'Failed to process refund' } } 
       });
@@ -430,8 +483,12 @@ describe('ViewOrder', () => {
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Refund All Savings/)).toBeInTheDocument();
       });
 
       const refundButton = screen.getByText(/Refund All Savings/);
@@ -459,13 +516,18 @@ describe('ViewOrder', () => {
     });
 
     test('disables buttons while processing refund', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
       mockApiPost.mockImplementation(() => new Promise(() => {})); // Never resolves
 
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Refund All Savings/)).toBeInTheDocument();
       });
 
       const refundButton = screen.getByText(/Refund All Savings/);
@@ -492,12 +554,18 @@ describe('ViewOrder', () => {
       });
     });
 
-    test('clears error when modal is closed', () => {
+    test('clears error when modal is closed', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
+
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Refund All Savings/)).toBeInTheDocument();
       });
 
       const refundButton = screen.getByText(/Refund All Savings/);
@@ -513,21 +581,25 @@ describe('ViewOrder', () => {
   });
 
   describe('Payment Schedule Display', () => {
-    test('displays payment schedule with completed transfers', () => {
+    test('displays payment schedule with completed transfers', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
+
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
       });
 
-      expect(screen.getByText('Payment Schedule')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Payment Schedule')).toBeInTheDocument();
+      });
       // There are multiple $100.00 entries (one per transfer)
       const amounts = screen.getAllByText('$100.00');
       expect(amounts.length).toBeGreaterThan(0);
     });
 
-    test('displays refund transfers with special styling', () => {
+    test('displays refund transfers with special styling', async () => {
       const goalWithRefund = {
         ...mockShopifyGoal,
         transfers: [
@@ -541,19 +613,22 @@ describe('ViewOrder', () => {
           }
         ]
       };
+      mockApiGet.mockResolvedValue({ data: goalWithRefund });
 
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithRefund] }
+          savings: { goals: [] }
         }
       });
 
-      expect(screen.getByText('(Refund)')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('(Refund)')).toBeInTheDocument();
+      });
       expect(screen.getByText('($50.00)')).toBeInTheDocument();
     });
 
-    test('displays transfer status icons correctly', () => {
+    test('displays transfer status icons correctly', async () => {
       const goalWithDifferentStatuses = {
         ...mockShopifyGoal,
         transfers: [
@@ -580,29 +655,36 @@ describe('ViewOrder', () => {
           }
         ]
       };
+      mockApiGet.mockResolvedValue({ data: goalWithDifferentStatuses });
 
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithDifferentStatuses] }
+          savings: { goals: [] }
         }
       });
 
       // Check for payment schedule header
-      expect(screen.getByText('Payment Schedule')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Payment Schedule')).toBeInTheDocument();
+      });
     });
   });
 
   describe('Order Summary Display', () => {
-    test('displays order totals correctly', () => {
+    test('displays order totals correctly', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
+
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
       });
 
-      expect(screen.getByText('Order Summary')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Order Summary')).toBeInTheDocument();
+      });
       expect(screen.getByText('Subtotal:')).toBeInTheDocument();
       // Check that $400.00 appears (may be in multiple places)
       expect(screen.getAllByText('$400.00').length).toBeGreaterThan(0);
@@ -610,29 +692,37 @@ describe('ViewOrder', () => {
       expect(screen.getByText('Shipping:')).toBeInTheDocument();
     });
 
-    test('displays product line items', () => {
+    test('displays product line items', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
+
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
       });
 
-      expect(screen.getByText('Test Product')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Test Product')).toBeInTheDocument();
+      });
       expect(screen.getByText('Test Vendor')).toBeInTheDocument();
       expect(screen.getByText('Qty')).toBeInTheDocument();
       expect(screen.getByText('1')).toBeInTheDocument();
     });
 
-    test('displays bank information when available', () => {
+    test('displays bank information when available', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
+
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
       });
 
-      expect(screen.getByText(/Test Bank/)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Test Bank/)).toBeInTheDocument();
+      });
       // Bank info is displayed as "Bank: Test Bank ••••1234" - check that lastFour is visible
       // The lastFour digits are rendered separately, so just verify bank name is shown
       // (The actual lastFour verification is less critical - main thing is bank info section renders)
@@ -640,13 +730,13 @@ describe('ViewOrder', () => {
       expect(bankSection.textContent).toContain('Test Bank');
     });
 
-    test('handles multiple line items', () => {
+    test('handles multiple line items', async () => {
       const multiItemGoal = {
         ...mockShopifyGoal,
-        product: {
-          ...mockShopifyGoal.product,
+        checkoutCartId: {
+          ...mockShopifyGoal.checkoutCartId,
           lineItems: [
-            mockShopifyGoal.product.lineItems[0],
+            mockShopifyGoal.checkoutCartId.lineItems[0],
             {
               productId: 'prod-456',
               variantId: 'var-456',
@@ -658,51 +748,60 @@ describe('ViewOrder', () => {
           ]
         }
       };
+      mockApiGet.mockResolvedValue({ data: multiItemGoal });
 
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [multiItemGoal] }
+          savings: { goals: [] }
         }
       });
 
-      expect(screen.getByText('Test Product')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Test Product')).toBeInTheDocument();
+      });
       expect(screen.getByText('Second Product')).toBeInTheDocument();
     });
   });
 
   describe('Edge Cases', () => {
-    test('handles goal without bank information', () => {
+    test('handles goal without bank information', async () => {
       const goalWithoutBank = { ...mockShopifyGoal };
       delete goalWithoutBank.bank;
+      mockApiGet.mockResolvedValue({ data: goalWithoutBank });
 
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithoutBank] }
+          savings: { goals: [] }
         }
       });
 
-      expect(screen.getByText('Installment Plan')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Installment Plan')).toBeInTheDocument();
+      });
       // Refund button should still show if other conditions are met
       expect(screen.getByText(/Refund All Savings/)).toBeInTheDocument();
     });
 
-    test('handles goal without transfers', () => {
+    test('handles goal without transfers', async () => {
       const goalWithoutTransfers = { ...mockShopifyGoal, transfers: [] };
+      mockApiGet.mockResolvedValue({ data: goalWithoutTransfers });
 
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithoutTransfers] }
+          savings: { goals: [] }
         }
       });
 
-      expect(screen.getByText('Payment Schedule')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Payment Schedule')).toBeInTheDocument();
+      });
       // No transfers should be displayed
     });
 
-    test('handles goal with failed transfers (allows refund)', () => {
+    test('handles goal with failed transfers (allows refund)', async () => {
       const goalWithFailed = {
         ...mockShopifyGoal,
         transfers: [
@@ -715,24 +814,34 @@ describe('ViewOrder', () => {
           }
         ]
       };
+      mockApiGet.mockResolvedValue({ data: goalWithFailed });
 
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [goalWithFailed] }
+          savings: { goals: [] }
         }
       });
 
       // Should show refund button since all transfers are failed (not pending)
-      expect(screen.getByText(/Refund All Savings/)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Refund All Savings/)).toBeInTheDocument();
+      });
     });
 
-    test('navigates to edit order when edit button is clicked', () => {
+    test('navigates to edit order when edit button is clicked', async () => {
+      mockApiGet.mockResolvedValue({ data: mockShopifyGoal });
+
       renderWithProviders(<ViewOrder />, {
         initialState: {
           user: { user: { _id: '1', firstName: 'John' } },
-          savings: { goals: [mockShopifyGoal] }
+          savings: { goals: [] }
         }
+      });
+
+      // Wait for the component to finish loading and render
+      await waitFor(() => {
+        expect(screen.getByText('Installment Plan')).toBeInTheDocument();
       });
 
       // Find the edit button by its icon class - it's a button with bi-pencil-square icon
