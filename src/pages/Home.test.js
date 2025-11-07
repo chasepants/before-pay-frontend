@@ -530,7 +530,7 @@ describe('Home', () => {
       });
 
       await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledWith('/api/auth/customer-token');
+        expect(mockApi.get).toHaveBeenCalledWith('/api/users/customer-token');
       });
 
       // Check that the component renders without errors

@@ -247,7 +247,7 @@ describe('StartSavingsPlan', () => {
       fireEvent.click(screen.getByText('Link Bank Account'));
 
       await waitFor(() => {
-        expect(mockApi.post).toHaveBeenCalledWith('/api/savings-goal/plaid/create-link-token', {
+        expect(mockApi.post).toHaveBeenCalledWith('/api/bank/plaid/link-token', {
           emailToken: 'test-token'
         });
       });
@@ -479,7 +479,7 @@ describe('StartSavingsPlan', () => {
       });
 
       await waitFor(() => {
-        expect(mockApi.post).toHaveBeenCalledWith('/api/auth/register', {
+        expect(mockApi.post).toHaveBeenCalledWith('/api/users', {
           email: 'test@example.com',
           password: 'testpassword123',
           firstName: 'John',
@@ -489,7 +489,7 @@ describe('StartSavingsPlan', () => {
       });
 
       await waitFor(() => {
-        expect(mockApi.post).toHaveBeenCalledWith('/api/savings-goal/create-guest-goal', {
+        expect(mockApi.post).toHaveBeenCalledWith('/api/savings-goal/guest', {
           emailToken: 'test-token',
           goalName: 'Save for Test Product',
           description: 'Automatic savings for your purchase',

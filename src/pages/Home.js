@@ -28,7 +28,7 @@ const Home = () => {
 
   const fetchCustomerToken = async () => {
     try {
-      const response = await api.get('/api/auth/customer-token');
+      const response = await api.get('/api/users/customer-token');
       console.log('Customer token:', response.data.token);
       setCustomerToken(response.data.token);
     } catch (err) {

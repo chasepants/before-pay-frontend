@@ -119,7 +119,7 @@ const ViewSavings = () => {
     if (savingsGoal) {
       const fetchTransactions = async () => {
         try {
-          const txRes = await api.get(`/api/bank/transaction-history/${savingsGoalId}`);
+          const txRes = await api.get(`/api/savings-goal/${savingsGoalId}/transactions`);
           setTransactions(txRes.data.transactions);
         } catch (err) {
           setError(

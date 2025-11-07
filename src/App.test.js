@@ -218,7 +218,7 @@ describe('App', () => {
       renderWithProviders(<App />);
 
       await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledWith('/api/auth/current_user');
+        expect(mockApi.get).toHaveBeenCalledWith('/api/users');
       });
     });
 

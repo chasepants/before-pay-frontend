@@ -24,7 +24,7 @@ const ApplicationSignup = () => {
     const fetchApplicationForm = async () => {
       setIsFetching(true);
       try {
-        const response = await api.get('/api/auth/create-application-form');
+        const response = await api.post('/api/users/unit-application-form');
         console.log('Application form response:', response.data);
         setApplicationFormId(response.data.id);
         setApplicationFormToken(response.data.token);

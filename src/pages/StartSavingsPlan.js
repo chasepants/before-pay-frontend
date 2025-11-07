@@ -57,7 +57,7 @@ const StartSavingsPlan = () => {
         const account = metadata.accounts[0];
         
         try {
-          const exchangeResponse = await api.post('/api/savings-goal/connect-plaid', {
+          const exchangeResponse = await api.post('/api/bank/plaid/connect', {
             emailToken: token,
             publicToken: public_token,
             accountId: account.id
@@ -124,7 +124,7 @@ const StartSavingsPlan = () => {
     setError('');
 
     try {
-      const firebaseResponse = await api.post('/api/auth/register', {
+      const firebaseResponse = await api.post('/api/users', {
         email: email,
         password: password,
         firstName: checkoutData?.customerFirstName || 'Guest',
@@ -134,7 +134,7 @@ const StartSavingsPlan = () => {
       console.log('Firebase response:', firebaseResponse);
 
       console.log('Creating savings goal...');
-        const response = await api.post('/api/savings-goal/create-guest-goal', {
+        const response = await api.post('/api/savings-goal/guest', {
           emailToken: token, 
           goalName: `Save for ${checkoutData?.lineItems?.[0]?.title || 'this purchase'}`,
           description: `Automatic savings for your purchase`,
@@ -168,7 +168,7 @@ const StartSavingsPlan = () => {
   const handleLinkBankAccount = async () => {
     try {
       // Create Plaid link token using emailToken
-      const plaidResponse = await api.post('/api/savings-goal/plaid/create-link-token', {
+      const plaidResponse = await api.post('/api/bank/plaid/link-token', {
         emailToken: token // Use token as emailToken for abandoned cart flow
       });
       setPlaidToken(plaidResponse.data.linkToken);

@@ -9,6 +9,7 @@ import userSlice from '../store/userSlice';
 // Mock the API
 jest.mock('../api', () => ({
   get: jest.fn(),
+  post: jest.fn(),
 }));
 
 // Mock useNavigate
@@ -72,6 +73,10 @@ describe('ApplicationSignup', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     mockReload.mockClear();
+    // Clear API mocks
+    const mockApi = require('../api');
+    mockApi.get.mockClear();
+    mockApi.post.mockClear();
     // Mock console methods to avoid noise in tests
     jest.spyOn(console, 'log').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -106,7 +111,7 @@ describe('ApplicationSignup', () => {
   describe('Navigation Logic', () => {
     test('navigates to home when user is approved', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ data: { id: 'form-123', token: 'token-123' } });
+      mockApi.post.mockResolvedValue({ data: { id: 'form-123', token: 'token-123' } });
 
       renderWithProviders(<ApplicationSignup />, {
         initialState: {
@@ -129,7 +134,7 @@ describe('ApplicationSignup', () => {
 
     test('does not navigate when user is not approved', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ data: { id: 'form-123', token: 'token-123' } });
+      mockApi.post.mockResolvedValue({ data: { id: 'form-123', token: 'token-123' } });
 
       renderWithProviders(<ApplicationSignup />, {
         initialState: {
@@ -155,7 +160,7 @@ describe('ApplicationSignup', () => {
   describe('Application Form Loading', () => {
     test('shows loading message when form is not loaded', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockImplementation(() => new Promise(() => {})); // Never resolves
+      mockApi.post.mockImplementation(() => new Promise(() => {})); // Never resolves
 
       renderWithProviders(<ApplicationSignup />, {
         initialState: {
@@ -173,7 +178,7 @@ describe('ApplicationSignup', () => {
 
     test('renders application form when loaded successfully', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ 
+      mockApi.post.mockResolvedValue({ 
         data: { id: 'form-123', token: 'token-123' } 
       });
 
@@ -198,7 +203,7 @@ describe('ApplicationSignup', () => {
   describe('Error Handling', () => {
     test('shows error message when API call fails', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockRejectedValue({ 
+      mockApi.post.mockRejectedValue({ 
         response: { data: { error: 'API Error' } } 
       });
 
@@ -218,7 +223,7 @@ describe('ApplicationSignup', () => {
 
     test('shows generic error when no specific error message', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockRejectedValue(new Error('Network error'));
+      mockApi.post.mockRejectedValue(new Error('Network error'));
 
       renderWithProviders(<ApplicationSignup />, {
         initialState: {
@@ -236,7 +241,7 @@ describe('ApplicationSignup', () => {
 
     test('shows retry button when error occurs', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockRejectedValue({ 
+      mockApi.post.mockRejectedValue({ 
         response: { data: { error: 'API Error' } } 
       });
 
@@ -256,7 +261,7 @@ describe('ApplicationSignup', () => {
 
     test('reloads page when retry button is clicked', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockRejectedValue({ 
+      mockApi.post.mockRejectedValue({ 
         response: { data: { error: 'API Error' } } 
       });
 
@@ -280,7 +285,7 @@ describe('ApplicationSignup', () => {
   describe('Unit Elements Integration', () => {
     test('sets up event listeners when form is loaded', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ 
+      mockApi.post.mockResolvedValue({ 
         data: { id: 'form-123', token: 'token-123' } 
       });
 
@@ -309,7 +314,7 @@ describe('ApplicationSignup', () => {
 
     test('handles unitOnLoad event with errors', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ 
+      mockApi.post.mockResolvedValue({ 
         data: { id: 'form-123', token: 'token-123' } 
       });
 
@@ -353,7 +358,7 @@ describe('ApplicationSignup', () => {
 
     test('handles unitApplicationFormCompleted event', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ 
+      mockApi.post.mockResolvedValue({ 
         data: { id: 'form-123', token: 'token-123' } 
       });
 
@@ -395,7 +400,7 @@ describe('ApplicationSignup', () => {
   describe('Component Structure', () => {
     test('renders navbar with user', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ 
+      mockApi.post.mockResolvedValue({ 
         data: { id: 'form-123', token: 'token-123' } 
       });
 
@@ -416,7 +421,7 @@ describe('ApplicationSignup', () => {
 
     test('has proper container structure', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockResolvedValue({ 
+      mockApi.post.mockResolvedValue({ 
         data: { id: 'form-123', token: 'token-123' } 
       });
 
@@ -429,19 +434,22 @@ describe('ApplicationSignup', () => {
         }
       });
 
+      // Wait for the loading text to disappear, indicating the form has loaded
       await waitFor(() => {
-        // Use screen.getByRole or screen.getByText to find elements instead of querySelector
-        const container = screen.getByTestId('navbar').closest('.container');
-        expect(container).toBeInTheDocument();
-        expect(container).toHaveClass('mb-4');
+        expect(screen.queryByText('Loading application form...')).not.toBeInTheDocument();
       });
+
+      // Then check the container class - it should be 'mb-4' when form is loaded
+      const container = screen.getByTestId('navbar').closest('.container');
+      expect(container).toBeInTheDocument();
+      expect(container).toHaveClass('mb-4');
     });
   });
 
   describe('Accessibility', () => {
     test('has proper error message styling', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockRejectedValue({ 
+      mockApi.post.mockRejectedValue({ 
         response: { data: { error: 'API Error' } } 
       });
 
@@ -462,7 +470,7 @@ describe('ApplicationSignup', () => {
 
     test('has proper button styling', async () => {
       const mockApi = require('../api');
-      mockApi.get.mockRejectedValue({ 
+      mockApi.post.mockRejectedValue({ 
         response: { data: { error: 'API Error' } } 
       });
 

@@ -72,8 +72,8 @@ const App = () => {
         return;
       }
       try {
-        console.log('Fetching user from:', `${process.env.REACT_APP_API_URL}/api/auth/current_user`);
-        const userRes = await api.get('/api/auth/current_user');
+        console.log('Fetching user from:', `${process.env.REACT_APP_API_URL}/api/users`);
+        const userRes = await api.get('/api/users');
         console.log('Current user response:', userRes.data);
         dispatch(setUser(userRes.data));
       } catch (err) {

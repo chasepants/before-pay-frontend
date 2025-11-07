@@ -365,7 +365,7 @@ describe('ViewSavings', () => {
       });
 
       await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledWith('/api/bank/transaction-history/test-goal-id');
+        expect(mockApi.get).toHaveBeenCalledWith('/api/savings-goal/test-goal-id/transactions');
       });
     });
   });
