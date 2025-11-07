@@ -49,6 +49,7 @@ const Home = () => {
     if (user && user.status === 'approved' && user.userType !== 'guest') {
       fetchCustomerToken();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Remove the duplicate useEffect and fix event listeners
@@ -126,11 +127,11 @@ const Home = () => {
   const getNextRunDate = (schedule) => {
     let today = new Date();
     const todaysDate = today.getDate();
-    if ("Monthly" == schedule.interval && schedule.dayOfMonth >= todaysDate) {
+    if (schedule.interval === "Monthly" && schedule.dayOfMonth >= todaysDate) {
       return today.toDateString();
     }
 
-    if ("Monthly" == schedule.interval && schedule.dayOfMonth < todaysDate) {
+    if (schedule.interval === "Monthly" && schedule.dayOfMonth < todaysDate) {
       today.setMonth(today.getMonth() + 1);
       today.setDate(schedule.dayOfMonth);
       return today.toDateString();
@@ -139,16 +140,13 @@ const Home = () => {
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const todaysIndex = today.getDay();
 
-    if ("Weekly" == schedule.interval && days.indexOf(schedule.dayOfWeek)  === todaysIndex) {
+    if (schedule.interval === "Weekly" && days.indexOf(schedule.dayOfWeek) === todaysIndex) {
       return "Today";
     }
 
     return `On ${schedule.dayOfWeek}`;
   }
 
-  const handleUnitComponentLoad = useCallback((event) => {
-    console.log(`${event.target.tagName} component loaded:`, event.detail);
-  }, []);
 
   if (error) {
     return (

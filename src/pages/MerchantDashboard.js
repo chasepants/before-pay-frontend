@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import Navbar from '../components/Navbar'
@@ -103,6 +103,7 @@ function MerchantDashboard() {
         if (merchant?.unitAccountId) {
             fetchCustomerToken();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [merchant?.unitAccountId]);
 
     if (!user || user.userType !== 'merchant') {

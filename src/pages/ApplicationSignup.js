@@ -36,10 +36,9 @@ const ApplicationSignup = () => {
       }
     };
 
-    if (!isFetching) {
-      fetchApplicationForm();
-    }
-  }, [userLoading]);
+    fetchApplicationForm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userLoading, user?.status, user?.unitCustomerId]);
 
   useEffect(() => {
     if (applicationFormId && applicationFormToken) {

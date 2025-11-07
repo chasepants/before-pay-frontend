@@ -19,7 +19,7 @@ const ProductCard = ({
   const buttonContent = isInSavings ? (
     <span className="text-success">Added ✓</span>
   ) : (
-    <a href="#" className="btn btn-primary w-100" onClick={(e) => { e.preventDefault(); onButtonClick(); }}>ADD TO SAVINGS</a>
+    <button type="button" className="btn btn-primary w-100" onClick={onButtonClick}>ADD TO SAVINGS</button>
   );
   return (
     <div className="card h-100">

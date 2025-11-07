@@ -15,7 +15,6 @@ const SetupSavings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [plaidToken, setPlaidToken] = useState(null);
   const [plaidPublicToken, setPlaidPublicToken] = useState(null);
-  const [plaidAccountId, setPlaidAccountId] = useState(null);
   const [linkedAccount, setLinkedAccount] = useState(null);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [amount, setAmount] = useState('');
@@ -55,7 +54,6 @@ const SetupSavings = () => {
       if (metadata.accounts && metadata.accounts.length > 0) {
         const account = metadata.accounts[0];
         setPlaidPublicToken(public_token);
-        setPlaidAccountId(account.id);
         setLinkedAccount({
           id: account.id,
           name: account.name || 'Linked Account',
@@ -114,7 +112,6 @@ const SetupSavings = () => {
 
   const handleChangeAccount = () => {
     setPlaidPublicToken(null);
-    setPlaidAccountId(null);
     setLinkedAccount(null);
     setSelectedAccount(null); // Reset to allow relinking
   };

@@ -159,9 +159,9 @@ const Signup = () => {
                 <div className="text-center mt-4">
                   <small style={{ color: '#116530 !important' }}>
                     By continuing, you agree to our{' '}
-                    <a href="#" className="text-decoration-none" style={{ color: '#116530 !important' }}>Terms of Service</a>
+                    <button type="button" className="btn btn-link p-0 text-decoration-none" style={{ color: '#116530 !important' }}>Terms of Service</button>
                     {' '}and{' '}
-                    <a href="#" className="text-decoration-none" style={{ color: '#116530 !important' }}>Privacy Policy</a>
+                    <button type="button" className="btn btn-link p-0 text-decoration-none" style={{ color: '#116530 !important' }}>Privacy Policy</button>
                   </small>
                 </div>
 

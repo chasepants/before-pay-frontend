@@ -12,7 +12,6 @@ const StartSavingsPlan = () => {
   
   const urlParams = new URLSearchParams(location.search);
   const token = urlParams.get('token');
-  const checkoutId = urlParams.get('checkout');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [plaidToken, setPlaidToken] = useState(null);

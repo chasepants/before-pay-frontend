@@ -326,8 +326,9 @@ describe('Login', () => {
     test('has proper link elements', () => {
       renderWithProviders(<Login />);
 
-      const links = screen.getAllByRole('link');
-      expect(links.length).toBeGreaterThan(0);
+      // After fixing anchor-is-valid, links are now buttons
+      const buttons = screen.getAllByRole('button');
+      expect(buttons.length).toBeGreaterThan(0);
     });
   });
 

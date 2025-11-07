@@ -26,7 +26,6 @@ const App = () => {
   const dispatch = useDispatch();
   const { user, loading: userLoading } = useSelector((state) => state.user);
   const { loading: savingsGoalsLoading, error: savingsGoalsError } = useSelector((state) => state.savings);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Skip authentication for start-savings-plan route since it uses email token validation
@@ -108,10 +107,10 @@ const App = () => {
     return <LoadingAnimation />;
   }
 
-  if (error || savingsGoalsError) {
+  if (savingsGoalsError) {
     return (
       <div style={{ padding: '16px' }}>
-        <p style={{ color: 'red' }}>{error || savingsGoalsError}</p>
+        <p style={{ color: 'red' }}>{savingsGoalsError}</p>
         <button
           onClick={() => window.location.reload()}
           style={{

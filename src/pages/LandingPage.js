@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { Container, Row, Col, Button, Card, Navbar, Nav, NavDropdown } from 'react-bootstrap';
+import { Container, Row, Col, Button, Card, Navbar, Nav } from 'react-bootstrap';
 import logo from '../assets/beforepay-logo.png';
 import 'bootstrap/dist/css/bootstrap.min.css';
 

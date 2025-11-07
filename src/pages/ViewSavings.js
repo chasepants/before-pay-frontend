@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
-import { ProgressBar } from 'react-bootstrap';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import LoadingAnimation from '../components/LoadingAnimation';
@@ -12,7 +11,6 @@ const ViewSavings = () => {
   const { user } = useSelector((state) => state.user);
   const { goals: savingsGoals } = useSelector((state) => state.savings);
   const [savingsGoal, setSavingsGoal] = useState(null);
-  const [transactions, setTransactions] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -21,7 +19,6 @@ const ViewSavings = () => {
   const [editTargetAmount, setEditTargetAmount] = useState('');
   const [aiImage, setAiImage] = useState(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [showInsights, setShowInsights] = useState(false);
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -119,8 +116,7 @@ const ViewSavings = () => {
     if (savingsGoal) {
       const fetchTransactions = async () => {
         try {
-          const txRes = await api.get(`/api/savings-goal/${savingsGoalId}/transactions`);
-          setTransactions(txRes.data.transactions);
+          await api.get(`/api/savings-goal/${savingsGoalId}/transactions`);
         } catch (err) {
           setError(
             err.response?.status === 404
@@ -741,7 +737,7 @@ const ViewSavings = () => {
                     {(productData?.thumbnail || aiImage) ? (
                       <img 
                         src={productData?.thumbnail || aiImage} 
-                        alt="Goal Image" 
+                        alt="Goal" 
                         className="rounded" 
                         style={{ width: '80px', height: '80px', objectFit: 'cover' }}
                       />
