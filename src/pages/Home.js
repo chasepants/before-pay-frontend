@@ -1,5 +1,5 @@
 import api from '../api';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import Navbar from '../components/Navbar';

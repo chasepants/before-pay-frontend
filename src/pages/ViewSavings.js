@@ -13,7 +13,7 @@ const ViewSavings = () => {
   const [savingsGoal, setSavingsGoal] = useState(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
+  const [editing] = useState(false); // eslint-disable-line no-unused-vars
   const [editGoalName, setEditGoalName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editTargetAmount, setEditTargetAmount] = useState('');
