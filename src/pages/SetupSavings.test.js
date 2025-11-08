@@ -9,6 +9,7 @@ import userSlice from '../store/userSlice';
 // Mock the API
 jest.mock('../api', () => ({
   post: jest.fn(),
+  put: jest.fn(),
 }));
 
 // Mock useNavigate and useParams at the top level
@@ -457,6 +458,9 @@ describe('SetupSavings', () => {
       }));
 
       // Create a test component that simulates the real SetupSavings with account linked
+      const apiMock = require('../api');
+      apiMock.put.mockResolvedValue({ data: { success: true } });
+
       const TestSetupSavings = () => {
         const { useSelector } = require('react-redux');
         const { useParams, useNavigate } = require('react-router');
@@ -496,10 +500,9 @@ describe('SetupSavings', () => {
           setError('');
 
           try {
-            await api.post(
-              `/api/bank/setup-savings`,
+            await api.put(
+              `/api/savings-goal/${savingsGoalId}/schedule`,
               {
-                savingsGoalId,
                 plaidAccessToken: plaidPublicToken || null, // Only send if newly linked
                 plaidAccountId: selectedAccount,
                 amount,
@@ -641,10 +644,9 @@ describe('SetupSavings', () => {
           setError('');
 
           try {
-            await api.post(
-              `/api/bank/setup-savings`,
+            await api.put(
+              `/api/savings-goal/${savingsGoalId}/schedule`,
               {
-                savingsGoalId,
                 plaidAccessToken: plaidPublicToken || null, // Only send if newly linked
                 plaidAccountId: selectedAccount,
                 amount,
@@ -686,6 +688,9 @@ describe('SetupSavings', () => {
           </div>
         );
       };
+
+      const apiMock2 = require('../api');
+      apiMock2.put.mockResolvedValue({ data: { success: true } });
 
       renderWithProviders(<TestSetupSavings />, {
         initialState: {
@@ -1549,6 +1554,9 @@ describe('SetupSavings', () => {
       });
 
       // Create a test component that simulates the real SetupSavings with account linked
+      const apiMock3 = require('../api');
+      apiMock3.put.mockResolvedValue({ data: { success: true } });
+
       const TestSetupSavings = () => {
         const { useSelector } = require('react-redux');
         const { useParams, useNavigate } = require('react-router');
@@ -1588,10 +1596,9 @@ describe('SetupSavings', () => {
           setError('');
 
           try {
-            await api.post(
-              `/api/bank/setup-savings`,
+            await api.put(
+              `/api/savings-goal/${savingsGoalId}/schedule`,
               {
-                savingsGoalId,
                 plaidAccessToken: plaidPublicToken || null, // Only send if newly linked
                 plaidAccountId: selectedAccount,
                 amount,

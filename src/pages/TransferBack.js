@@ -48,7 +48,7 @@ const TransferBack = () => {
       const allocations = Object.entries(allocs)
         .map(([savingsGoalId, amount]) => ({ savingsGoalId, amount: Number(amount) }))
         .filter(a => a.amount > 0);
-      await api.post('/api/bank/transfer-back-batch', {
+      await api.post('/api/bank/transfers/batch', {
         totalAmount: Number(totalAmount),
         allocations
       });

@@ -91,10 +91,9 @@ const SetupSavings = () => {
     setError('');
 
     try {
-      await api.post(
-        `/api/bank/setup-savings`,
+      await api.put(
+        `/api/savings-goal/${savingsGoalId}/schedule`,
         {
-          savingsGoalId,
           plaidAccessToken: plaidPublicToken || null, // Only send if newly linked
           plaidAccountId: selectedAccount,
           amount,

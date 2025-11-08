@@ -109,11 +109,10 @@ const EditOrder = () => {
     setError('');
 
     try {
-      // For logged-in users, use the setup-savings endpoint which handles JWT authentication
+      // For logged-in users, use the schedule endpoint which handles JWT authentication
       // and exchanges the Plaid public token. It can also update existing savings goals.
       // Include existing goal values to preserve them while updating the bank account.
       const updateData = {
-        savingsGoalId,
         plaidAccessToken: plaidPublicToken, // Backend will exchange this public token
         plaidAccountId: selectedAccount
       };
@@ -151,7 +150,7 @@ const EditOrder = () => {
         return;
       }
 
-      await api.post(`/api/bank/setup-savings`, updateData);
+      await api.put(`/api/savings-goal/${savingsGoalId}/schedule`, updateData);
       alert('Bank account updated successfully!');
       navigate(`/view-order/${savingsGoalId}`);
     } catch (err) {

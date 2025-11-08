@@ -424,7 +424,7 @@ describe('TransferBack', () => {
 
       // Wait for the form submission to complete
       await waitFor(() => {
-        expect(mockApi.post).toHaveBeenCalledWith('/api/bank/transfer-back-batch', {
+        expect(mockApi.post).toHaveBeenCalledWith('/api/bank/transfers/batch', {
           totalAmount: 500,
           allocations: [{ savingsGoalId: '1', amount: 500 }]
         });
