@@ -309,6 +309,7 @@ const ViewSavings = () => {
                     className="btn btn-outline-primary btn-sm"
                     onClick={openEditModal}
                     title="Edit goal details"
+                    data-testid="edit-goal-details-button"
                     style={{ display: user?.userType === 'guest' ? 'none' : 'block' }}
                   >
                     <i className="bi bi-pencil-square"></i>
@@ -376,9 +377,9 @@ const ViewSavings = () => {
         {/* Savings User Bank info */}
         {
           ('guest' !== user.userType && savingsGoal.bank) && (
-            <div className='row mt-4'>
+            <div className='row mt-4' data-testid="bank-info-section">
               <div className='col-sm-4 offset-sm-1 d-flex align-items-center'>
-                  <h5>
+                  <h5 data-testid="bank-info-display">
                     {savingsGoal.bank.bankName} - ${savingsGoal.savingsAmount}
                     &nbsp;{savingsGoal.schedule.interval}&nbsp;
                   </h5>
@@ -767,6 +768,7 @@ const ViewSavings = () => {
                     className="form-control"
                     value={editGoalName}
                     onChange={(e) => setEditGoalName(e.target.value)}
+                    data-testid="edit-goal-name-input"
                   />
                 </div>
 
@@ -778,6 +780,7 @@ const ViewSavings = () => {
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
                     placeholder="Enter description..."
+                    data-testid="edit-goal-description-input"
                   />
                 </div>
 
@@ -790,6 +793,7 @@ const ViewSavings = () => {
                     onChange={(e) => setEditTargetAmount(e.target.value)}
                     disabled={user?.userType === 'guest'}
                     style={{ display: user?.userType === 'guest' ? 'none' : 'block' }}
+                    data-testid="edit-goal-amount-input"
                   />
                 </div>
 
@@ -813,6 +817,7 @@ const ViewSavings = () => {
                   type="button" 
                   className="btn btn-primary" 
                   onClick={handleSave}
+                  data-testid="edit-goal-save-button"
                 >
                   Save
                 </button>

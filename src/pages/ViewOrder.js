@@ -66,6 +66,18 @@ const ViewOrder = () => {
     );
   }
 
+  // Check if all payments are completed
+  const isAllPaymentsCompleted = () => {
+    if (!savingsGoal || savingsGoal.__t !== 'ShopifySavingsGoal') return false;
+    if (!savingsGoal.transfers || savingsGoal.transfers.length === 0) return false;
+    
+    // Check if all non-refund transfers are completed
+    const paymentTransfers = savingsGoal.transfers.filter(t => t.type !== 'credit');
+    if (paymentTransfers.length === 0) return false;
+    
+    return paymentTransfers.every(transfer => transfer.status === 'completed');
+  };
+
   // Check if refund is available
   const canRefund = () => {
     if (!savingsGoal || savingsGoal.__t !== 'ShopifySavingsGoal') return false;
@@ -242,13 +254,20 @@ const ViewOrder = () => {
                       <button
                         className="btn btn-danger btn-sm"
                         onClick={() => setShowRefundModal(true)}
+                        data-testid="refund-button"
                       >
                         <i className="bi bi-arrow-counterclockwise me-2"></i>
                         Refund All Savings (${savingsGoal.currentAmount?.toFixed(2) || '0.00'})
                       </button>
                     </div>
                   )}
-                  {savingsGoal.isPaused && (
+                  {isAllPaymentsCompleted() && savingsGoal.checkoutCartId?.orderId && (
+                    <div className="alert alert-success mt-3 mb-0 py-2">
+                      <i className="bi bi-check-circle me-2"></i>
+                      <small>Order completed! Order ID: {savingsGoal.checkoutCartId.orderId}</small>
+                    </div>
+                  )}
+                  {savingsGoal.isPaused && !(isAllPaymentsCompleted() && savingsGoal.checkoutCartId?.orderId) && (
                     <div className="alert alert-warning mt-3 mb-0 py-2">
                       <i className="bi bi-pause-circle me-2"></i>
                       <small>This savings plan is paused.</small>
@@ -257,14 +276,20 @@ const ViewOrder = () => {
                 </div>
                 <div className="col-md-4">
                   <h6 className="mb-3">Payment Schedule</h6>
-                  {savingsGoal.transfers.map((transfer) => {
+                  {savingsGoal.transfers.map((transfer, index) => {
                     console.log(transfer)
                     const paymentDate = new Date(transfer.date);
                     const isCompleted = 'completed' === transfer.status;
                     const isPending = 'pending' === transfer.status;
                     const isRefund = transfer.type === 'credit';
                     return (
-                      <div key={transfer.transferId} className={`d-flex justify-content-between align-items-center mb-2 ${isRefund ? 'border-start border-danger border-3 ps-2' : ''}`}>
+                      <div 
+                        key={transfer.transferId} 
+                        data-testid={`payment-item-${index}`}
+                        data-payment-status={transfer.status}
+                        data-payment-type={transfer.type}
+                        className={`d-flex justify-content-between align-items-center mb-2 ${isRefund ? 'border-start border-danger border-3 ps-2' : ''}`}
+                      >
                         <span className="small">
                           {isRefund ? (
                             <i className="bi bi-arrow-counterclockwise me-1 text-danger"></i>
@@ -278,11 +303,14 @@ const ViewOrder = () => {
                           <span className={`me-2 ${isRefund ? 'text-danger fw-bold' : ''}`}>
                             {isRefund ? `($${transfer.amount.toFixed(2)})` : `$${transfer.amount.toFixed(2)}`}
                           </span>
-                          <i className={`bi ${
-                            isCompleted ? 'bi-check-circle-fill text-success' : 
-                            isPending ? 'bi-clock-fill text-warning' : 
-                            'bi-x-circle-fill text-danger'
-                          }`}></i>
+                          <i 
+                            className={`bi ${
+                              isCompleted ? 'bi-check-circle-fill text-success' : 
+                              isPending ? 'bi-clock-fill text-warning' : 
+                              'bi-x-circle-fill text-danger'
+                            }`}
+                            data-testid={`payment-status-icon-${index}`}
+                          ></i>
                         </div>
                       </div>
                     );

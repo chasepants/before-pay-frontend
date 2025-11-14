@@ -329,6 +329,12 @@ function MerchantDashboard() {
                                                         </div>
                                                     )}
                                                     
+                                                    {goal.__t === 'ShopifySavingsGoal' && goal.checkoutCartId?.orderId && (
+                                                        <div className="small text-muted mt-2" data-testid={`order-id-${goal._id}`}>
+                                                            <strong>Order ID:</strong> <code data-testid={`order-id-value-${goal._id}`}>{goal.checkoutCartId.orderId}</code>
+                                                        </div>
+                                                    )}
+                                                    
                                                     <div className="small text-muted mt-2">
                                                         Created: {new Date(goal.createdAt).toLocaleDateString()}
                                                     </div>

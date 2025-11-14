@@ -23,6 +23,7 @@ const CreateSavingsGoal = () => {
   });
   const [error, setError] = useState('');
   const [category, setCategory] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!user) navigate('/');
@@ -30,10 +31,20 @@ const CreateSavingsGoal = () => {
 
   const handleManualSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent duplicate submissions
+    if (isSubmitting) {
+      return;
+    }
+    
     if (!formData.goalName || !formData.description || !formData.amount || !category) {
       setError('Goal name, description, amount, and category are required');
       return;
     }
+    
+    setIsSubmitting(true);
+    setError('');
+    
     try {
       const newGoal = {
         userId: user._id,
@@ -47,11 +58,12 @@ const CreateSavingsGoal = () => {
       dispatch(addSavingsGoal(res.data));
       setFormData({ goalName: '', description: '', amount: '', productLink: '' });
       setCategory(''); // Reset category to empty
-      setError('');
       navigate(`/setup-savings/${res.data._id}`);
     } catch (err) {
       setError('Failed to create savings goal: ' + err.message);
       console.error('Create savings goal error:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -125,6 +137,7 @@ const CreateSavingsGoal = () => {
                 value={category} 
                 onChange={(e) => setCategory(e.target.value)}
                 aria-label='Category'
+                data-testid="category-select"
                 required
               >
                 <option value="" disabled>Category</option>
@@ -144,8 +157,8 @@ const CreateSavingsGoal = () => {
                 placeholder='Product Link (Optional)'
                 aria-label='Product Link'
               />
-              <button type='submit' className='btn btn-primary w-50 mt-3'>
-                Create Goal
+              <button type='submit' className='btn btn-primary w-50 mt-3' disabled={isSubmitting}>
+                {isSubmitting ? 'Creating...' : 'Create Goal'}
               </button>
               {error && <p className='text-danger mt-2'>{error}</p>}
             </form>

@@ -121,31 +121,55 @@ const Home = () => {
       dispatch(setSavingsGoals(refreshed.data));
     } catch (e) {
       console.error('Toggle pause failed:', e);
+      // Show error message to user if backend returns an error
+      if (e.response?.data?.error) {
+        alert(e.response.data.error);
+      } else {
+        alert('Failed to update savings goal. Please try again.');
+      }
     }
   };
 
-  const getNextRunDate = (schedule) => {
-    let today = new Date();
-    const todaysDate = today.getDate();
-    if (schedule.interval === "Monthly" && schedule.dayOfMonth >= todaysDate) {
-      return today.toDateString();
+  // Check if a Shopify goal is completed (has orderId)
+  const isGoalCompleted = (goal) => {
+    if (goal.__t !== 'ShopifySavingsGoal') return false;
+    // checkoutCartId might be an ObjectId string (not populated) or an object (populated)
+    // Only check orderId if checkoutCartId is an object (populated) and has a non-empty orderId
+    if (!goal.checkoutCartId || typeof goal.checkoutCartId === 'string') {
+      // It's not populated or is just an ObjectId string
+      return false;
     }
+    // checkoutCartId is a populated object, check for orderId
+    const orderId = goal.checkoutCartId.orderId;
+    return !!orderId && typeof orderId === 'string' && 
+      orderId.trim().length > 0 && 
+      goal.currentAmount === goal.targetAmount;
+  };
 
-    if (schedule.interval === "Monthly" && schedule.dayOfMonth < todaysDate) {
-      today.setMonth(today.getMonth() + 1);
-      today.setDate(schedule.dayOfMonth);
-      return today.toDateString();
+  const formatNextRunDate = (dateString) => {
+    if (!dateString) return 'Not set';
+    
+    const date = new Date(dateString);
+    const today = new Date();
+    const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    const dateUTC = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    
+    if (dateUTC.getTime() === todayUTC.getTime()) {
+      return 'Today';
     }
-
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const todaysIndex = today.getDay();
-
-    if (schedule.interval === "Weekly" && days.indexOf(schedule.dayOfWeek) === todaysIndex) {
-      return "Today";
+    
+    const tomorrow = new Date(todayUTC);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    if (dateUTC.getTime() === tomorrow.getTime()) {
+      return 'Tomorrow';
     }
-
-    return `On ${schedule.dayOfWeek}`;
-  }
+    
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
 
 
   if (error) {
@@ -217,13 +241,15 @@ const Home = () => {
                               <td className="align-middle">${goal.currentAmount || 0}</td>
                               <td className="align-middle">${goal.targetAmount || 0}</td>
                               <td className="align-middle" data-testid={`next-run-${goal._id}`}>
-                                {goal.isPaused ? (
+                                {isGoalCompleted(goal) ? (
+                                  <span className="text-success fw-bold">COMPLETED</span>
+                                ) : goal.isPaused ? (
                                   <span className="text-muted fw-bold">PAUSED</span>
                                 ) : (
-                                  goal.schedule ? getNextRunDate(goal.schedule) : 'Not set'
+                                  formatNextRunDate(goal.nextRunDate)
                                 )}
                               </td>
-                              <td className="align-middle">
+                              <td className="align-middle" data-testid={`transfer-from-${goal._id}`}>
                                 {goal.bank ? (
                                   `${goal.bank.bankName || 'Unit'} (****${goal.bank.bankLastFour})`
                                 ) : (
@@ -321,11 +347,17 @@ const Home = () => {
                         </div>
                         <div className="col-3">
                           <small className="text-muted d-block">Next Run</small>
-                          <strong className={goal.isPaused ? 'text-muted' : 'text-primary'} data-testid={`mobile-next-run-${goal._id}`}>
-                            {goal.isPaused ? (
+                          <strong className={
+                            isGoalCompleted(goal) ? 'text-success' : 
+                            goal.isPaused ? 'text-muted' : 
+                            'text-primary'
+                          } data-testid={`mobile-next-run-${goal._id}`}>
+                            {isGoalCompleted(goal) ? (
+                              <span className="fw-bold">COMPLETED</span>
+                            ) : goal.isPaused ? (
                               <span className="fw-bold">PAUSED</span>
                             ) : (
-                              goal.schedule ? getNextRunDate(goal.schedule) : 'Not set'
+                              formatNextRunDate(goal.nextRunDate)
                             )}
                           </strong>
                         </div>

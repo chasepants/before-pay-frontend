@@ -162,6 +162,7 @@ const SetupSavings = () => {
               type="text"
               placeholder="$50"
               aria-label="Savings Amount"
+              data-testid="savings-amount-input"
             />
             <label htmlFor="startTime" className="form-label mt-3">Start Date</label>
             <input
@@ -170,6 +171,7 @@ const SetupSavings = () => {
               className="form-control form-control-lg"
               type="date"
               aria-label="Start Date"
+              data-testid="start-date-input"
             />
             <label htmlFor="interval" className="form-label mt-3">Interval</label>
             <select
@@ -177,6 +179,7 @@ const SetupSavings = () => {
               onChange={(e) => setInterval(e.target.value)}
               className="form-control form-control-lg"
               aria-label="Interval"
+              data-testid="interval-select"
             >
               <option value="Weekly">Weekly</option>
               <option value="Monthly">Monthly</option>
@@ -199,6 +202,7 @@ const SetupSavings = () => {
                   onClick={() => open()}
                   disabled={!ready || isLoading}
                   className="btn btn-secondary mt-4"
+                  data-testid="link-bank-account-button"
                 >
                   <i className="bi bi-lock"></i> Link a Bank Account
                 </button>
@@ -236,7 +240,7 @@ const SetupSavings = () => {
                 </h3>
               </div>
             )}
-            <button onClick={handleSubmit} className="btn btn-primary w-50 mt-5" disabled={isLoading}>
+            <button onClick={handleSubmit} className="btn btn-primary w-50 mt-5" disabled={isLoading} data-testid="create-savings-plan-button">
               {isLoading ? 'Processing...' : 'Create'}
             </button>
           </div>
