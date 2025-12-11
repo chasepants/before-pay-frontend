@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.5",
+    "@mui/material": "^7.3.5",
+    "@mui/x-data-grid": "^8.18.0",
     "@reduxjs/toolkit": "^2.8.2",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -55,7 +60,11 @@
     "transformIgnorePatterns": [
       "/node_modules/(?!axios)/"
     ],
-    "coverageReporters": ["text", "lcov", "html"],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
     "coverageThreshold": {
       "global": {
         "branches": 60,
@@ -66,7 +75,7 @@
     }
   },
   "devDependencies": {
-    "husky": "^9.1.7",
-    "cypress": "^13.6.0"
+    "cypress": "^13.6.0",
+    "husky": "^9.1.7"
   }
 }

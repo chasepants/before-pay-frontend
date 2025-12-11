@@ -20,14 +20,14 @@ describe('Test Transactions with Manual Plaid Linking (Manual)', () => {
     cy.createSavingsGoal({
       goalName: 'Transaction Test Goal',
       description: 'Test description for transaction testing',
-      targetAmount: 300, // Target $300 for 3 monthly payments of $100
+      targetAmount: 8, // Target $8 for 4 monthly payments of $2
       category: 'other'
     }).then((goalId) => {
       cy.wrap(goalId).as('savingsGoalId');
     });
 
     // Step 3: Set up savings plan with manual Plaid linking
-    cy.setupSavingsPlanWithManualPlaid({ amount: 100, interval: 'Monthly' });
+    cy.setupSavingsPlanWithManualPlaid({ amount: 2, interval: 'Monthly' });
 
     // Step 7: Refresh the page to get the latest data from the backend
     cy.reload();
@@ -70,7 +70,7 @@ describe('Test Transactions with Manual Plaid Linking (Manual)', () => {
           .should('be.visible');
         cy.get('[data-testid="bank-info-display"]', { timeout: 5000 })
           .should('be.visible')
-          .should('contain', '$100') // Savings amount
+          .should('contain', '$2') // Savings amount
           .should('contain', 'Monthly'); // Interval
       } else {
         // Bank info might not be visible yet - wait a bit more and check again
@@ -81,7 +81,7 @@ describe('Test Transactions with Manual Plaid Linking (Manual)', () => {
               .should('be.visible');
             cy.get('[data-testid="bank-info-display"]', { timeout: 5000 })
               .should('be.visible')
-              .should('contain', '$100')
+              .should('contain', '$2')
               .should('contain', 'Monthly');
           } else {
             cy.log('⚠️  Bank info section not found after refresh - may need to check backend data population');
@@ -143,20 +143,20 @@ describe('Test Transactions with Manual Plaid Linking (Manual)', () => {
             cy.get('.badge.bg-warning', { timeout: 5000 })
               .should('be.visible')
               .should('contain', 'pending');
-            cy.contains('$100').should('be.visible');
+            cy.contains('$2').should('be.visible');
           });
-          cy.contains('100', { timeout: 5000 }).should('be.visible');
+          cy.contains('2', { timeout: 5000 }).should('be.visible');
           
-          cy.log('💳 Processing Payment 1 of 3...');
-          cy.processAndVerifyPayment(savingsGoalId, apiBaseUrl, baseUrl, 1, 100, 'Transaction Test Goal');
+          cy.log('💳 Processing Payment 1 of 4...');
+          cy.processAndVerifyPayment(savingsGoalId, apiBaseUrl, baseUrl, 1, 2, 'Transaction Test Goal');
           
           // Payment 2
           cy.wait(5000);
           cy.log(`📅 Simulating Payment 2 for date: ${secondPaymentDate}`);
           cy.simulatePaymentForGoal(savingsGoalId, apiBaseUrl, secondPaymentDate).then(() => {
             cy.wait(2000);
-            cy.log('💳 Processing Payment 2 of 3...');
-            cy.processAndVerifyPayment(savingsGoalId, apiBaseUrl, baseUrl, 2, 200, 'Transaction Test Goal');
+            cy.log('💳 Processing Payment 2 of 4...');
+            cy.processAndVerifyPayment(savingsGoalId, apiBaseUrl, baseUrl, 2, 4, 'Transaction Test Goal');
           });
           
           // Payment 3
@@ -164,15 +164,30 @@ describe('Test Transactions with Manual Plaid Linking (Manual)', () => {
           cy.log(`📅 Simulating Payment 3 for date: ${thirdPaymentDate}`);
           cy.simulatePaymentForGoal(savingsGoalId, apiBaseUrl, thirdPaymentDate).then(() => {
             cy.wait(2000);
-            cy.log('💳 Processing Payment 3 of 3...');
-            cy.processAndVerifyPayment(savingsGoalId, apiBaseUrl, baseUrl, 3, 300, 'Transaction Test Goal');
+            cy.log('💳 Processing Payment 3 of 4...');
+            cy.processAndVerifyPayment(savingsGoalId, apiBaseUrl, baseUrl, 3, 6, 'Transaction Test Goal');
+          });
+          
+          // Payment 4
+          cy.wait(5000);
+          // Calculate fourth payment date (3 months from first, same dayOfMonth)
+          const fourthRunDate = new Date();
+          fourthRunDate.setUTCMonth(fourthRunDate.getUTCMonth() + 3);
+          fourthRunDate.setUTCDate(dayOfMonth);
+          fourthRunDate.setUTCHours(0, 0, 0, 0);
+          const fourthPaymentDate = fourthRunDate.toISOString().split('T')[0];
+          cy.log(`📅 Simulating Payment 4 for date: ${fourthPaymentDate}`);
+          cy.simulatePaymentForGoal(savingsGoalId, apiBaseUrl, fourthPaymentDate).then(() => {
+            cy.wait(2000);
+            cy.log('💳 Processing Payment 4 of 4...');
+            cy.processAndVerifyPayment(savingsGoalId, apiBaseUrl, baseUrl, 4, 8, 'Transaction Test Goal');
           });
         });
       });
     });
     
-    // Step 9: Verify goal is complete and test that no 4th payment is created
-    cy.wait(5000); // Give time for payment 3 to complete
+    // Step 9: Verify goal is complete and test that no 5th payment is created
+    cy.wait(5000); // Give time for payment 4 to complete
     cy.get('@savingsGoalId').then((savingsGoalId) => {
       cy.window().then((win) => {
         const token = win.localStorage.getItem('authToken');
@@ -185,11 +200,11 @@ describe('Test Transactions with Manual Plaid Linking (Manual)', () => {
                         // Wait for page to fully load
                         cy.wait(2000);
         
-        // Verify goal shows 300/300
-        cy.contains('300', { timeout: 10000 }).should('be.visible');
-        cy.contains('300 / 300', { timeout: 5000 }).should('be.visible');
+        // Verify goal shows 8/8
+        cy.contains('8', { timeout: 10000 }).should('be.visible');
+        cy.contains('8 / 8', { timeout: 5000 }).should('be.visible');
         
-        // Get transfer count before attempting 4th payment
+        // Get transfer count before attempting 5th payment
         cy.request({
           method: 'GET',
           url: `${apiBaseUrl}/api/savings-goal/${savingsGoalId}`,
@@ -200,20 +215,20 @@ describe('Test Transactions with Manual Plaid Linking (Manual)', () => {
         }).then((goalBeforeResponse) => {
           const transfersBefore = goalBeforeResponse.body.transfers?.length || 0;
           
-          // Calculate date for 4th payment (3 months from first, same dayOfMonth)
+          // Calculate date for 5th payment (4 months from first, same dayOfMonth)
           const goal = goalBeforeResponse.body;
           const schedule = goal.schedule;
           const dayOfMonth = schedule.dayOfMonth;
-          const fourthRunDate = new Date();
-          fourthRunDate.setUTCMonth(fourthRunDate.getUTCMonth() + 3);
-          fourthRunDate.setUTCDate(dayOfMonth);
-          fourthRunDate.setUTCHours(0, 0, 0, 0);
-          const nextPaymentDate = fourthRunDate.toISOString().split('T')[0];
+          const fifthRunDate = new Date();
+          fifthRunDate.setUTCMonth(fifthRunDate.getUTCMonth() + 4);
+          fifthRunDate.setUTCDate(dayOfMonth);
+          fifthRunDate.setUTCHours(0, 0, 0, 0);
+          const nextPaymentDate = fifthRunDate.toISOString().split('T')[0];
           
           cy.log('🔍 Testing that no payment is created after goal is reached...');
-          cy.log(`📅 Attempting to simulate Payment 4 for date: ${nextPaymentDate}`);
+          cy.log(`📅 Attempting to simulate Payment 5 for date: ${nextPaymentDate}`);
           
-          // Simulate payment 4
+          // Simulate payment 5
           cy.request({
             method: 'POST',
             url: `${apiBaseUrl}/api/test/simulate-payments`,
@@ -240,16 +255,16 @@ describe('Test Transactions with Manual Plaid Linking (Manual)', () => {
               expect(transfersAfter).to.eq(transfersBefore);
               cy.log(`✅ Verified: No new payment created (${transfersBefore} transfers before and after)`);
               
-              // Verify goal is still at 300/300
+              // Verify goal is still at 8/8
               cy.reload();
-              cy.contains('300 / 300', { timeout: 5000 }).should('be.visible');
+              cy.contains('8 / 8', { timeout: 5000 }).should('be.visible');
             });
           });
         });
       });
     });
 
-    cy.log('✅ Full transaction test complete: 3 payments processed, goal reached, and verified no further payments are created');
+    cy.log('✅ Full transaction test complete: 4 payments of $2 processed ($8 total), goal reached, and verified no further payments are created');
     
     // Step 10: Clean up - Delete the savings goal to prevent accumulation
     cy.get('@savingsGoalId').then((savingsGoalId) => {

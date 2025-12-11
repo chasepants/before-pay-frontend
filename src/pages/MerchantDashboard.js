@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import Navbar from '../components/Navbar'
 import Placeholder from 'react-bootstrap/Placeholder';
+import { Box, Typography, Paper } from '@mui/material';
+import SavingsGoalsTable from '../components/SavingsGoalsTable';
 import api from '../api';
 
 function MerchantDashboard() {
@@ -15,7 +17,6 @@ function MerchantDashboard() {
     const unitComponentsRendered = useRef(false);
     const [savingsGoals, setSavingsGoals] = useState([]);
     const [savingsGoalsLoading, setSavingsGoalsLoading] = useState(false);
-    const [expandedTransfers, setExpandedTransfers] = useState({});
 
     useEffect(() => {
         if (!user) {
@@ -56,6 +57,21 @@ function MerchantDashboard() {
         try {
             const response = await api.get(`/api/savings-goal/merchant/${shopDomain}`);
             console.log('Savings goals response:', response.data);
+            
+            // Debug: Log each goal's checkoutCartId structure
+            response.data.forEach((goal, index) => {
+                console.log(`Goal ${index + 1}:`, {
+                    _id: goal._id,
+                    __t: goal.__t,
+                    goalName: goal.goalName,
+                    hasCheckoutCartId: !!goal.checkoutCartId,
+                    checkoutCartIdType: typeof goal.checkoutCartId,
+                    checkoutCartIdValue: goal.checkoutCartId,
+                    orderId: goal.checkoutCartId?.orderId,
+                    checkoutCartIdKeys: goal.checkoutCartId && typeof goal.checkoutCartId === 'object' ? Object.keys(goal.checkoutCartId) : null,
+                });
+            });
+            
             setSavingsGoals(response.data);
         } catch (error) {
             console.error('Error fetching savings goals:', error);
@@ -71,11 +87,17 @@ function MerchantDashboard() {
         }
     }, [merchant?.shopDomain]);
 
-    const toggleTransfers = (goalId) => {
-        setExpandedTransfers(prev => ({
-            ...prev,
-            [goalId]: !prev[goalId]
-        }));
+    const handleViewGoal = (goalId) => {
+        // For merchant, we might want to view order details
+        // For now, navigate to view-order page
+        navigate(`/view-order/${goalId}`);
+    };
+
+    const handleRefundCheck = async (goal) => {
+        // Check if goal has a refund payment
+        // For now, return false - we can optimize this later by adding a hasRefund flag to goals
+        // or creating a batch endpoint to check refunds for multiple goals
+        return false;
     };
 
     const fetchCustomerToken = async () => {
@@ -145,7 +167,7 @@ function MerchantDashboard() {
         <Navbar user={user} />
         <div className="container mt-3">
             <div className="row mb-3">
-                <div className="col-sm-6 offset-sm-3">
+                <div className="col-12">
                     <h2>Merchant Dashboard</h2>
                     <p>Welcome, {user.firstName} {user.lastName}!</p>
                     
@@ -222,192 +244,23 @@ function MerchantDashboard() {
             )}
 
             {/* Savings Goals Section */}
-            <div className="row mt-4">
-                <div className="col-12">
-                    <div className="card">
-                        <div className="card-header">
-                            <h5 className="mb-0">Customer Savings Goals</h5>
-                            <small className="text-muted">Track all savings goals created by your customers</small>
-                        </div>
-                        <div className="card-body">
-                            {savingsGoalsLoading ? (
-                                <div className="text-center py-4">
-                                    <div className="spinner-border" role="status">
-                                        <span className="visually-hidden">Loading...</span>
-                                    </div>
-                                    <p className="mt-2">Loading savings goals...</p>
-                                </div>
-                            ) : savingsGoals.length === 0 ? (
-                                <div className="text-center py-4">
-                                    <p className="text-muted">No savings goals found for your shop yet.</p>
-                                    <small className="text-muted">Savings goals will appear here when customers create them for your products.</small>
-                                </div>
-                            ) : (
-                                <div className="row">
-                                    {savingsGoals.map((goal) => (
-                                        <div key={goal._id} className="col-12 mb-3">
-                                            <div className="card">
-                                                <div className="card-body">
-                                                    <div className="d-flex justify-content-between align-items-start mb-2">
-                                                        <h6 className="card-title mb-0">{goal.goalName}</h6>
-                                                        <span className={`badge ${
-                                                            goal.status === 'completed' ? 'bg-success' : 
-                                                            goal.status === 'ongoing' ? 'bg-warning' : 
-                                                            'bg-secondary'
-                                                        }`}>
-                                                            {goal.status === 'completed' ? 'Completed' : 
-                                                             goal.status === 'ongoing' ? 'Ongoing' : 
-                                                             'Not Started'}
-                                                        </span>
-                                                    </div>
-                                                    
-                                                    {goal.userId && (
-                                                        <p className="card-text small text-muted mb-2">
-                                                            Customer: {goal.userId.firstName} {goal.userId.lastName}
-                                                        </p>
-                                                    )}
-                                                    
-                                                    <div className="mb-3">
-                                                        <div className="d-flex justify-content-between small text-muted mb-1">
-                                                            <span>Progress</span>
-                                                            <span>${goal.currentAmount.toFixed(2)} / ${goal.targetAmount.toFixed(2)}</span>
-                                                        </div>
-                                                        <div className="progress" style={{ height: '8px' }}>
-                                                            <div 
-                                                                className={`progress-bar ${
-                                                                    goal.status === 'completed' ? 'bg-success' : 
-                                                                    goal.status === 'ongoing' ? 'bg-warning' : 
-                                                                    'bg-secondary'
-                                                                }`}
-                                                                role="progressbar" 
-                                                                style={{ width: `${goal.progressPercentage}%` }}
-                                                                aria-valuenow={goal.progressPercentage}
-                                                                aria-valuemin="0" 
-                                                                aria-valuemax="100"
-                                                            ></div>
-                                                        </div>
-                                                        <div className="text-center small text-muted mt-1">
-                                                            {goal.progressPercentage}% complete
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {(() => {
-                                                        // Get product info based on goal type
-                                                        let productInfo = null;
-                                                        if (goal.__t === 'ManualSavingsGoal') {
-                                                            const firstItem = goal.googleShoppingData?.[0];
-                                                            productInfo = {
-                                                                title: firstItem?.title || goal.manualTitle || goal.goalName,
-                                                                price: firstItem?.price || goal.manualPrice
-                                                            };
-                                                        } else if (goal.__t === 'ShopifySavingsGoal') {
-                                                            const firstItem = goal.checkoutCartId?.lineItems?.[0];
-                                                            productInfo = {
-                                                                title: firstItem?.presentmentTitle || 'Unknown Product',
-                                                                price: goal.checkoutCartId?.totalPrice || goal.targetAmount
-                                                            };
-                                                        }
-                                                        
-                                                        return productInfo && (
-                                                            <div className="mb-2">
-                                                                <strong>Product:</strong>
-                                                                <div className="small text-muted">
-                                                                    {productInfo.title}
-                                                                </div>
-                                                                {productInfo.price && (
-                                                                    <div className="small text-muted">
-                                                                        Price: ${parseFloat(productInfo.price).toFixed(2)}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })()}
-                                                    
-                                                    {goal.schedule && goal.schedule.installments && (
-                                                        <div className="small text-muted">
-                                                            <strong>Payment Plan:</strong> {goal.schedule.installments} installments
-                                                        </div>
-                                                    )}
-                                                    
-                                                    {goal.__t === 'ShopifySavingsGoal' && goal.checkoutCartId?.orderId && (
-                                                        <div className="small text-muted mt-2" data-testid={`order-id-${goal._id}`}>
-                                                            <strong>Order ID:</strong> <code data-testid={`order-id-value-${goal._id}`}>{goal.checkoutCartId.orderId}</code>
-                                                        </div>
-                                                    )}
-                                                    
-                                                    <div className="small text-muted mt-2">
-                                                        Created: {new Date(goal.createdAt).toLocaleDateString()}
-                                                    </div>
-                                                    
-                                                    {/* Transfers Dropdown */}
-                                                    {goal.transfers && goal.transfers.length > 0 && (
-                                                        <div className="mt-3">
-                                                            <button
-                                                                className="btn btn-outline-secondary btn-sm w-100"
-                                                                type="button"
-                                                                onClick={() => toggleTransfers(goal._id)}
-                                                                aria-expanded={expandedTransfers[goal._id]}
-                                                            >
-                                                                <i className={`fas fa-chevron-${expandedTransfers[goal._id] ? 'up' : 'down'} me-2`}></i>
-                                                                View Transfers ({goal.transfers.length})
-                                                            </button>
-                                                            
-                                                            {expandedTransfers[goal._id] && (
-                                                                <div className="mt-2">
-                                                                    <div className="card">
-                                                                        <div className="card-body p-2">
-                                                                            <h6 className="card-title small mb-2">Transfer Details</h6>
-                                                                            <div className="table-responsive">
-                                                                                <table className="table table-sm table-striped">
-                                                                                    <thead>
-                                                                                        <tr>
-                                                                                            <th>Date</th>
-                                                                                            <th>Amount</th>
-                                                                                            <th>Status</th>
-                                                                                            <th>Type</th>
-                                                                                            <th>Payment ID</th>
-                                                                                        </tr>
-                                                                                    </thead>
-                                                                                    <tbody>
-                                                                                        {goal.transfers.map((transfer, index) => (
-                                                                                            <tr key={index}>
-                                                                                                <td>{new Date(transfer.date).toLocaleDateString()}</td>
-                                                                                                <td>${transfer.amount.toFixed(2)}</td>
-                                                                                                <td>
-                                                                                                    <span className={`badge ${
-                                                                                                        transfer.status === 'completed' ? 'bg-success' :
-                                                                                                        transfer.status === 'pending' ? 'bg-warning' :
-                                                                                                        transfer.status === 'failed' ? 'bg-danger' :
-                                                                                                        'bg-secondary'
-                                                                                                    }`}>
-                                                                                                        {transfer.status}
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                                <td>{transfer.type}</td>
-                                                                                                <td>
-                                                                                                    <code className="small">{transfer.transferId || 'N/A'}</code>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                        ))}
-                                                                                    </tbody>
-                                                                                </table>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <Box sx={{ mt: 4 }}>
+                <Paper sx={{ p: 3 }}>
+                    <Typography variant="h5" gutterBottom>
+                        Customer Savings Goals
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mb: 3 }}>
+                        Track all savings goals created by your customers
+                    </Typography>
+                    <SavingsGoalsTable
+                        goals={savingsGoals}
+                        loading={savingsGoalsLoading}
+                        userType="merchant"
+                        onViewGoal={handleViewGoal}
+                        onRefundCheck={handleRefundCheck}
+                    />
+                </Paper>
+            </Box>
         </div>
     </>
 }

@@ -37,6 +37,58 @@ jest.mock('../components/Navbar', () => {
   };
 });
 
+// Mock the SavingsGoalsTable component
+jest.mock('../components/SavingsGoalsTable', () => {
+  return function MockSavingsGoalsTable({ goals, onViewGoal, onTogglePause, loading }) {
+    if (loading) {
+      return (
+        <div data-testid="savings-goals-table">
+          <div data-testid="savings-goals-loading">Loading...</div>
+        </div>
+      );
+    }
+    
+    return (
+      <div data-testid="savings-goals-table">
+        {goals && goals.length > 0 ? (
+          goals.map((goal) => (
+            <div key={goal._id} data-testid={`goal-row-${goal._id}`}>
+              <span>{goal.goalName}</span>
+              {goal.nextRunDate && (
+                <span data-testid={`next-run-${goal._id}`}>
+                  {goal.isPaused ? 'PAUSED' : goal.nextRunDate}
+                </span>
+              )}
+              {!goal.nextRunDate && goal.isPaused && (
+                <span data-testid={`next-run-${goal._id}`}>PAUSED</span>
+              )}
+              <button
+                data-testid={`view-goal-${goal._id}`}
+                onClick={() => onViewGoal && onViewGoal(goal._id)}
+              >
+                View
+              </button>
+              {onTogglePause && (
+                <button
+                  data-testid={`toggle-pause-${goal._id}`}
+                  onClick={() => onTogglePause && onTogglePause(goal)}
+                >
+                  {goal.isPaused ? 'Resume' : 'Pause'}
+                </button>
+              )}
+            </div>
+          ))
+        ) : (
+          <div data-testid="empty-goals-state">
+            <p>No savings goals yet. Start saving today!</p>
+            <button data-testid="create-first-goal-btn">Create First Goal</button>
+          </div>
+        )}
+      </div>
+    );
+  };
+});
+
 // Create a mock store
 const createMockStore = (initialState = {}) => {
   return configureStore({
@@ -190,7 +242,7 @@ describe('Home', () => {
       }
     ];
 
-    test('displays savings goals table on desktop', () => {
+    test('displays savings goals table', () => {
       renderWithProviders(<Home />, {
         initialState: {
           user: { user: { firstName: 'John', status: 'approved' } },
@@ -202,32 +254,6 @@ describe('Home', () => {
       expect(screen.getByTestId('savings-goals-table')).toBeInTheDocument();
       expect(screen.getByTestId('goal-row-1')).toBeInTheDocument();
       expect(screen.getByTestId('goal-row-2')).toBeInTheDocument();
-    });
-
-    test('displays savings goals cards on mobile', () => {
-      // Mock window.innerWidth to simulate mobile
-      Object.defineProperty(window, 'innerWidth', {
-        writable: true,
-        configurable: true,
-        value: 500,
-      });
-
-      renderWithProviders(<Home />, {
-        initialState: {
-          user: { user: { firstName: 'John', status: 'approved' } },
-          savings: { savingsGoalsLoading: false, goals: mockGoals }
-        }
-      });
-
-      expect(screen.getByTestId('mobile-goals-container')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-goal-card-1')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-goal-card-2')).toBeInTheDocument();
-      
-      // Verify bank details are displayed in mobile cards
-      expect(screen.getByTestId('mobile-bank-1')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-bank-2')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-bank-1')).toHaveTextContent('Chase (****1234)');
-      expect(screen.getByTestId('mobile-bank-2')).toHaveTextContent('Bank of America (****5678)');
     });
 
     test('shows empty state when no goals exist', () => {
@@ -242,19 +268,6 @@ describe('Home', () => {
       expect(screen.getByTestId('create-first-goal-btn')).toBeInTheDocument();
     });
 
-    test('displays goal progress correctly', () => {
-      renderWithProviders(<Home />, {
-        initialState: {
-          user: { user: { firstName: 'John', status: 'approved' } },
-          savings: { savingsGoalsLoading: false, goals: mockGoals }
-        }
-      });
-
-      // Check mobile progress display
-      expect(screen.getByTestId('mobile-progress-1')).toHaveTextContent('$500 / $2000');
-      expect(screen.getByTestId('mobile-progress-2')).toHaveTextContent('$1000 / $5000');
-    });
-
     test('shows paused status correctly', () => {
       renderWithProviders(<Home />, {
         initialState: {
@@ -264,7 +277,6 @@ describe('Home', () => {
       });
 
       expect(screen.getByTestId('next-run-2')).toHaveTextContent('PAUSED');
-      expect(screen.getByTestId('mobile-next-run-2')).toHaveTextContent('PAUSED');
     });
   });
 
@@ -414,7 +426,8 @@ describe('Home', () => {
         targetAmount: 1000,
         isPaused: false,
         schedule: { interval: 'Monthly', dayOfMonth: 15 },
-        bank: { bankName: 'Test Bank', bankLastFour: '1234' }
+        bank: { bankName: 'Test Bank', bankLastFour: '1234' },
+        nextRunDate: '2024-01-15T00:00:00.000Z'
       };
 
       renderWithProviders(<Home />, {
@@ -424,11 +437,7 @@ describe('Home', () => {
         }
       });
 
-      // Use data-testid instead of text content to avoid multiple elements error
       expect(screen.getByTestId('goal-row-1')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-goal-card-1')).toBeInTheDocument();
-      
-      // Check that the table structure is correct
       expect(screen.getByTestId('savings-goals-table')).toBeInTheDocument();
     });
 
@@ -440,7 +449,8 @@ describe('Home', () => {
         targetAmount: 1000,
         isPaused: false,
         schedule: { interval: 'Weekly', dayOfWeek: 'Friday' },
-        bank: { bankName: 'Test Bank', bankLastFour: '1234' }
+        bank: { bankName: 'Test Bank', bankLastFour: '1234' },
+        nextRunDate: '2024-01-19T00:00:00.000Z'
       };
 
       renderWithProviders(<Home />, {
@@ -450,13 +460,8 @@ describe('Home', () => {
         }
       });
 
-      // Use data-testid instead of text content
       expect(screen.getByTestId('goal-row-1')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-goal-card-1')).toBeInTheDocument();
-      
-      // Check that the next run date elements exist
       expect(screen.getByTestId('next-run-1')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-next-run-1')).toBeInTheDocument();
     });
   });
 
@@ -595,7 +600,9 @@ describe('Home', () => {
       const testGoal = {
         _id: '1',
         goalName: 'Test Goal',
-        schedule: { interval: 'Weekly', dayOfWeek: 'Wednesday' }
+        schedule: { interval: 'Weekly', dayOfWeek: 'Wednesday' },
+        isPaused: false,
+        nextRunDate: '2024-01-17T00:00:00.000Z'
       };
 
       renderWithProviders(<Home />, {

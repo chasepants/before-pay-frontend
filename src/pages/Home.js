@@ -6,6 +6,9 @@ import Navbar from '../components/Navbar';
 import Placeholder from 'react-bootstrap/Placeholder';
 import { setSavingsGoals } from '../store/savingsSlice';
 import { Link } from 'react-router';
+import { Box, Typography, Paper, Button } from '@mui/material';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import SavingsGoalsTable from '../components/SavingsGoalsTable';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -197,210 +200,43 @@ const Home = () => {
       <div className="container mt-3">
         <div className="row mb-3">
           <div className="col-12">
-            <div className="d-grid gap-2 d-md-flex justify-content-between">
-              <h2 className="text-dark fw-bold mb-1">
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h4" component="h2">
                 {user?.firstName ? `Welcome, ${user.firstName}!` : 'Welcome!'}
-              </h2>
-              <button 
-                className="btn btn-primary" 
-                onClick={handleCreateSavingsGoal}
-                style={{ display: user?.userType === 'guest' ? 'none' : 'block' }}
-              >
-                <i className="bi bi-plus-circle me-1"></i>
-                Add New Goal
-              </button>
-            </div>
+              </Typography>
+              {user?.userType !== 'guest' && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddCircleIcon />}
+                  onClick={handleCreateSavingsGoal}
+                  sx={{
+                    backgroundColor: '#116530',
+                    '&:hover': {
+                      backgroundColor: '#0d4f26',
+                    },
+                  }}
+                >
+                  Add New Goal
+                </Button>
+              )}
+            </Box>
           </div>
         </div>
 
-        {!savingsGoalsLoading ? (
-          <div className="row mb-4">
-            <div className="col-12">
-              <div className="d-none d-md-block">
-                <div className="border-0 shadow-sm">
-                  <div className="card-header bg-dark text-white">
-                    <h4 className="mb-0 p-2" data-testid="savings-goals-header">Savings Goals</h4>
-                  </div>
-                  <div className="card-body p-0">
-                    <div className="table-responsive">
-                      <table className="table table-striped" data-testid="savings-goals-table">
-                        <thead className="bg-light">
-                          <tr>
-                            <th>Goal Name</th>
-                            <th>Saved</th>
-                            <th>Goal</th>
-                            <th>Next Run</th>
-                            <th>Transfer From</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody data-testid="savings-goals-tbody">
-                          {savingsGoals.map((goal) => (
-                            <tr key={goal._id} data-testid={`goal-row-${goal._id}`}>
-                              <td className="align-middle">{goal.goalName || goal.product?.title}</td>
-                              <td className="align-middle">${goal.currentAmount || 0}</td>
-                              <td className="align-middle">${goal.targetAmount || 0}</td>
-                              <td className="align-middle" data-testid={`next-run-${goal._id}`}>
-                                {isGoalCompleted(goal) ? (
-                                  <span className="text-success fw-bold">COMPLETED</span>
-                                ) : goal.isPaused ? (
-                                  <span className="text-muted fw-bold">PAUSED</span>
-                                ) : (
-                                  formatNextRunDate(goal.nextRunDate)
-                                )}
-                              </td>
-                              <td className="align-middle" data-testid={`transfer-from-${goal._id}`}>
-                                {goal.bank ? (
-                                  `${goal.bank.bankName || 'Unit'} (****${goal.bank.bankLastFour})`
-                                ) : (
-                                  <span className="text-muted">Not set</span>
-                                )}
-                              </td>
-                              <td className="align-middle">
-                                <div className="btn-group" role="group">
-                                  <button
-                                    className="btn btn-outline-secondary btn-sm"
-                                    onClick={() => handleViewSavings(goal._id)}
-                                    data-testid={`view-goal-${goal._id}`}
-                                  >
-                                    View
-                                  </button>
-                                  <button
-                                    className={`btn btn-sm ${goal.isPaused ? 'btn-success' : 'btn-warning'}`}
-                                    onClick={() => togglePause(goal)}
-                                    title={goal.isPaused ? 'Resume goal' : 'Pause goal'}
-                                    data-testid={`toggle-pause-${goal._id}`}
-                                  >
-                                    {goal.isPaused ? (
-                                      <i className="bi bi-play-circle-fill"></i>
-                                    ) : (
-                                      <i className="bi bi-pause-circle-fill"></i>
-                                    )}
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="d-md-none" data-testid="mobile-goals-container">
-                {savingsGoals.length > 0 ? (
-                  savingsGoals.map((goal, index) => (
-                    <div key={goal._id} className="border rounded p-3 mb-3 bg-white" data-testid={`mobile-goal-card-${goal._id}`}>
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h6 className="mb-0 fw-bold text-truncate" style={{ maxWidth: '60%' }}>
-                          {goal.goalName || goal.product?.title}
-                        </h6>
-                        <div className="btn-group btn-group-sm" role="group">
-                          <button
-                            className="btn btn-outline-secondary btn-sm"
-                            onClick={() => handleViewSavings(goal._id)}
-                            data-testid={`mobile-view-goal-${goal._id}`}
-                          >
-                            View
-                          </button>
-                          <button
-                            className={`btn btn-sm ${goal.isPaused ? 'btn-success' : 'btn-warning'}`}
-                            onClick={() => togglePause(goal)}
-                            title={goal.isPaused ? 'Resume goal' : 'Pause goal'}
-                            data-testid={`mobile-toggle-pause-${goal._id}`}
-                          >
-                            {goal.isPaused ? (
-                              <i className="bi bi-play-circle-fill"></i>
-                            ) : (
-                              <i className="bi bi-pause-circle-fill"></i>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="mb-2">
-                        <div className="d-flex justify-content-between align-items-center mb-1">
-                          <small className="text-muted">Progress</small>
-                          <small className="text-muted" data-testid={`mobile-progress-${goal._id}`}>
-                            ${goal.currentAmount || 0} / ${goal.targetAmount || 0}
-                          </small>
-                        </div>
-                        <div className="progress" style={{ height: '8px' }}>
-                          <div 
-                            className="progress-bar" 
-                            style={{ 
-                              width: `${Math.min((goal.currentAmount || 0) / (goal.targetAmount || 1) * 100, 100)}%` 
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      <div className="row text-center">
-                        <div className="col-3">
-                          <small className="text-muted d-block">Saved</small>
-                          <strong className="text-success">${goal.currentAmount || 0}</strong>
-                        </div>
-                        <div className="col-3">
-                          <small className="text-muted d-block">Goal</small>
-                          <strong>${goal.targetAmount || 0}</strong>
-                        </div>
-                        <div className="col-3">
-                          <small className="text-muted d-block">Next Run</small>
-                          <strong className={
-                            isGoalCompleted(goal) ? 'text-success' : 
-                            goal.isPaused ? 'text-muted' : 
-                            'text-primary'
-                          } data-testid={`mobile-next-run-${goal._id}`}>
-                            {isGoalCompleted(goal) ? (
-                              <span className="fw-bold">COMPLETED</span>
-                            ) : goal.isPaused ? (
-                              <span className="fw-bold">PAUSED</span>
-                            ) : (
-                              formatNextRunDate(goal.nextRunDate)
-                            )}
-                          </strong>
-                        </div>
-                        <div className="col-3">
-                          <small className="text-muted d-block">Bank</small>
-                          <strong className="text-info" data-testid={`mobile-bank-${goal._id}`}>
-                            {goal.bank ? (
-                              `${goal.bank.bankName || 'Unit'} (****${goal.bank.bankLastFour})`
-                            ) : (
-                              <span className="text-muted">Not set</span>
-                            )}
-                          </strong>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-5" data-testid="empty-goals-state">
-                    <div className="mb-3">
-                      <i className="bi bi-piggy-bank text-muted" style={{ fontSize: '3rem' }}></i>
-                    </div>
-                    <p className="text-muted mb-3">No savings goals yet. Start saving today!</p>
-                    <button 
-                      className="btn btn-primary btn-lg" 
-                      onClick={handleCreateSavingsGoal} 
-                      data-testid="create-first-goal-btn"
-                      style={{ display: user?.userType === 'guest' ? 'none' : 'block' }}
-                    >
-                      <i className="bi bi-plus-circle me-2"></i>
-                      Create Your First Goal
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-4" data-testid="savings-goals-loading">
-            <Placeholder animation="glow">
-              <Placeholder xs={12} style={{ height: '200px' }} />
-            </Placeholder>
-          </div>
-        )}
+        <Box sx={{ mb: 4 }}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom data-testid="savings-goals-header">
+              Savings Goals
+            </Typography>
+            <SavingsGoalsTable
+              goals={savingsGoals}
+              loading={savingsGoalsLoading}
+              userType={user?.userType || 'savings-account'}
+              onViewGoal={handleViewSavings}
+              onTogglePause={togglePause}
+            />
+          </Paper>
+        </Box>
 
         {user?.userType === 'savings-account' && (
           <div className="row mb-4">

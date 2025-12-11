@@ -1,10 +1,10 @@
 describe('Shopify Abandoned Cart Flow (Manual)', () => {
   const baseUrl = 'http://localhost:3000';
   const apiBaseUrl = 'http://localhost:3001';
-  const testEmail = 'shopify_customer@test.com';
+  const testEmail = 'roweashbyparks@gmail.com';
   const testPassword = 'Test1234!';
-  const checkoutId = '44057011322977';
-  const emailToken = 'e10c809b-d102-4692-a39d-3e0cdd93c545';
+  const checkoutId = '44067729735777';
+  const emailToken = '11b965dc-65b0-4241-83a7-e65af1b6fc85';
 
   beforeEach(() => {
     // Clean up user data before each test to ensure clean state
@@ -24,7 +24,7 @@ describe('Shopify Abandoned Cart Flow (Manual)', () => {
       failOnStatusCode: false
     });
     
-    // Reset checkout cart orderId (since we reuse the same checkout cart across tests)
+    // Reset checkout cart orderId and update email (since we reuse the same checkout cart across tests)
     cy.request({
       method: 'POST',
       url: `${apiBaseUrl}/api/test/reset-checkout-cart`,
@@ -32,7 +32,8 @@ describe('Shopify Abandoned Cart Flow (Manual)', () => {
         'Content-Type': 'application/json'
       },
       body: {
-        checkoutId: checkoutId
+        checkoutId: checkoutId,
+        email: testEmail
       },
       failOnStatusCode: false
     });
@@ -45,7 +46,7 @@ describe('Shopify Abandoned Cart Flow (Manual)', () => {
     // Clean up user data after each test
     cy.cleanupUserData(testEmail, apiBaseUrl);
     
-    // Reset checkout cart orderId (since we reuse the same checkout cart across tests)
+    // Reset checkout cart orderId and update email (since we reuse the same checkout cart across tests)
     cy.request({
       method: 'POST',
       url: `${apiBaseUrl}/api/test/reset-checkout-cart`,
@@ -53,7 +54,8 @@ describe('Shopify Abandoned Cart Flow (Manual)', () => {
         'Content-Type': 'application/json'
       },
       body: {
-        checkoutId: checkoutId
+        checkoutId: checkoutId,
+        email: testEmail
       },
       failOnStatusCode: false
     });
@@ -160,20 +162,40 @@ describe('Shopify Abandoned Cart Flow (Manual)', () => {
     cy.contains('Savings Goals', { timeout: 10000 }).should('be.visible');
     cy.contains('Cart from', { timeout: 10000 }).should('be.visible');
     
-    // Find the goal ID by looking for the row/card containing "Cart from"
+    // Find the goal ID by looking for the row/card containing "Cart from stashpay-2"
+    // Since we're using Material UI DataGrid now, we need to find it differently
     cy.get('body').then(($body) => {
-      // Try desktop table first
       let goalId = null;
-      const goalRow = $body.find('[data-testid^="goal-row-"]').filter((i, el) => {
-        return Cypress.$(el).text().includes('Cart from');
-      });
       
-      if (goalRow.length > 0) {
-        goalId = goalRow.attr('data-testid').replace('goal-row-', '');
-      } else {
-        // Try mobile card view
+      // Try to find in Material UI DataGrid rows
+      const dataGridRows = $body.find('[role="row"][data-id]');
+      
+      if (dataGridRows.length > 0) {
+        dataGridRows.each((index, row) => {
+          const $row = Cypress.$(row);
+          const rowText = $row.text();
+          if (rowText.includes('Cart from stashpay-2')) {
+            goalId = $row.attr('data-id');
+            return false; // Break the loop
+          }
+        });
+      }
+      
+      // Fallback: Try old desktop table structure
+      if (!goalId) {
+        const goalRow = $body.find('[data-testid^="goal-row-"]').filter((i, el) => {
+          return Cypress.$(el).text().includes('Cart from stashpay-2');
+        });
+        
+        if (goalRow.length > 0) {
+          goalId = goalRow.attr('data-testid').replace('goal-row-', '');
+        }
+      }
+      
+      // Fallback: Try mobile card view
+      if (!goalId) {
         const goalCard = $body.find('[data-testid^="mobile-goal-card-"]').filter((i, el) => {
-          return Cypress.$(el).text().includes('Cart from');
+          return Cypress.$(el).text().includes('Cart from stashpay-2');
         });
         if (goalCard.length > 0) {
           goalId = goalCard.attr('data-testid').replace('mobile-goal-card-', '');
@@ -181,7 +203,7 @@ describe('Shopify Abandoned Cart Flow (Manual)', () => {
       }
       
       if (!goalId) {
-        throw new Error('Could not find Shopify goal with "Cart from" text');
+        throw new Error('Could not find Shopify goal with "Cart from stashpay-2" text');
       }
       
       cy.wrap(goalId).as('shopifyGoalId');
@@ -191,19 +213,14 @@ describe('Shopify Abandoned Cart Flow (Manual)', () => {
     // Step 11: Click View button for the Shopify goal
     cy.log('👁️  Step 11: Clicking View button for Shopify goal...');
     cy.get('@shopifyGoalId').then((goalId) => {
-      // Try desktop view button first
-      cy.get('body').then(($body) => {
-        if ($body.find(`[data-testid="view-goal-${goalId}"]`).length > 0) {
-          cy.get(`[data-testid="view-goal-${goalId}"]`, { timeout: 5000 })
+      // Try Material UI DataGrid view button first
+      cy.get(`[data-id="${goalId}"][role="row"]`, { timeout: 10000 })
+        .should('be.visible')
+        .within(() => {
+          cy.get('button[aria-label="View"]', { timeout: 5000 })
             .should('be.visible')
             .click();
-        } else {
-          // Try mobile view button
-          cy.get(`[data-testid="mobile-view-goal-${goalId}"]`, { timeout: 5000 })
-            .should('be.visible')
-            .click();
-        }
-      });
+        });
     });
     
     // Step 12: Verify View Order page displays correctly

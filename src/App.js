@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import api from './api';
 import LandingPage from './pages/LandingPage';
 import Home from './pages/Home';
@@ -130,8 +132,22 @@ const App = () => {
 
   const isProduction = process.env.REACT_APP_VERCEL_ENV === 'production';
 
+  // Material UI theme
+  const theme = createTheme({
+    palette: {
+      primary: {
+        main: '#1976d2',
+      },
+      secondary: {
+        main: '#dc004e',
+      },
+    },
+  });
+
   return (
-    <Router>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
       <Routes>
         {isProduction ? (
           <>
@@ -161,6 +177,7 @@ const App = () => {
         )}
       </Routes>
     </Router>
+    </ThemeProvider>
   );
 };
 
